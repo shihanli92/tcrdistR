@@ -149,8 +149,10 @@ Plotting functions for TCR repertoire data
 
 ## I/O
 
-Read TCR data from various formats
+Read and standardize TCR data from various formats
 
+- [`as_tcr_df()`](https://shihanli92.github.io/tcrdistR/reference/as_tcr_df.md)
+  : Standardize a TCR data.frame to tcrdistR column names
 - [`read_tcr_table()`](https://shihanli92.github.io/tcrdistR/reference/read_tcr_table.md)
   : Read a delimited file containing TCR repertoire data
 - [`read_airr()`](https://shihanli92.github.io/tcrdistR/reference/read_airr.md)
