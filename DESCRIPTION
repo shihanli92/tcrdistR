@@ -26,6 +26,7 @@ Suggests:
     ggseqlogo,
     patchwork,
     ggrepel,
+    uwot,
     knitr,
     rmarkdown
 VignetteBuilder: knitr
@@ -64,6 +65,7 @@ Collate:
     'tcr_sampler.R'
     'tcrdistR-package.R'
     'translation.R'
+    'umap.R'
     'wrappers_distance.R'
     'wrappers_neighbors.R'
     'wrappers_rectangular.R'

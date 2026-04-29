@@ -44,9 +44,10 @@ reference:
       - strict_single_chain_match_tcrs_to_db
 
   - title: "Dimensionality Reduction"
-    desc: "Kernel PCA for TCRdist distance matrices"
+    desc: "Kernel PCA and UMAP for TCRdist distance matrices"
     contents:
       - compute_tcrdist_kernel_pca
+      - compute_tcrdist_umap
 
   - title: "CD8 Scoring"
     desc: "Logistic regression-based CD8 phenotype scoring"
