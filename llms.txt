@@ -217,6 +217,10 @@ Plotting functions for TCR repertoire data
   : Plot V-gene or J-gene usage frequencies
 - [`plot_tcr_scatter()`](https://shihanli92.github.io/tcrdistR/reference/plot_tcr_scatter.md)
   : Plot a 2D scatter of TCR embeddings
+- [`compute_tcr_network()`](https://shihanli92.github.io/tcrdistR/reference/compute_tcr_network.md)
+  : Build a TCR clone network from distance data
+- [`plot_tcr_network()`](https://shihanli92.github.io/tcrdistR/reference/plot_tcr_network.md)
+  : Plot a TCR clone network
 
 ## I/O
 

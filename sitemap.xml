@@ -29,6 +29,7 @@
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/as_tcr_df.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/bsd4_matrix.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/cluster_tcrs.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/compute_tcr_network.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/compute_tcrdist_kernel_pca.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/compute_tcrdist_umap.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dash.html</loc></url>
@@ -44,9 +45,11 @@
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-encode_single_chain_tcr.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-estimate_background_tcrdist_distributions.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-find_alternate_alleles_for_tcrs.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-find_distance_valley.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-get_j_cdr3_nucseq.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-get_trbd_nucseq.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-get_v_cdr3_nucseq.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-gmm_2_component.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-load_cd8_logreg_models.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-normalize_gene_names.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-normalize_tcr_db_columns.html</loc></url>
@@ -58,6 +61,7 @@
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-run_umap_from_knn.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-single_linkage_clumping.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-smooth_knn_dist.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-sparse_to_edgelist.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-standardize_columns.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-validate_tcr_df.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/find_clumping.html</loc></url>
@@ -77,6 +81,7 @@
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/plot_distance_distribution.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/plot_gene_usage.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/plot_junction_bars.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/plot_tcr_network.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/plot_tcr_scatter.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/plot_tcrdist_dendrogram.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/plot_tcrdist_heatmap.html</loc></url>
