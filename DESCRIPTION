@@ -8,7 +8,8 @@ Description: C++-accelerated TCR distance calculations for T-cell receptor
     repertoire analysis. Computes pairwise TCRdist distances incorporating
     V-region and CDR3 sequence comparisons using BLOSUM62-derived substitution
     matrices. Targets feature parity with Python tcrdist3.
-URL: https://github.com/shihanli92/tcrdistR
+URL: https://shihanli92.github.io/tcrdistR/,
+    https://github.com/shihanli92/tcrdistR
 BugReports: https://github.com/shihanli92/tcrdistR/issues
 License: MIT + file LICENSE
 Imports:

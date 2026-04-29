@@ -128,4 +128,5 @@ navbar:
   components:
     github:
       icon: fa-github
+      aria-label: GitHub
       href: https://github.com/shihanli92/tcrdistR
