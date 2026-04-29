@@ -112,8 +112,8 @@ tcrs <- data.frame(
 result <- compute_tcrdist_kernel_pca(tcrs, "human", n_components = 2L)
 str(result)
 #> List of 3
-#>  $ embeddings  : num [1:3, 1:2] 4.65e-01 -9.29e-01 4.65e-01 2.40e-01 -1.13e-16 ...
-#>  $ eigenvalues : num [1:2] 1.295 0.115
+#>  $ embeddings  : num [1:3, 1:2] 0.47255 -0.92218 0.44963 0.23793 0.00398 ...
+#>  $ eigenvalues : num [1:2] 1.276 0.115
 #>  $ n_components: int 2
 # }
 ```

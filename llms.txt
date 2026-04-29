@@ -316,42 +316,6 @@ Gene database, constants, and helper functions
 
 Direct C++ function access via Rcpp
 
-- [`rcpp_blosum_sequence_distance()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_blosum_sequence_distance.md)
-  : Aligned sequence distance using BSD4 substitution costs (C++
-  implementation)
-- [`rcpp_build_bsd4()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_build_bsd4.md)
-  : Build the BSD4 amino acid distance matrix (C++ constexpr values)
-- [`rcpp_compute_v_region_distances()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_compute_v_region_distances.md)
-  : Compute pairwise V-region distances (C++ implementation)
-- [`rcpp_count_nuc_matches()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_count_nuc_matches.md)
-  : Count nucleotide prefix matches between two sequences (C++
-  implementation)
-- [`rcpp_find_alternate_alleles_batch()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_find_alternate_alleles_batch.md)
-  : Find alternate alleles for a batch of TCRs (C++ implementation)
-- [`rcpp_knn_from_distance_matrix()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_knn_from_distance_matrix.md)
-  : K-nearest-neighbors from a precomputed distance matrix (C++
-  implementation)
-- [`rcpp_knn_from_pca_matrix()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_knn_from_pca_matrix.md)
-  : K-nearest-neighbors from a PCA embedding matrix (C++ implementation)
-- [`rcpp_resample_shuffled_tcr_chains()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_resample_shuffled_tcr_chains.md)
-  : Resample shuffled TCR chains by junction breakpoint splicing (C++
-  implementation)
-- [`rcpp_tcrdist_knn()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_tcrdist_knn.md)
-  : K-nearest-neighbors by TCRdist with group masking (C++
-  implementation)
-- [`rcpp_tcrdist_matrix()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_tcrdist_matrix.md)
-  : Pairwise TCRdist matrix (C++ implementation)
-- [`rcpp_tcrdist_radius_neighbors()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_tcrdist_radius_neighbors.md)
-  : Radius-based TCRdist neighbor search with group masking (C++
-  implementation)
-- [`rcpp_tcrdist_rect()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_tcrdist_rect.md)
-  : Rectangular TCRdist query-vs-reference distance matrix (C++
-  implementation)
-- [`rcpp_tcrdist_sparse()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_tcrdist_sparse.md)
-  : Sparse TCRdist matrix as COO triplets (C++ implementation)
-- [`rcpp_weighted_cdr3_distance()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_weighted_cdr3_distance.md)
-  : Weighted CDR3 distance (C++ implementation)
-
 # Articles
 
 ### Getting Started
