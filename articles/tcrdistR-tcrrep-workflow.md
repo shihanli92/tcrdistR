@@ -106,10 +106,10 @@ Compute a kernel PCA embedding from the TCRrep:
 ``` r
 pca <- compute_tcrdist_kernel_pca(
   rep@clone_df, organism = rep@organism,
-  n_components = 10L, method = "eigen"
+  n_components = 50L, method = "eigen"
 )
 dim(pca$embeddings)
-#> [1] 1888   10
+#> [1] 1888   50
 ```
 
 Visualize the first two components, colored by epitope:
@@ -124,6 +124,27 @@ plot_tcr_scatter(
 ```
 
 ![](tcrdistR-tcrrep-workflow_files/figure-html/scatter-1.png)
+
+## UMAP
+
+UMAP provides a nonlinear 2D embedding that often separates clusters
+better than linear PCA.
+[`compute_tcrdist_umap()`](https://shihanli92.github.io/tcrdistR/reference/compute_tcrdist_umap.md)
+takes kernel PCA embeddings (or raw TCR data) and returns UMAP
+coordinates:
+
+``` r
+umap <- compute_tcrdist_umap(pca_embeddings = pca$embeddings, seed = 42)
+plot_tcr_scatter(
+  umap$embeddings,
+  color_by = rep@clone_df$epitope,
+  title = "UMAP of DASH TCRs",
+  axis_label_prefix = "UMAP",
+  point_size = 1.5
+)
+```
+
+![](tcrdistR-tcrrep-workflow_files/figure-html/umap-1.png)
 
 ## Clustering
 

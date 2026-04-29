@@ -213,10 +213,12 @@ Match TCRs against literature epitope databases
 
 ## Dimensionality Reduction
 
-Kernel PCA for TCRdist distance matrices
+Kernel PCA and UMAP for TCRdist distance matrices
 
 - [`compute_tcrdist_kernel_pca()`](https://shihanli92.github.io/tcrdistR/reference/compute_tcrdist_kernel_pca.md)
   : Kernel PCA on TCRdist distances
+- [`compute_tcrdist_umap()`](https://shihanli92.github.io/tcrdistR/reference/compute_tcrdist_umap.md)
+  : Compute UMAP embedding from TCRdist kernel PCA
 
 ## CD8 Scoring
 
