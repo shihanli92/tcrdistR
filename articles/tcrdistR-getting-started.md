@@ -1,0 +1,172 @@
+# Getting Started with tcrdistR
+
+## Introduction
+
+**tcrdistR** computes pairwise distances between T-cell receptors (TCRs)
+using the TCRdist metric. Each TCR is represented by its V-gene and CDR3
+amino acid sequence for both alpha and beta chains. The distance
+incorporates V-region similarity (via BLOSUM62-derived substitution
+matrices) and CDR3 sequence alignment.
+
+All distance computations are implemented in C++ for high performance.
+This vignette walks through the core functionality.
+
+## Installation
+
+``` r
+# install.packages("devtools")
+devtools::install_github("shihanli92/tcrdistR")
+```
+
+## Creating TCR Data
+
+tcrdistR works with data.frames containing at minimum four columns:
+`va`, `cdr3a`, `vb`, `cdr3b` (V-gene and CDR3 for alpha and beta
+chains).
+
+``` r
+library(tcrdistR)
+
+tcrs <- data.frame(
+  va    = c("TRAV7-3*01", "TRAV6D-6*01", "TRAV6D-6*01",
+            "TRAV6-4*01", "TRAV6-4*01"),
+  cdr3a = c("CAVSLDSNYQLIW", "CALGDRATGGNNKLTF", "CALGSNTGYQNFYF",
+            "CALAPSNTNKVVF", "CALVPSNTNKVVF"),
+  vb    = c("TRBV13-1*01", "TRBV29*01", "TRBV29*01",
+            "TRBV2*01", "TRBV29*01"),
+  cdr3b = c("CASSDFDWGGDAETLYF", "CASSPDRGEVFF", "CASTGGGAPLF",
+            "CASSQDPGDYEQYF", "CASSLGGENTLYF"),
+  stringsAsFactors = FALSE
+)
+```
+
+## Reading TCR Data from Files
+
+tcrdistR can read TCR data from multiple common formats:
+
+``` r
+# Auto-detect format from column naming conventions
+tcrs <- read_tcr_table("my_data.csv")
+
+# Format-specific readers
+tcrs <- read_10x("filtered_contig_annotations.csv")
+tcrs <- read_airr("airr_rearrangements.tsv")
+tcrs <- read_adaptive("immunoseq_export.tsv")
+```
+
+## The TCRrep Object
+
+For more structured workflows, wrap your data in a `TCRrep` S4 object:
+
+``` r
+rep <- TCRrep(tcrs, organism = "mouse", chains = "paired")
+rep
+```
+
+## Computing the Distance Matrix
+
+The core function
+[`tcrdist_matrix()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_matrix.md)
+computes a dense N x N pairwise distance matrix:
+
+``` r
+dist_mat <- tcrdist_matrix(tcrs, organism = "mouse")
+dim(dist_mat)   # 5 x 5
+dist_mat[1:3, 1:3]
+```
+
+Each entry is an integer TCRdist value. Identical TCRs have distance 0;
+typical distances range from 0 to ~400.
+
+## Sparse Distances
+
+For large datasets, storing the full N x N matrix is impractical. Use
+[`tcrdist_sparse()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_sparse.md)
+to only store distances below a threshold:
+
+``` r
+sparse_mat <- tcrdist_sparse(tcrs, organism = "mouse", threshold = 100)
+class(sparse_mat)  # dgCMatrix (sparse)
+```
+
+The result is a `Matrix::dgCMatrix` where zero entries represent
+distances above the threshold (not distance 0 — actual zeros are stored
+as well).
+
+## Rectangular Distances
+
+Compute distances between two different sets of TCRs (query vs
+reference):
+
+``` r
+query <- tcrs[1:2, ]
+reference <- tcrs[3:5, ]
+rect_mat <- tcrdist_rect(query, reference, organism = "mouse")
+dim(rect_mat)  # 2 x 3
+```
+
+## K-Nearest Neighbors
+
+Find the K closest TCRs for each input:
+
+``` r
+knn <- tcrdist_knn(tcrs, organism = "mouse", K = 3)
+knn$knn_indices   # K x N matrix of neighbor indices
+knn$knn_distances  # K x N matrix of distances
+```
+
+## Radius-Based Neighbors
+
+Find all neighbors within a distance threshold:
+
+``` r
+neighbors <- tcrdist_radius_neighbors(
+  tcrs, organism = "mouse", radius = 50
+)
+# Returns a list of neighbor indices and distances per TCR
+```
+
+## Single-Pair Distances
+
+For comparing individual CDR3 sequences:
+
+``` r
+# Weighted CDR3 distance (uses BLOSUM62-derived BSD4 matrix)
+d <- weighted_cdr3_distance("CAVRDSSYKLIF", "CAVKDSSYKLIF")
+
+# Simple Hamming distance (counts mismatches)
+h <- hamming_distance("CASSI", "CASSK")  # returns 1
+```
+
+## Diversity Metrics
+
+Repertoire diversity functions work on count vectors (no C++ needed):
+
+``` r
+library(tcrdistR)
+
+# Clone counts for 5 clonotypes
+counts <- c(100, 50, 30, 15, 5)
+
+# Generalized Simpson's diversity (order 2)
+div <- tcr_diversity(counts, order = 2)
+div$entropy
+#> [1] 0.6620603
+div$effective_number
+#> [1] 2.959108
+
+# Species richness (number of unique clonotypes)
+tcr_richness(counts)
+#> [1] 5
+
+# Clonality (1 - normalized Shannon entropy)
+tcr_clonality(counts)
+#> [1] 0.2145039
+```
+
+## Next Steps
+
+- [`vignette("tcrdistR-advanced")`](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-advanced.md)
+  — Clumping, meta-clonotypes, clustering, database matching, kernel PCA
+- [`vignette("tcrdistR-visualization")`](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-visualization.md)
+  — Heatmaps, dendrograms, CDR3 logos, scatter plots

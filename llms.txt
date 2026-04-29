@@ -1,0 +1,367 @@
+# tcrdistR
+
+C++-accelerated TCR distance calculations for T-cell receptor repertoire
+analysis. Computes pairwise TCRdist distances incorporating V-region and
+CDR3 sequence comparisons using BLOSUM62-derived substitution matrices.
+Targets feature parity with Python
+[tcrdist3](https://github.com/kmayerb/tcrdist3).
+
+## Installation
+
+Install the development version from GitHub:
+
+``` r
+# install.packages("devtools")
+devtools::install_github("shihanli92/tcrdistR")
+```
+
+## Quick Start
+
+``` r
+library(tcrdistR)
+
+# Create a TCR data.frame (paired alpha/beta chains)
+tcrs <- data.frame(
+  va    = c("TRAV1-1*01", "TRAV1-2*01", "TRAV10*01",
+            "TRAV1-1*01", "TRAV1-2*01"),
+  cdr3a = c("CAVRDSSYKLIF", "CAVKDSSYKLIF", "CAVRDSYKLIF",
+            "CAVRDSSYKLIF", "CAVKDSYKLIF"),
+  vb    = c("TRBV5-1*01", "TRBV6-1*01", "TRBV7-2*01",
+            "TRBV5-1*01", "TRBV6-1*01"),
+  cdr3b = c("CASSIRSSYEQY", "CASSIKSSYEQY", "CASSIRSYEQY",
+            "CASSIRSSYEQF", "CASSIKSSYEQF"),
+  stringsAsFactors = FALSE
+)
+
+# Compute the full pairwise distance matrix
+dist_mat <- tcrdist_matrix(tcrs, "human")
+
+# Find K-nearest neighbors
+knn <- tcrdist_knn(tcrs, "human", K = 3)
+
+# Sparse distance matrix (only store distances <= threshold)
+sparse_mat <- tcrdist_sparse(tcrs, "human", threshold = 100)
+```
+
+## Features
+
+**Distance computation** – Dense, sparse, and rectangular pairwise
+TCRdist matrices with C++ backend:
+[`tcrdist_matrix()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_matrix.md),
+[`tcrdist_sparse()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_sparse.md),
+[`tcrdist_rect()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_rect.md),
+[`weighted_cdr3_distance()`](https://shihanli92.github.io/tcrdistR/reference/weighted_cdr3_distance.md),
+[`hamming_distance()`](https://shihanli92.github.io/tcrdistR/reference/hamming_distance.md).
+
+**Neighbor search** – K-nearest neighbors and radius-based queries:
+[`tcrdist_knn()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_knn.md),
+[`tcrdist_radius_neighbors()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_radius_neighbors.md),
+[`knn_from_matrix()`](https://shihanli92.github.io/tcrdistR/reference/knn_from_matrix.md),
+[`knn_from_pca()`](https://shihanli92.github.io/tcrdistR/reference/knn_from_pca.md).
+
+**Clumping detection** – Background-corrected TCR clumping with Poisson
+significance testing:
+[`find_clumping()`](https://shihanli92.github.io/tcrdistR/reference/find_clumping.md),
+[`setup_tcr_groups()`](https://shihanli92.github.io/tcrdistR/reference/setup_tcr_groups.md).
+
+**Database matching** – Match query TCRs against literature epitope
+databases with adjusted p-values:
+[`find_significant_tcrdist_matches()`](https://shihanli92.github.io/tcrdistR/reference/find_significant_tcrdist_matches.md),
+[`match_tcrs_to_db()`](https://shihanli92.github.io/tcrdistR/reference/match_tcrs_to_db.md).
+
+**Dimensionality reduction** – Kernel PCA on TCRdist matrices (validated
+against scipy):
+[`compute_tcrdist_kernel_pca()`](https://shihanli92.github.io/tcrdistR/reference/compute_tcrdist_kernel_pca.md).
+
+**CD8 scoring** – Logistic regression phenotype scoring:
+[`make_cd8_score_table_column()`](https://shihanli92.github.io/tcrdistR/reference/make_cd8_score_table_column.md).
+
+**Diversity metrics** – Generalized Simpson’s entropy, fuzzy TCR-aware
+diversity, richness, clonality:
+[`tcr_diversity()`](https://shihanli92.github.io/tcrdistR/reference/tcr_diversity.md),
+[`tcr_fuzzy_diversity()`](https://shihanli92.github.io/tcrdistR/reference/tcr_fuzzy_diversity.md),
+[`tcr_richness()`](https://shihanli92.github.io/tcrdistR/reference/tcr_richness.md),
+[`tcr_clonality()`](https://shihanli92.github.io/tcrdistR/reference/tcr_clonality.md).
+
+**Clustering and neighborhood tests** – Hierarchical clustering with
+Fisher’s exact / chi-squared neighborhood tests:
+[`tcrdist_hclust()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_hclust.md),
+[`cluster_tcrs()`](https://shihanli92.github.io/tcrdistR/reference/cluster_tcrs.md),
+[`neighborhood_test()`](https://shihanli92.github.io/tcrdistR/reference/neighborhood_test.md).
+
+**Meta-clonotypes** – Quasi-public TCR motif discovery across subjects:
+[`find_meta_clonotypes()`](https://shihanli92.github.io/tcrdistR/reference/find_meta_clonotypes.md),
+[`summarize_meta_clonotype()`](https://shihanli92.github.io/tcrdistR/reference/summarize_meta_clonotype.md).
+
+**Distance-based joins** – Fuzzy join of TCR datasets by distance
+threshold:
+[`tcrdist_join()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_join.md).
+
+**Visualization** – Distance heatmaps, dendrograms, CDR3 logos, gene
+usage plots, PCA scatter:
+[`plot_tcrdist_heatmap()`](https://shihanli92.github.io/tcrdistR/reference/plot_tcrdist_heatmap.md),
+[`plot_tcrdist_dendrogram()`](https://shihanli92.github.io/tcrdistR/reference/plot_tcrdist_dendrogram.md),
+[`plot_cdr3_logo()`](https://shihanli92.github.io/tcrdistR/reference/plot_cdr3_logo.md),
+[`plot_tcr_scatter()`](https://shihanli92.github.io/tcrdistR/reference/plot_tcr_scatter.md),
+and more.
+
+**I/O** – Read TCR data from AIRR, Adaptive ImmunoSeq, 10x Genomics, and
+generic CSV/TSV formats:
+[`read_airr()`](https://shihanli92.github.io/tcrdistR/reference/read_airr.md),
+[`read_adaptive()`](https://shihanli92.github.io/tcrdistR/reference/read_adaptive.md),
+[`read_10x()`](https://shihanli92.github.io/tcrdistR/reference/read_10x.md),
+[`read_tcr_table()`](https://shihanli92.github.io/tcrdistR/reference/read_tcr_table.md).
+
+## Reading TCR Data
+
+``` r
+# Auto-detect format from common column naming conventions
+tcrs <- read_tcr_table("my_tcr_data.csv")
+
+# Format-specific readers
+tcrs <- read_10x("filtered_contig_annotations.csv")
+tcrs <- read_airr("airr_rearrangements.tsv")
+tcrs <- read_adaptive("immunoseq_export.tsv")
+```
+
+## Documentation
+
+- [`vignette("tcrdistR-getting-started")`](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-getting-started.md)
+  – Tutorial introduction
+- [`vignette("tcrdistR-advanced")`](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-advanced.md)
+  – Clumping, meta-clonotypes, clustering, DB matching
+- [`vignette("tcrdistR-visualization")`](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-visualization.md)
+  – Visualization guide
+
+## License
+
+MIT
+
+# Package index
+
+## TCRrep Object
+
+S4 class and constructor for TCR repertoire data
+
+- [`TCRrep-class`](https://shihanli92.github.io/tcrdistR/reference/TCRrep-class.md)
+  : TCRrep S4 class
+- [`TCRrep()`](https://shihanli92.github.io/tcrdistR/reference/TCRrep.md)
+  : Create a TCRrep object
+- [`show(`*`<TCRrep>`*`)`](https://shihanli92.github.io/tcrdistR/reference/show-TCRrep-method.md)
+  : Show method for TCRrep objects
+
+## Distance Computation
+
+Pairwise TCRdist distance calculations
+
+- [`tcrdist_matrix()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_matrix.md)
+  : Compute pairwise TCRdist distance matrix
+
+- [`tcrdist_rect()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_rect.md)
+  : Compute rectangular TCRdist matrix between a query set and a
+  reference set
+
+- [`tcrdist_sparse()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_sparse.md)
+  :
+
+  Compute sparse TCRdist matrix as a `dgCMatrix`
+
+- [`weighted_cdr3_distance()`](https://shihanli92.github.io/tcrdistR/reference/weighted_cdr3_distance.md)
+  : Weighted CDR3 distance between two CDR3 sequences
+
+- [`bsd4_matrix()`](https://shihanli92.github.io/tcrdistR/reference/bsd4_matrix.md)
+  : Retrieve the BSD4 substitution matrix
+
+- [`hamming_distance()`](https://shihanli92.github.io/tcrdistR/reference/hamming_distance.md)
+  : Hamming distance between two CDR3 sequences
+
+- [`hamming_matrix()`](https://shihanli92.github.io/tcrdistR/reference/hamming_matrix.md)
+  : Pairwise Hamming distance matrix for CDR3 sequences
+
+## Neighbor Search
+
+K-nearest neighbor and radius-based neighbor queries
+
+- [`tcrdist_knn()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_knn.md)
+  : K-nearest-neighbors by TCRdist with optional group masking
+- [`tcrdist_radius_neighbors()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_radius_neighbors.md)
+  : Radius-based TCRdist neighbor search with optional group masking
+- [`knn_from_matrix()`](https://shihanli92.github.io/tcrdistR/reference/knn_from_matrix.md)
+  : K-nearest-neighbors from a precomputed distance matrix
+- [`knn_from_pca()`](https://shihanli92.github.io/tcrdistR/reference/knn_from_pca.md)
+  : K-nearest-neighbors from a PCA embedding matrix
+
+## Clumping & Background Models
+
+TCR clumping detection with background-corrected significance
+
+- [`find_clumping()`](https://shihanli92.github.io/tcrdistR/reference/find_clumping.md)
+  : Find TCR clumping in TCR space
+- [`setup_tcr_groups()`](https://shihanli92.github.io/tcrdistR/reference/setup_tcr_groups.md)
+  : Assign alpha and beta chain group indices
+
+## Database Matching
+
+Match TCRs against literature epitope databases
+
+- [`find_significant_tcrdist_matches()`](https://shihanli92.github.io/tcrdistR/reference/find_significant_tcrdist_matches.md)
+  : Find significant TCRdist matches between query and database TCRs
+- [`match_tcrs_to_db()`](https://shihanli92.github.io/tcrdistR/reference/match_tcrs_to_db.md)
+  : Match TCRs to a literature database
+- [`strict_single_chain_match_tcrs_to_db()`](https://shihanli92.github.io/tcrdistR/reference/strict_single_chain_match_tcrs_to_db.md)
+  : Strict CDR3 sequence matching against a database
+
+## Dimensionality Reduction
+
+Kernel PCA for TCRdist distance matrices
+
+- [`compute_tcrdist_kernel_pca()`](https://shihanli92.github.io/tcrdistR/reference/compute_tcrdist_kernel_pca.md)
+  : Kernel PCA on TCRdist distances
+
+## CD8 Scoring
+
+Logistic regression-based CD8 phenotype scoring
+
+- [`make_cd8_score_table_column()`](https://shihanli92.github.io/tcrdistR/reference/make_cd8_score_table_column.md)
+  : CD8 logistic regression score for paired TCRs
+
+## Diversity Metrics
+
+Repertoire diversity, richness, and clonality
+
+- [`tcr_diversity()`](https://shihanli92.github.io/tcrdistR/reference/tcr_diversity.md)
+  : Generalized Simpson's diversity (Hill numbers framework)
+- [`tcr_fuzzy_diversity()`](https://shihanli92.github.io/tcrdistR/reference/tcr_fuzzy_diversity.md)
+  : TCR-aware fuzzy diversity
+- [`tcr_richness()`](https://shihanli92.github.io/tcrdistR/reference/tcr_richness.md)
+  : TCR repertoire richness
+- [`tcr_clonality()`](https://shihanli92.github.io/tcrdistR/reference/tcr_clonality.md)
+  : TCR repertoire clonality
+
+## Clustering & Neighborhood Tests
+
+Hierarchical clustering and neighborhood-based statistics
+
+- [`tcrdist_hclust()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_hclust.md)
+  : Hierarchical clustering of TCRs by TCRdist
+- [`cluster_tcrs()`](https://shihanli92.github.io/tcrdistR/reference/cluster_tcrs.md)
+  : Cluster TCRs by TCRdist-based hierarchical clustering
+- [`neighborhood_test()`](https://shihanli92.github.io/tcrdistR/reference/neighborhood_test.md)
+  : Test association between a variable and TCR neighborhoods
+
+## Meta-Clonotypes
+
+Quasi-public TCR motif discovery across subjects
+
+- [`find_meta_clonotypes()`](https://shihanli92.github.io/tcrdistR/reference/find_meta_clonotypes.md)
+  : Identify quasi-public meta-clonotypes
+- [`summarize_meta_clonotype()`](https://shihanli92.github.io/tcrdistR/reference/summarize_meta_clonotype.md)
+  : Summarize a meta-clonotype's composition
+
+## Joins
+
+Distance-based fuzzy joining of TCR datasets
+
+- [`tcrdist_join()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_join.md)
+  : Join two TCR datasets by TCRdist threshold
+
+## Visualization
+
+Plotting functions for TCR repertoire data
+
+- [`plot_tcrdist_heatmap()`](https://shihanli92.github.io/tcrdistR/reference/plot_tcrdist_heatmap.md)
+  : Plot a TCRdist pairwise distance heatmap
+- [`plot_tcrdist_dendrogram()`](https://shihanli92.github.io/tcrdistR/reference/plot_tcrdist_dendrogram.md)
+  : Plot a TCRdist-based dendrogram
+- [`plot_distance_distribution()`](https://shihanli92.github.io/tcrdistR/reference/plot_distance_distribution.md)
+  : Plot the distribution of pairwise TCRdist distances
+- [`plot_cdr3_logo()`](https://shihanli92.github.io/tcrdistR/reference/plot_cdr3_logo.md)
+  : Plot a CDR3 sequence logo
+- [`plot_junction_bars()`](https://shihanli92.github.io/tcrdistR/reference/plot_junction_bars.md)
+  : Plot junction bars showing V/N/D/J nucleotide composition
+- [`plot_gene_usage()`](https://shihanli92.github.io/tcrdistR/reference/plot_gene_usage.md)
+  : Plot V-gene or J-gene usage frequencies
+- [`plot_tcr_scatter()`](https://shihanli92.github.io/tcrdistR/reference/plot_tcr_scatter.md)
+  : Plot a 2D scatter of TCR embeddings
+
+## I/O
+
+Read TCR data from various formats
+
+- [`read_tcr_table()`](https://shihanli92.github.io/tcrdistR/reference/read_tcr_table.md)
+  : Read a delimited file containing TCR repertoire data
+- [`read_airr()`](https://shihanli92.github.io/tcrdistR/reference/read_airr.md)
+  : Read AIRR Rearrangement TSV format
+- [`read_adaptive()`](https://shihanli92.github.io/tcrdistR/reference/read_adaptive.md)
+  : Read Adaptive Biotechnologies ImmunoSeq TSV file
+- [`read_10x()`](https://shihanli92.github.io/tcrdistR/reference/read_10x.md)
+  : Read 10X Genomics VDJ contig annotations
+
+## Utilities
+
+Gene database, constants, and helper functions
+
+- [`load_gene_database()`](https://shihanli92.github.io/tcrdistR/reference/load_gene_database.md)
+  : Load and cache the TCR/BCR gene database
+- [`trim_allele_to_gene()`](https://shihanli92.github.io/tcrdistR/reference/trim_allele_to_gene.md)
+  : Trim allele designation from a gene ID
+- [`get_translation()`](https://shihanli92.github.io/tcrdistR/reference/get_translation.md)
+  : Translate a nucleotide sequence to a protein sequence
+- [`reverse_complement()`](https://shihanli92.github.io/tcrdistR/reference/reverse_complement.md)
+  : Reverse complement of a nucleotide sequence
+- [`AMINO_ACIDS`](https://shihanli92.github.io/tcrdistR/reference/AMINO_ACIDS.md)
+  : Standard 20 amino acid single-letter codes
+
+## Rcpp (Advanced)
+
+Direct C++ function access via Rcpp
+
+- [`rcpp_blosum_sequence_distance()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_blosum_sequence_distance.md)
+  : Aligned sequence distance using BSD4 substitution costs (C++
+  implementation)
+- [`rcpp_build_bsd4()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_build_bsd4.md)
+  : Build the BSD4 amino acid distance matrix (C++ constexpr values)
+- [`rcpp_compute_v_region_distances()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_compute_v_region_distances.md)
+  : Compute pairwise V-region distances (C++ implementation)
+- [`rcpp_count_nuc_matches()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_count_nuc_matches.md)
+  : Count nucleotide prefix matches between two sequences (C++
+  implementation)
+- [`rcpp_find_alternate_alleles_batch()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_find_alternate_alleles_batch.md)
+  : Find alternate alleles for a batch of TCRs (C++ implementation)
+- [`rcpp_knn_from_distance_matrix()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_knn_from_distance_matrix.md)
+  : K-nearest-neighbors from a precomputed distance matrix (C++
+  implementation)
+- [`rcpp_knn_from_pca_matrix()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_knn_from_pca_matrix.md)
+  : K-nearest-neighbors from a PCA embedding matrix (C++ implementation)
+- [`rcpp_resample_shuffled_tcr_chains()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_resample_shuffled_tcr_chains.md)
+  : Resample shuffled TCR chains by junction breakpoint splicing (C++
+  implementation)
+- [`rcpp_tcrdist_knn()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_tcrdist_knn.md)
+  : K-nearest-neighbors by TCRdist with group masking (C++
+  implementation)
+- [`rcpp_tcrdist_matrix()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_tcrdist_matrix.md)
+  : Pairwise TCRdist matrix (C++ implementation)
+- [`rcpp_tcrdist_radius_neighbors()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_tcrdist_radius_neighbors.md)
+  : Radius-based TCRdist neighbor search with group masking (C++
+  implementation)
+- [`rcpp_tcrdist_rect()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_tcrdist_rect.md)
+  : Rectangular TCRdist query-vs-reference distance matrix (C++
+  implementation)
+- [`rcpp_tcrdist_sparse()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_tcrdist_sparse.md)
+  : Sparse TCRdist matrix as COO triplets (C++ implementation)
+- [`rcpp_weighted_cdr3_distance()`](https://shihanli92.github.io/tcrdistR/reference/rcpp_weighted_cdr3_distance.md)
+  : Weighted CDR3 distance (C++ implementation)
+
+# Articles
+
+### Getting Started
+
+- [Getting Started with
+  tcrdistR](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-getting-started.md):
+
+### Guides
+
+- [Advanced TCR Repertoire
+  Analysis](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-advanced.md):
+- [Visualization
+  Guide](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-visualization.md):

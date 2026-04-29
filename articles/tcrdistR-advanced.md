@@ -1,0 +1,202 @@
+# Advanced TCR Repertoire Analysis
+
+## Setup
+
+This vignette demonstrates the advanced analysis features in tcrdistR:
+hierarchical clustering, neighborhood statistical tests, clumping
+detection, meta-clonotype discovery, database matching, and more.
+
+We use a small inline dataset of mouse TCRs from different subjects
+responding to different epitopes:
+
+``` r
+library(tcrdistR)
+
+tcrs <- data.frame(
+  va    = c("TRAV7-3*01",  "TRAV6D-6*01", "TRAV6D-6*01",
+            "TRAV6-4*01",  "TRAV6-4*01",  "TRAV7-3*01",
+            "TRAV6D-6*01", "TRAV6-4*01",  "TRAV7-3*01",
+            "TRAV6D-6*01", "TRAV6-4*01",  "TRAV7-3*01",
+            "TRAV6D-6*01", "TRAV6-4*01",  "TRAV7-3*01"),
+  cdr3a = c("CAVSLDSNYQLIW",  "CALGDRATGGNNKLTF", "CALGSNTGYQNFYF",
+            "CALAPSNTNKVVF",  "CALVPSNTNKVVF",    "CAVSLDSNYQLIW",
+            "CALGDRATGGNNKLTF","CALAPSNTNKVVF",    "CAVSLDSNYQLIW",
+            "CALGSNTGYQNFYF", "CALVPSNTNKVVF",    "CAVSLDSNYQLIW",
+            "CALGDRATGGNNKLTF","CALAPSNTNKVVF",    "CAVSLDSNYQLIW"),
+  vb    = c("TRBV13-1*01", "TRBV29*01",   "TRBV29*01",
+            "TRBV2*01",    "TRBV29*01",   "TRBV13-1*01",
+            "TRBV29*01",   "TRBV2*01",    "TRBV13-1*01",
+            "TRBV29*01",   "TRBV29*01",   "TRBV13-1*01",
+            "TRBV29*01",   "TRBV2*01",    "TRBV13-1*01"),
+  cdr3b = c("CASSDFDWGGDAETLYF", "CASSPDRGEVFF",    "CASTGGGAPLF",
+            "CASSQDPGDYEQYF",   "CASSLGGENTLYF",   "CASSDFDWGGDAETLYF",
+            "CASSPDRGEVFF",      "CASSQDPGDYEQYF",  "CASSDFDWGGDAETLYF",
+            "CASTGGGAPLF",       "CASSLGGENTLYF",    "CASSDFDWGGDAETLYF",
+            "CASSPDRGEVFF",      "CASSQDPGDYEQYF",  "CASSDFDWGGDAETLYF"),
+  epitope = c("PA", "PA", "PA", "PA", "PA",
+              "NP", "NP", "NP", "NP", "NP",
+              "M1", "M1", "M1", "M1", "M1"),
+  subject = c("S1", "S1", "S2", "S2", "S3",
+              "S1", "S2", "S3", "S1", "S2",
+              "S3", "S1", "S2", "S3", "S1"),
+  stringsAsFactors = FALSE
+)
+```
+
+## Hierarchical Clustering
+
+Cluster TCRs by distance using hierarchical agglomerative clustering:
+
+``` r
+hc <- tcrdist_hclust(tcrs, organism = "mouse", method = "average")
+
+# hc contains:
+# - hc$hclust: an hclust object (pass to plot(), cutree(), etc.)
+# - hc$dist_matrix: the underlying distance matrix
+# - hc$indices: row indices used (relevant if subsampled)
+
+plot(hc$hclust, main = "TCR Hierarchical Clustering")
+```
+
+Cut the dendrogram into a fixed number of clusters:
+
+``` r
+clusters <- cluster_tcrs(tcrs, organism = "mouse", k = 3)
+table(clusters)
+
+# Or cut by height threshold
+clusters_h <- cluster_tcrs(tcrs, organism = "mouse", h = 100)
+```
+
+## Neighborhood Statistical Tests
+
+Test whether a categorical variable (e.g., epitope specificity) is
+enriched in TCR neighborhoods:
+
+``` r
+# Fisher's exact test for binary variables
+result <- neighborhood_test(
+  tcrs, organism = "mouse",
+  variable = ifelse(tcrs$epitope == "PA", "PA", "other"),
+  radius = 100, test = "fisher"
+)
+
+# Each row reports the test result for one TCR's neighborhood
+head(result[, c("cdr3a", "cdr3b", "odds_ratio", "p_value", "p_adjusted")])
+
+# Chi-squared test for multi-level variables
+result_chi <- neighborhood_test(
+  tcrs, organism = "mouse",
+  variable = tcrs$epitope,
+  radius = 100, test = "chisq"
+)
+```
+
+## Meta-Clonotype Discovery
+
+Identify quasi-public TCR motifs shared across multiple subjects:
+
+``` r
+meta <- find_meta_clonotypes(
+  tcrs, organism = "mouse",
+  radius = 100,
+  min_nsubject = 2L,
+  subject_col = "subject"
+)
+
+# Returns a data.frame with center TCR info, radius, neighbor count,
+# number of subjects, and neighbor indices
+print(meta[, c("cdr3a", "cdr3b", "radius", "K_neighbors", "nsubject")])
+```
+
+Summarize the composition of a discovered meta-clonotype:
+
+``` r
+if (nrow(meta) > 0) {
+  indices <- as.integer(strsplit(meta$neighbor_indices[1], ",")[[1]])
+  summary <- summarize_meta_clonotype(tcrs, meta$center_index[1], indices)
+  summary$n_members
+  summary$va_usage
+  summary$vb_usage
+}
+```
+
+## Database Matching
+
+Match query TCRs against the built-in literature epitope databases:
+
+``` r
+# Paired-chain matching with background-corrected p-values
+results <- match_tcrs_to_db(tcrs, organism = "mouse")
+significant <- results[results$pvalue_adj < 0.05, ]
+
+# Single-chain exact CDR3 matching (no background model needed)
+hits <- strict_single_chain_match_tcrs_to_db(tcrs, organism = "mouse")
+hits$alpha_matches  # matches on CDR3-alpha
+hits$beta_matches   # matches on CDR3-beta
+```
+
+## CD8 Scoring
+
+Score TCRs for CD8 phenotype using a logistic regression model:
+
+``` r
+# Requires human TCRs
+human_tcrs <- data.frame(
+  va    = c("TRAV1-1*01", "TRAV1-2*01"),
+  cdr3a = c("CAVRDSSYKLIF", "CAVKDSSYKLIF"),
+  vb    = c("TRBV5-1*01", "TRBV6-1*01"),
+  cdr3b = c("CASSIRSSYEQYF", "CASSIKSSYEQYF"),
+  stringsAsFactors = FALSE
+)
+
+scores <- make_cd8_score_table_column(human_tcrs)
+# Returns a numeric vector of CD8 probability scores
+```
+
+## Kernel PCA
+
+Embed TCRs in lower-dimensional space via kernel PCA on the distance
+matrix:
+
+``` r
+pca <- compute_tcrdist_kernel_pca(tcrs, organism = "mouse", n_components = 10)
+
+# pca$embeddings: N x n_components matrix
+# pca$eigenvalues: eigenvalues
+# pca$indices: row indices used
+
+# Use with plot_tcr_scatter for visualization
+plot_tcr_scatter(
+  pca$embeddings[, 1], pca$embeddings[, 2],
+  color = tcrs$epitope[pca$indices],
+  xlab = "KPC1", ylab = "KPC2"
+)
+```
+
+## Fuzzy Diversity
+
+Compute TCR-aware diversity that accounts for sequence similarity:
+
+``` r
+fd <- tcr_fuzzy_diversity(tcrs, organism = "mouse", threshold = 50)
+fd$fuzzy_diversity     # diversity accounting for similar TCRs
+fd$standard_diversity  # standard Simpson's for comparison
+```
+
+## Distance-Based Joins
+
+Fuzzy-join two TCR datasets by distance threshold:
+
+``` r
+left <- tcrs[1:5, ]
+right <- tcrs[6:15, ]
+
+# Inner join: only matched pairs within radius
+joined <- tcrdist_join(left, right, organism = "mouse",
+                       radius = 100, max_n = 3)
+
+# Left join: all left rows, NAs for unmatched
+joined_left <- tcrdist_join(left, right, organism = "mouse",
+                            radius = 100, type = "left")
+```
