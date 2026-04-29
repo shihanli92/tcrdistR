@@ -106,6 +106,107 @@ rcpp_knn_from_pca_matrix <- function(pca_matrix, K, agroups, bgroups, sort_nbrs 
     .Call(`_tcrdistR_rcpp_knn_from_pca_matrix`, pca_matrix, K, agroups, bgroups, sort_nbrs)
 }
 
+rcpp_poisson_test_loop <- function(all_nbr_indices, all_nbr_distances, bg_freqs, agroups, bgroups, radii, n_bg_pairs, pvalue_threshold, num_clones, clusters_gex_nullable, use_conservative_pvalues) {
+    .Call(`_tcrdistR_rcpp_poisson_test_loop`, all_nbr_indices, all_nbr_distances, bg_freqs, agroups, bgroups, radii, n_bg_pairs, pvalue_threshold, num_clones, clusters_gex_nullable, use_conservative_pvalues)
+}
+
+#' Count nucleotide prefix matches between two sequences (C++ implementation)
+#'
+#' Linear scan prefix matching: +1 per match, mismatch_score per mismatch.
+#' Returns the length of the best-scoring prefix (the position at which the
+#' cumulative score was highest).
+#'
+#' @param a Character string. First nucleotide sequence.
+#' @param b Character string. Second nucleotide sequence.
+#' @param mismatch_score Integer. Score added per mismatch position.
+#'   Default -4.
+#' @return Integer: length of best-scoring prefix (0 if either string is
+#'   empty).
+#' @examples
+#' \dontrun{
+#'   rcpp_count_nuc_matches("ATCGATCG", "ATCGTTCG")
+#' }
+#' @export
+rcpp_count_nuc_matches <- function(a, b, mismatch_score = -4L) {
+    .Call(`_tcrdistR_rcpp_count_nuc_matches`, a, b, mismatch_score)
+}
+
+#' Find alternate alleles for a batch of TCRs (C++ implementation)
+#'
+#' For each paired TCR (alpha+beta chains), tries alternate V/J alleles
+#' (same gene, different allele number after \code{*}) and picks the allele
+#' whose CDR3 nucleotide prefix match score improves by at least
+#' \code{min_improvement} over the current allele.  J alleles are compared
+#' using reversed sequences.
+#'
+#' @param va_genes Character vector. Alpha V gene names.
+#' @param ja_genes Character vector. Alpha J gene names.
+#' @param cdr3a_nucseqs Character vector. Alpha CDR3 nucleotide sequences.
+#' @param vb_genes Character vector. Beta V gene names.
+#' @param jb_genes Character vector. Beta J gene names.
+#' @param cdr3b_nucseqs Character vector. Beta CDR3 nucleotide sequences.
+#' @param all_gene_names Character vector. All gene names in the database.
+#' @param all_v_cdr3_nucseqs Character vector. Pre-computed V CDR3 nucleotide
+#'   sequences (same order as \code{all_gene_names}).
+#' @param all_j_cdr3_nucseqs Character vector. Pre-computed J CDR3 nucleotide
+#'   sequences (same order as \code{all_gene_names}).
+#' @param mismatch_score Integer. Mismatch penalty for prefix scoring.
+#'   Default -4.
+#' @param min_improvement Integer. Minimum score improvement required to
+#'   accept an alternate allele over the current one. Default 2.
+#' @return A list with elements: \code{new_va}, \code{new_ja}, \code{new_vb},
+#'   \code{new_jb} (character vectors), and \code{counts} (data.frame with
+#'   columns \code{old_gene}, \code{new_gene}, \code{count}).
+#' @examples
+#' \dontrun{
+#'   result <- rcpp_find_alternate_alleles_batch(
+#'     va_genes, ja_genes, cdr3a_nucseqs,
+#'     vb_genes, jb_genes, cdr3b_nucseqs,
+#'     all_gene_names, all_v_cdr3_nucseqs, all_j_cdr3_nucseqs
+#'   )
+#' }
+#' @export
+rcpp_find_alternate_alleles_batch <- function(va_genes, ja_genes, cdr3a_nucseqs, vb_genes, jb_genes, cdr3b_nucseqs, all_gene_names, all_v_cdr3_nucseqs, all_j_cdr3_nucseqs, mismatch_score = -4L, min_improvement = 2L) {
+    .Call(`_tcrdistR_rcpp_find_alternate_alleles_batch`, va_genes, ja_genes, cdr3a_nucseqs, vb_genes, jb_genes, cdr3b_nucseqs, all_gene_names, all_v_cdr3_nucseqs, all_j_cdr3_nucseqs, mismatch_score, min_improvement)
+}
+
+#' Resample shuffled TCR chains by junction breakpoint splicing (C++ implementation)
+#'
+#' Randomly selects pairs of junctions, finds shared breakpoints, and splices
+#' chimeric nucleotide sequences.  Validates that the result has a length
+#' divisible by 3 and contains no stop codons, then translates to amino acid.
+#'
+#' Uses an inline standard genetic code table (no external codon map needed).
+#'
+#' @param junction_v_genes Character vector. V gene names for each junction.
+#' @param junction_j_genes Character vector. J gene names for each junction.
+#' @param junction_nucseqs Character vector. CDR3 nucleotide sequences.
+#' @param junction_breakpoints_pre_d List of integer vectors. Pre-D breakpoints
+#'   for each junction.
+#' @param junction_breakpoints_post_d List of integer vectors. Post-D
+#'   breakpoints for each junction.
+#' @param chain Character string. \code{"A"} for alpha (pre-D breakpoints only)
+#'   or \code{"B"} for beta (both pre-D and post-D).
+#' @param num_samples Integer. Number of chimeric TCRs to generate.
+#' @param max_attempts Integer. Maximum sampling attempts before returning
+#'   partial results.
+#' @return A data.frame with columns: \code{v_gene}, \code{j_gene},
+#'   \code{cdr3} (amino acid), \code{cdr3_nucseq}.
+#' @examples
+#' \dontrun{
+#'   result <- rcpp_resample_shuffled_tcr_chains(
+#'     v_genes, j_genes, nucseqs, bp_pre, bp_post, "B", 1000L, 100000L
+#'   )
+#' }
+#' @export
+rcpp_resample_shuffled_tcr_chains <- function(junction_v_genes, junction_j_genes, junction_nucseqs, junction_breakpoints_pre_d, junction_breakpoints_post_d, chain, num_samples, max_attempts) {
+    .Call(`_tcrdistR_rcpp_resample_shuffled_tcr_chains`, junction_v_genes, junction_j_genes, junction_nucseqs, junction_breakpoints_pre_d, junction_breakpoints_post_d, chain, num_samples, max_attempts)
+}
+
+rcpp_calc_background_distributions <- function(fg_va, fg_cdr3a, fg_vb, fg_cdr3b, bg_va, bg_cdr3a, bg_vb, bg_cdr3b, v_dist_a, v_dist_b, max_dist, pseudocount = 0.25, weight_cdr3_region = 3L, gap_penalty_cdr3_region = 12L) {
+    .Call(`_tcrdistR_rcpp_calc_background_distributions`, fg_va, fg_cdr3a, fg_vb, fg_cdr3b, bg_va, bg_cdr3a, bg_vb, bg_cdr3b, v_dist_a, v_dist_b, max_dist, pseudocount, weight_cdr3_region, gap_penalty_cdr3_region)
+}
+
 #' Weighted CDR3 distance (C++ implementation)
 #'
 #' Direct C++ port of the CDR3 distance algorithm from

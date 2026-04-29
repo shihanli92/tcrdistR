@@ -146,6 +146,55 @@ inline double cdr3_dist_fast(const CDR3Data& s1,
 }
 
 // ---------------------------------------------------------------------------
+// cdr3_dist_fast (budgeted overload) — early termination for background
+// ---------------------------------------------------------------------------
+// Same algorithm, but returns early when gap_cost alone exceeds `budget`.
+// Used in background distribution computation where v_dist is already known
+// and the caller passes budget = max_dist - v_dist.
+
+inline double cdr3_dist_fast(const CDR3Data& s1,
+                               const CDR3Data& s2,
+                               int weight_cdr3_region,
+                               int gap_penalty_cdr3_region,
+                               double budget) {
+    const CDR3Data& shortd = (s1.len <= s2.len) ? s1 : s2;
+    const CDR3Data& longd  = (s1.len <= s2.len) ? s2 : s1;
+
+    const int lendiff = longd.len - shortd.len;
+    const double gap_cost = static_cast<double>(lendiff * gap_penalty_cdr3_region);
+
+    if (shortd.len < 5) {
+        return static_cast<double>(weight_cdr3_region * 4.0 * 5 + gap_cost);
+    }
+
+    // Early exit: gap penalty alone exceeds remaining budget
+    if (gap_cost >= budget) {
+        return gap_cost;
+    }
+
+    static const int ntrim = 3;
+    static const int ctrim = 2;
+
+    const uint8_t* short_aa  = shortd.aa.data();
+    const uint8_t* long_aa   = longd.aa.data();
+    const int      short_last = shortd.len - 1;
+    const int      long_last  = longd.len  - 1;
+
+    double dist = 0.0;
+
+    for (int i = ntrim; i < shortd.gappos; ++i) {
+        dist += tcrdist::BSD4_FLAT[short_aa[i] * 20 + long_aa[i]];
+    }
+
+    for (int i = ctrim; i < shortd.remainder; ++i) {
+        dist += tcrdist::BSD4_FLAT[short_aa[short_last - i] * 20
+                                 + long_aa[long_last  - i]];
+    }
+
+    return weight_cdr3_region * dist + gap_cost;
+}
+
+// ---------------------------------------------------------------------------
 // VDistLookup — named V-gene distance matrix wrapper
 // ---------------------------------------------------------------------------
 // Builds a gene-name -> index map from the row/column names of a named

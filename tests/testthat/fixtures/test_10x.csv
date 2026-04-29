@@ -1,0 +1,13 @@
+barcode,is_cell,contig_id,high_confidence,length,chain,v_gene,d_gene,j_gene,c_gene,full_length,productive,cdr3,cdr3_nt,reads,umis
+AAAA-1,True,AAAA-1_contig_1,True,550,TRA,TRAV1-1*01,None,TRAJ33*01,TRAC,True,True,CAVRDSSYKLIF,tgtgctgtgcgagatagcagctataaactgattttt,1500,5
+AAAA-1,True,AAAA-1_contig_2,True,600,TRB,TRBV19*01,None,TRBJ2-7*01,TRBC2,True,True,CASSIRSSYEQYF,tgtgccagcagtatacgatcttcctacgagcagtacttc,2000,8
+BBBB-1,True,BBBB-1_contig_1,True,540,TRA,TRAV1-2*01,None,TRAJ34*01,TRAC,True,True,CAVRDSSYKLIF,tgtgctgtgcgagatagcagctataaactgattttt,1200,4
+BBBB-1,True,BBBB-1_contig_2,True,590,TRB,TRBV20-1*01,None,TRBJ2-1*01,TRBC1,True,True,CSARDRTGNTIYF,tgtgccagcagcgcccgtgatcggacagggaacaccatatatttt,1800,7
+CCCC-1,True,CCCC-1_contig_1,True,530,TRA,TRAV12-2*01,None,TRAJ40*01,TRAC,True,True,CAVSANSGTYF,tgtgctgtgagtgctaatagtggtacttacttt,1100,3
+CCCC-1,True,CCCC-1_contig_2,True,610,TRB,TRBV5-1*01,None,TRBJ1-1*01,TRBC1,True,True,CASSVGQGTEAFF,tgtgccagcagtgttgggcaggggactgaagctttcttt,1600,6
+DDDD-1,True,DDDD-1_contig_1,True,545,TRA,TRAV14DV4*01,None,TRAJ49*01,TRAC,True,True,CAASNYGQNFVF,tgtgctgcttcaaactacgggcagaattttgtcttt,1300,4
+DDDD-1,True,DDDD-1_contig_3,True,520,TRA,TRAV38-2DV8*01,None,TRAJ52*01,TRAC,True,True,CAYRSAVNARLMF,tgtgcttatagatcagcagtgaatgcaaggttaatgttt,900,2
+DDDD-1,True,DDDD-1_contig_2,True,605,TRB,TRBV28*01,None,TRBJ2-3*01,TRBC2,True,True,CASSLGQAYEQYF,tgtgccagcagtttaggacaggcgtacgagcagtacttc,1900,7
+EEEE-1,True,EEEE-1_contig_1,True,535,TRA,TRAV38-2DV8*01,None,TRAJ52*01,TRAC,True,True,CAYRSAVNARLMF,tgtgcttatagatcagcagtgaatgcaaggttaatgttt,1000,3
+EEEE-1,True,EEEE-1_contig_2,True,595,TRB,TRBV7-2*01,None,TRBJ1-5*01,TRBC1,True,True,CASSLGVNQPQHF,tgtgccagcagcttaggggttaaccaacccccccacttt,1400,5
+FFFF-1,False,FFFF-1_contig_1,True,500,TRA,TRAV1-1*01,None,TRAJ33*01,TRAC,True,True,CAVRDSSYKLIF,tgtgctgtgcgagatagcagctataaactgattttt,100,1

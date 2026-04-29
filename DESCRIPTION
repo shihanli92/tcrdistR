@@ -14,7 +14,8 @@ License: MIT + file LICENSE
 Imports:
     methods,
     Matrix,
-    Rcpp (>= 1.0.0)
+    Rcpp (>= 1.0.0),
+    stats
 Suggests:
     testthat (>= 3.0.0),
     roxygen2
@@ -23,14 +24,21 @@ Config/testthat/edition: 3
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
-Collate: 
+Collate:
     'RcppExports.R'
     'all_genes.R'
     'constants.R'
     'classes.R'
     'constructors.R'
     'genetic_code.R'
+    'io_10x.R'
+    'io_adaptive.R'
+    'io_airr.R'
+    'io_utils.R'
+    'io_generic.R'
     'show-methods.R'
+    'tcr_clumping.R'
+    'tcr_sampler.R'
     'tcrdistR-package.R'
     'translation.R'
     'wrappers_distance.R'

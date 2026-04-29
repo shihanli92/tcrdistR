@@ -62,6 +62,103 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rcpp_poisson_test_loop
+Rcpp::List rcpp_poisson_test_loop(const Rcpp::List& all_nbr_indices, const Rcpp::List& all_nbr_distances, const Rcpp::NumericMatrix& bg_freqs, const Rcpp::IntegerVector& agroups, const Rcpp::IntegerVector& bgroups, const Rcpp::IntegerVector& radii, double n_bg_pairs, double pvalue_threshold, int num_clones, Rcpp::Nullable<Rcpp::IntegerVector> clusters_gex_nullable, bool use_conservative_pvalues);
+RcppExport SEXP _tcrdistR_rcpp_poisson_test_loop(SEXP all_nbr_indicesSEXP, SEXP all_nbr_distancesSEXP, SEXP bg_freqsSEXP, SEXP agroupsSEXP, SEXP bgroupsSEXP, SEXP radiiSEXP, SEXP n_bg_pairsSEXP, SEXP pvalue_thresholdSEXP, SEXP num_clonesSEXP, SEXP clusters_gex_nullableSEXP, SEXP use_conservative_pvaluesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type all_nbr_indices(all_nbr_indicesSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type all_nbr_distances(all_nbr_distancesSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type bg_freqs(bg_freqsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type agroups(agroupsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type bgroups(bgroupsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::IntegerVector& >::type radii(radiiSEXP);
+    Rcpp::traits::input_parameter< double >::type n_bg_pairs(n_bg_pairsSEXP);
+    Rcpp::traits::input_parameter< double >::type pvalue_threshold(pvalue_thresholdSEXP);
+    Rcpp::traits::input_parameter< int >::type num_clones(num_clonesSEXP);
+    Rcpp::traits::input_parameter< Rcpp::Nullable<Rcpp::IntegerVector> >::type clusters_gex_nullable(clusters_gex_nullableSEXP);
+    Rcpp::traits::input_parameter< bool >::type use_conservative_pvalues(use_conservative_pvaluesSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_poisson_test_loop(all_nbr_indices, all_nbr_distances, bg_freqs, agroups, bgroups, radii, n_bg_pairs, pvalue_threshold, num_clones, clusters_gex_nullable, use_conservative_pvalues));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rcpp_count_nuc_matches
+int rcpp_count_nuc_matches(const std::string& a, const std::string& b, int mismatch_score);
+RcppExport SEXP _tcrdistR_rcpp_count_nuc_matches(SEXP aSEXP, SEXP bSEXP, SEXP mismatch_scoreSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type a(aSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type b(bSEXP);
+    Rcpp::traits::input_parameter< int >::type mismatch_score(mismatch_scoreSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_count_nuc_matches(a, b, mismatch_score));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rcpp_find_alternate_alleles_batch
+Rcpp::List rcpp_find_alternate_alleles_batch(const CharacterVector& va_genes, const CharacterVector& ja_genes, const CharacterVector& cdr3a_nucseqs, const CharacterVector& vb_genes, const CharacterVector& jb_genes, const CharacterVector& cdr3b_nucseqs, const CharacterVector& all_gene_names, const CharacterVector& all_v_cdr3_nucseqs, const CharacterVector& all_j_cdr3_nucseqs, int mismatch_score, int min_improvement);
+RcppExport SEXP _tcrdistR_rcpp_find_alternate_alleles_batch(SEXP va_genesSEXP, SEXP ja_genesSEXP, SEXP cdr3a_nucseqsSEXP, SEXP vb_genesSEXP, SEXP jb_genesSEXP, SEXP cdr3b_nucseqsSEXP, SEXP all_gene_namesSEXP, SEXP all_v_cdr3_nucseqsSEXP, SEXP all_j_cdr3_nucseqsSEXP, SEXP mismatch_scoreSEXP, SEXP min_improvementSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const CharacterVector& >::type va_genes(va_genesSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type ja_genes(ja_genesSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type cdr3a_nucseqs(cdr3a_nucseqsSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type vb_genes(vb_genesSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type jb_genes(jb_genesSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type cdr3b_nucseqs(cdr3b_nucseqsSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type all_gene_names(all_gene_namesSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type all_v_cdr3_nucseqs(all_v_cdr3_nucseqsSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type all_j_cdr3_nucseqs(all_j_cdr3_nucseqsSEXP);
+    Rcpp::traits::input_parameter< int >::type mismatch_score(mismatch_scoreSEXP);
+    Rcpp::traits::input_parameter< int >::type min_improvement(min_improvementSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_find_alternate_alleles_batch(va_genes, ja_genes, cdr3a_nucseqs, vb_genes, jb_genes, cdr3b_nucseqs, all_gene_names, all_v_cdr3_nucseqs, all_j_cdr3_nucseqs, mismatch_score, min_improvement));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rcpp_resample_shuffled_tcr_chains
+Rcpp::DataFrame rcpp_resample_shuffled_tcr_chains(const CharacterVector& junction_v_genes, const CharacterVector& junction_j_genes, const CharacterVector& junction_nucseqs, const Rcpp::List& junction_breakpoints_pre_d, const Rcpp::List& junction_breakpoints_post_d, const std::string& chain, int num_samples, int max_attempts);
+RcppExport SEXP _tcrdistR_rcpp_resample_shuffled_tcr_chains(SEXP junction_v_genesSEXP, SEXP junction_j_genesSEXP, SEXP junction_nucseqsSEXP, SEXP junction_breakpoints_pre_dSEXP, SEXP junction_breakpoints_post_dSEXP, SEXP chainSEXP, SEXP num_samplesSEXP, SEXP max_attemptsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const CharacterVector& >::type junction_v_genes(junction_v_genesSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type junction_j_genes(junction_j_genesSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type junction_nucseqs(junction_nucseqsSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type junction_breakpoints_pre_d(junction_breakpoints_pre_dSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::List& >::type junction_breakpoints_post_d(junction_breakpoints_post_dSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type chain(chainSEXP);
+    Rcpp::traits::input_parameter< int >::type num_samples(num_samplesSEXP);
+    Rcpp::traits::input_parameter< int >::type max_attempts(max_attemptsSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_resample_shuffled_tcr_chains(junction_v_genes, junction_j_genes, junction_nucseqs, junction_breakpoints_pre_d, junction_breakpoints_post_d, chain, num_samples, max_attempts));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rcpp_calc_background_distributions
+Rcpp::NumericMatrix rcpp_calc_background_distributions(const Rcpp::CharacterVector& fg_va, const Rcpp::CharacterVector& fg_cdr3a, const Rcpp::CharacterVector& fg_vb, const Rcpp::CharacterVector& fg_cdr3b, const Rcpp::CharacterVector& bg_va, const Rcpp::CharacterVector& bg_cdr3a, const Rcpp::CharacterVector& bg_vb, const Rcpp::CharacterVector& bg_cdr3b, const Rcpp::NumericMatrix& v_dist_a, const Rcpp::NumericMatrix& v_dist_b, int max_dist, double pseudocount, int weight_cdr3_region, int gap_penalty_cdr3_region);
+RcppExport SEXP _tcrdistR_rcpp_calc_background_distributions(SEXP fg_vaSEXP, SEXP fg_cdr3aSEXP, SEXP fg_vbSEXP, SEXP fg_cdr3bSEXP, SEXP bg_vaSEXP, SEXP bg_cdr3aSEXP, SEXP bg_vbSEXP, SEXP bg_cdr3bSEXP, SEXP v_dist_aSEXP, SEXP v_dist_bSEXP, SEXP max_distSEXP, SEXP pseudocountSEXP, SEXP weight_cdr3_regionSEXP, SEXP gap_penalty_cdr3_regionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::CharacterVector& >::type fg_va(fg_vaSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::CharacterVector& >::type fg_cdr3a(fg_cdr3aSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::CharacterVector& >::type fg_vb(fg_vbSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::CharacterVector& >::type fg_cdr3b(fg_cdr3bSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::CharacterVector& >::type bg_va(bg_vaSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::CharacterVector& >::type bg_cdr3a(bg_cdr3aSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::CharacterVector& >::type bg_vb(bg_vbSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::CharacterVector& >::type bg_cdr3b(bg_cdr3bSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type v_dist_a(v_dist_aSEXP);
+    Rcpp::traits::input_parameter< const Rcpp::NumericMatrix& >::type v_dist_b(v_dist_bSEXP);
+    Rcpp::traits::input_parameter< int >::type max_dist(max_distSEXP);
+    Rcpp::traits::input_parameter< double >::type pseudocount(pseudocountSEXP);
+    Rcpp::traits::input_parameter< int >::type weight_cdr3_region(weight_cdr3_regionSEXP);
+    Rcpp::traits::input_parameter< int >::type gap_penalty_cdr3_region(gap_penalty_cdr3_regionSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_calc_background_distributions(fg_va, fg_cdr3a, fg_vb, fg_cdr3b, bg_va, bg_cdr3a, bg_vb, bg_cdr3b, v_dist_a, v_dist_b, max_dist, pseudocount, weight_cdr3_region, gap_penalty_cdr3_region));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rcpp_weighted_cdr3_distance
 double rcpp_weighted_cdr3_distance(const std::string& seq1, const std::string& seq2, int weight_cdr3_region, int gap_penalty_cdr3_region);
 RcppExport SEXP _tcrdistR_rcpp_weighted_cdr3_distance(SEXP seq1SEXP, SEXP seq2SEXP, SEXP weight_cdr3_regionSEXP, SEXP gap_penalty_cdr3_regionSEXP) {
@@ -211,6 +308,11 @@ static const R_CallMethodDef CallEntries[] = {
     {"_tcrdistR_rcpp_blosum62_lookup", (DL_FUNC) &_tcrdistR_rcpp_blosum62_lookup, 2},
     {"_tcrdistR_rcpp_knn_from_distance_matrix", (DL_FUNC) &_tcrdistR_rcpp_knn_from_distance_matrix, 5},
     {"_tcrdistR_rcpp_knn_from_pca_matrix", (DL_FUNC) &_tcrdistR_rcpp_knn_from_pca_matrix, 5},
+    {"_tcrdistR_rcpp_poisson_test_loop", (DL_FUNC) &_tcrdistR_rcpp_poisson_test_loop, 11},
+    {"_tcrdistR_rcpp_count_nuc_matches", (DL_FUNC) &_tcrdistR_rcpp_count_nuc_matches, 3},
+    {"_tcrdistR_rcpp_find_alternate_alleles_batch", (DL_FUNC) &_tcrdistR_rcpp_find_alternate_alleles_batch, 11},
+    {"_tcrdistR_rcpp_resample_shuffled_tcr_chains", (DL_FUNC) &_tcrdistR_rcpp_resample_shuffled_tcr_chains, 8},
+    {"_tcrdistR_rcpp_calc_background_distributions", (DL_FUNC) &_tcrdistR_rcpp_calc_background_distributions, 14},
     {"_tcrdistR_rcpp_weighted_cdr3_distance", (DL_FUNC) &_tcrdistR_rcpp_weighted_cdr3_distance, 4},
     {"_tcrdistR_rcpp_blosum_sequence_distance", (DL_FUNC) &_tcrdistR_rcpp_blosum_sequence_distance, 3},
     {"_tcrdistR_rcpp_tcrdist_knn", (DL_FUNC) &_tcrdistR_rcpp_tcrdist_knn, 12},
