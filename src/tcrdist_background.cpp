@@ -34,6 +34,25 @@ Rcpp::NumericMatrix rcpp_calc_background_distributions(
     const int n_bins = max_dist + 1;
     const double n_bg_pairs = static_cast<double>(n_bg_a) * n_bg_b;
 
+    // ---- validate input lengths ---------------------------------------------
+    if (fg_cdr3a.size() != n_fg || fg_vb.size() != n_fg || fg_cdr3b.size() != n_fg) {
+        Rcpp::stop(
+            "rcpp_calc_background_distributions: fg_va, fg_cdr3a, fg_vb, fg_cdr3b "
+            "must all have the same length (%d vs %d/%d/%d)",
+            n_fg, static_cast<int>(fg_cdr3a.size()),
+            static_cast<int>(fg_vb.size()), static_cast<int>(fg_cdr3b.size()));
+    }
+    if (bg_cdr3a.size() != n_bg_a) {
+        Rcpp::stop(
+            "rcpp_calc_background_distributions: bg_va and bg_cdr3a must have "
+            "the same length (%d vs %d)", n_bg_a, static_cast<int>(bg_cdr3a.size()));
+    }
+    if (bg_cdr3b.size() != n_bg_b) {
+        Rcpp::stop(
+            "rcpp_calc_background_distributions: bg_vb and bg_cdr3b must have "
+            "the same length (%d vs %d)", n_bg_b, static_cast<int>(bg_cdr3b.size()));
+    }
+
     // ---- build V-gene distance lookups using VDistLookup --------------------
     VDistLookup vlookup_a, vlookup_b;
     vlookup_a.build(v_dist_a);

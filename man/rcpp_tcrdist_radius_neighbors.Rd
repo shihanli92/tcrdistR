@@ -80,3 +80,4 @@ Three-stage early termination is applied per pair:
   )
 }
 }
+\keyword{internal}

@@ -61,7 +61,7 @@ using namespace Rcpp;
 //'     threshold = 50
 //'   )
 //' }
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 Rcpp::List rcpp_tcrdist_sparse(
     const CharacterVector& va_genes,
@@ -74,58 +74,14 @@ Rcpp::List rcpp_tcrdist_sparse(
     int weight_cdr3_region       = 3,
     int gap_penalty_cdr3_region  = 12
 ) {
-    const int n = va_genes.size();
-
-    // ---- validate input lengths --------------------------------------------
-    if (cdr3a_seqs.size() != n || vb_genes.size() != n || cdr3b_seqs.size() != n) {
-        Rcpp::stop(
-            "rcpp_tcrdist_sparse: va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs "
-            "must all have the same length"
-        );
-    }
-
-    // ---- build V-gene lookup tables ----------------------------------------
+    // ---- prepare inputs -------------------------------------------------------
     VDistLookup vla, vlb;
     vla.build(v_dist_a);
     vlb.build(v_dist_b);
 
-    // ---- pre-convert CharacterVector to std::string ------------------------
-    std::vector<std::string> va(n), cdr3a(n), vb(n), cdr3b(n);
-    for (int k = 0; k < n; ++k) {
-        va[k]    = Rcpp::as<std::string>(va_genes[k]);
-        cdr3a[k] = Rcpp::as<std::string>(cdr3a_seqs[k]);
-        vb[k]    = Rcpp::as<std::string>(vb_genes[k]);
-        cdr3b[k] = Rcpp::as<std::string>(cdr3b_seqs[k]);
-    }
-
-    // ---- pre-resolve V-gene names to indices -------------------------------
-    std::vector<int> ri_a(n), ri_b(n);
-    for (int k = 0; k < n; ++k) {
-        int ia = vla.resolve(va[k]);
-        if (ia < 0) {
-            Rcpp::stop(
-                "rcpp_tcrdist_sparse: alpha V-gene '%s' not found in v_dist_a",
-                va[k].c_str()
-            );
-        }
-        ri_a[k] = ia;
-
-        int ib = vlb.resolve(vb[k]);
-        if (ib < 0) {
-            Rcpp::stop(
-                "rcpp_tcrdist_sparse: beta V-gene '%s' not found in v_dist_b",
-                vb[k].c_str()
-            );
-        }
-        ri_b[k] = ib;
-    }
-
-    // ---- preprocess all CDR3 sequences -------------------------------------
-    std::vector<CDR3Data> cdr3a_d(n), cdr3b_d(n);
-    for (int k = 0; k < n; ++k) {
-        cdr3a_d[k] = preprocess_cdr3(cdr3a[k]);
-        cdr3b_d[k] = preprocess_cdr3(cdr3b[k]);
-    }
+    PreparedTCRs t = prepare_tcrs(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs,
+                                  vla, vlb, "rcpp_tcrdist_sparse");
+    const int n = t.n;
 
     // ---- COO triplet storage (growing vectors) ------------------------------
     std::vector<int>    row_idx;
@@ -136,22 +92,23 @@ Rcpp::List rcpp_tcrdist_sparse(
     for (int i = 0; i < n - 1; ++i) {
         if (i % 100 == 0) Rcpp::checkUserInterrupt();
 
-        const int ria = ri_a[i];
-        const int rib = ri_b[i];
+        const int ria = t.vi_a[i];
+        const int rib = t.vi_b[i];
 
         for (int j = i + 1; j < n; ++j) {
             // Stage 1: V-region sum only
-            const double vd = vla.lookup(ria, ri_a[j]) + vlb.lookup(rib, ri_b[j]);
+            const double vd = vla.lookup(ria, t.vi_a[j])
+                            + vlb.lookup(rib, t.vi_b[j]);
             if (vd > threshold) continue;
 
             // Stage 2: add CDR3-alpha
-            const double cd_a = cdr3_dist_fast(cdr3a_d[i], cdr3a_d[j],
+            const double cd_a = cdr3_dist_fast(t.cdr3a[i], t.cdr3a[j],
                                                weight_cdr3_region,
                                                gap_penalty_cdr3_region);
             if (vd + cd_a > threshold) continue;
 
             // Stage 3: add CDR3-beta for full distance
-            const double cd_b = cdr3_dist_fast(cdr3b_d[i], cdr3b_d[j],
+            const double cd_b = cdr3_dist_fast(t.cdr3b[i], t.cdr3b[j],
                                                weight_cdr3_region,
                                                gap_penalty_cdr3_region);
             const double d = vd + cd_a + cd_b;

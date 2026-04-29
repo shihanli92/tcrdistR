@@ -189,10 +189,14 @@ inline double cdr3_dist_fast(const CDR3Data& s1,
     const int      short_last = shortd.len - 1;
     const int      long_last  = longd.len  - 1;
 
+    // Remaining budget after gap cost, expressed as raw substitution limit
+    const double subst_budget = (budget - gap_cost) / weight_cdr3_region;
+
     if (lendiff == 0) {
         double dist = 0.0;
         for (int i = ntrim; i < shortd.len - ctrim; ++i) {
             dist += tcrdist::BSD4_FLAT[short_aa[i] * 20 + long_aa[i]];
+            if (dist > subst_budget) return weight_cdr3_region * dist;
         }
         return weight_cdr3_region * dist;
     }
@@ -285,3 +289,74 @@ struct VDistLookup {
         return (it != gene_to_idx.end()) ? it->second : -1;
     }
 };
+
+// ---------------------------------------------------------------------------
+// PreparedTCRs — pre-processed TCR set for distance computation
+// ---------------------------------------------------------------------------
+// Converts R CharacterVectors to C++ types, resolves V-gene names to integer
+// indices, and preprocesses CDR3 sequences — the boilerplate shared by
+// tcrdist_matrix, tcrdist_sparse, tcrdist_knn, tcrdist_radius, tcrdist_rect.
+
+struct PreparedTCRs {
+    int                   n;
+    std::vector<int>      vi_a;   // resolved V-gene alpha indices
+    std::vector<int>      vi_b;   // resolved V-gene beta indices
+    std::vector<CDR3Data> cdr3a;  // preprocessed CDR3 alpha
+    std::vector<CDR3Data> cdr3b;  // preprocessed CDR3 beta
+};
+
+// prepare_tcrs — converts R inputs to PreparedTCRs.
+//
+// Validates that all four CharacterVectors have the same length, converts
+// strings, resolves V-gene names to integer indices (fails fast on unknown
+// genes), and preprocesses CDR3 sequences.  `caller` is used in error messages.
+
+inline PreparedTCRs prepare_tcrs(
+    const Rcpp::CharacterVector& va_genes,
+    const Rcpp::CharacterVector& cdr3a_seqs,
+    const Rcpp::CharacterVector& vb_genes,
+    const Rcpp::CharacterVector& cdr3b_seqs,
+    const VDistLookup& vla,
+    const VDistLookup& vlb,
+    const char* caller
+) {
+    const int n = va_genes.size();
+
+    if (cdr3a_seqs.size() != n || vb_genes.size() != n || cdr3b_seqs.size() != n) {
+        Rcpp::stop(
+            "%s: va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs "
+            "must all have the same length", caller
+        );
+    }
+
+    PreparedTCRs t;
+    t.n = n;
+    t.vi_a.resize(n);
+    t.vi_b.resize(n);
+    t.cdr3a.resize(n);
+    t.cdr3b.resize(n);
+
+    for (int k = 0; k < n; ++k) {
+        std::string va_str  = Rcpp::as<std::string>(va_genes[k]);
+        std::string vb_str  = Rcpp::as<std::string>(vb_genes[k]);
+
+        int ia = vla.resolve(va_str);
+        if (ia < 0) {
+            Rcpp::stop("%s: alpha V-gene '%s' not found in v_dist_a",
+                       caller, va_str.c_str());
+        }
+        t.vi_a[k] = ia;
+
+        int ib = vlb.resolve(vb_str);
+        if (ib < 0) {
+            Rcpp::stop("%s: beta V-gene '%s' not found in v_dist_b",
+                       caller, vb_str.c_str());
+        }
+        t.vi_b[k] = ib;
+
+        t.cdr3a[k] = preprocess_cdr3(Rcpp::as<std::string>(cdr3a_seqs[k]));
+        t.cdr3b[k] = preprocess_cdr3(Rcpp::as<std::string>(cdr3b_seqs[k]));
+    }
+
+    return t;
+}

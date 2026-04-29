@@ -61,7 +61,7 @@ using namespace Rcpp;
 //'     agroups = 1:2, bgroups = 1:2
 //'   )
 //' }
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 Rcpp::List rcpp_tcrdist_knn(
     const CharacterVector& va_genes,
@@ -77,74 +77,25 @@ Rcpp::List rcpp_tcrdist_knn(
     int weight_cdr3_region       = 3,
     int gap_penalty_cdr3_region  = 12
 ) {
-    const int n = va_genes.size();
-
-    // ---- validate inputs ---------------------------------------------------
-    if (cdr3a_seqs.size() != n || vb_genes.size() != n || cdr3b_seqs.size() != n) {
-        Rcpp::stop(
-            "rcpp_tcrdist_knn: va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs "
-            "must all have the same length"
-        );
-    }
-    if (agroups.size() != n) {
-        Rcpp::stop(
-            "rcpp_tcrdist_knn: agroups length (%d) != N (%d)",
-            (int)agroups.size(), n
-        );
-    }
-    if (bgroups.size() != n) {
-        Rcpp::stop(
-            "rcpp_tcrdist_knn: bgroups length (%d) != N (%d)",
-            (int)bgroups.size(), n
-        );
-    }
-    if (K <= 0 || K >= n) {
-        Rcpp::stop(
-            "rcpp_tcrdist_knn: K must be in [1, N-1]; got K=%d, N=%d", K, n
-        );
-    }
-
-    // ---- build V-gene lookup tables ----------------------------------------
+    // ---- prepare inputs -------------------------------------------------------
     VDistLookup vla, vlb;
     vla.build(v_dist_a);
     vlb.build(v_dist_b);
 
-    // ---- pre-convert CharacterVector to std::string ------------------------
-    std::vector<std::string> va(n), cdr3a(n), vb(n), cdr3b(n);
-    for (int k = 0; k < n; ++k) {
-        va[k]    = Rcpp::as<std::string>(va_genes[k]);
-        cdr3a[k] = Rcpp::as<std::string>(cdr3a_seqs[k]);
-        vb[k]    = Rcpp::as<std::string>(vb_genes[k]);
-        cdr3b[k] = Rcpp::as<std::string>(cdr3b_seqs[k]);
+    PreparedTCRs t = prepare_tcrs(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs,
+                                  vla, vlb, "rcpp_tcrdist_knn");
+    const int n = t.n;
+
+    if (agroups.size() != n) {
+        Rcpp::stop("rcpp_tcrdist_knn: agroups length (%d) != N (%d)",
+                   (int)agroups.size(), n);
     }
-
-    // ---- pre-resolve V-gene names to indices -------------------------------
-    std::vector<int> ri_a(n), ri_b(n);
-    for (int k = 0; k < n; ++k) {
-        int ia = vla.resolve(va[k]);
-        if (ia < 0) {
-            Rcpp::stop(
-                "rcpp_tcrdist_knn: alpha V-gene '%s' not found in v_dist_a",
-                va[k].c_str()
-            );
-        }
-        ri_a[k] = ia;
-
-        int ib = vlb.resolve(vb[k]);
-        if (ib < 0) {
-            Rcpp::stop(
-                "rcpp_tcrdist_knn: beta V-gene '%s' not found in v_dist_b",
-                vb[k].c_str()
-            );
-        }
-        ri_b[k] = ib;
+    if (bgroups.size() != n) {
+        Rcpp::stop("rcpp_tcrdist_knn: bgroups length (%d) != N (%d)",
+                   (int)bgroups.size(), n);
     }
-
-    // ---- preprocess all CDR3 sequences -------------------------------------
-    std::vector<CDR3Data> cdr3a_d(n), cdr3b_d(n);
-    for (int k = 0; k < n; ++k) {
-        cdr3a_d[k] = preprocess_cdr3(cdr3a[k]);
-        cdr3b_d[k] = preprocess_cdr3(cdr3b[k]);
+    if (K <= 0 || K >= n) {
+        Rcpp::stop("rcpp_tcrdist_knn: K must be in [1, N-1]; got K=%d, N=%d", K, n);
     }
 
     // ---- allocate output matrices ------------------------------------------
@@ -174,11 +125,11 @@ Rcpp::List rcpp_tcrdist_knn(
             if (i == j || agroups[j] == ag_i || bgroups[j] == bg_i) {
                 candidates[j] = {MASK_DIST, j};
             } else {
-                double d = vla.lookup(ri_a[i], ri_a[j])
-                         + cdr3_dist_fast(cdr3a_d[i], cdr3a_d[j],
+                double d = vla.lookup(t.vi_a[i], t.vi_a[j])
+                         + cdr3_dist_fast(t.cdr3a[i], t.cdr3a[j],
                                           weight_cdr3_region, gap_penalty_cdr3_region)
-                         + vlb.lookup(ri_b[i], ri_b[j])
-                         + cdr3_dist_fast(cdr3b_d[i], cdr3b_d[j],
+                         + vlb.lookup(t.vi_b[i], t.vi_b[j])
+                         + cdr3_dist_fast(t.cdr3b[i], t.cdr3b[j],
                                           weight_cdr3_region, gap_penalty_cdr3_region);
                 candidates[j] = {d, j};
             }

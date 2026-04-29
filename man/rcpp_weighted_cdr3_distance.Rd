@@ -42,3 +42,4 @@ needed).  The result is numerically identical to
   rcpp_weighted_cdr3_distance("CASSIRSSYEQYF", "CASSIRSYEQYF")
 }
 }
+\keyword{internal}

@@ -111,6 +111,13 @@ tcrdist_matrix <- function(tcrs, organism,
         return(matrix(numeric(0L), nrow = 0L, ncol = 0L))
     }
 
+    if (n > 20000L) {
+        warning(sprintf(
+            "tcrdist_matrix: N=%d requires a full %d x %d distance matrix (%.1f GB). Consider tcrdist_sparse() or tcrdist_radius_neighbors() for large datasets.",
+            n, n, n, as.double(n) * n * 8 / 1e9
+        ))
+    }
+
     # Ensure character columns (not factors)
     for (col in required_cols) {
         if (is.factor(tcrs[[col]])) {

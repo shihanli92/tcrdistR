@@ -26,7 +26,7 @@
 #'   bsd4["A", "A"]  # 0 (diagonal)
 #'   bsd4["A", "C"]  # 4 (BLOSUM62=-something negative)
 #' }
-#' @export
+#' @keywords internal
 rcpp_build_bsd4 <- function() {
     .Call(`_tcrdistR_rcpp_build_bsd4`)
 }
@@ -70,7 +70,7 @@ rcpp_blosum62_lookup <- function(aa1, aa2) {
 #'   D <- matrix(c(0,1,2,1,0,3,2,3,0), nrow=3)
 #'   result <- rcpp_knn_from_distance_matrix(D, K=1L, agroups=1:3, bgroups=1:3)
 #' }
-#' @export
+#' @keywords internal
 rcpp_knn_from_distance_matrix <- function(D, K, agroups, bgroups, sort_nbrs = TRUE) {
     .Call(`_tcrdistR_rcpp_knn_from_distance_matrix`, D, K, agroups, bgroups, sort_nbrs)
 }
@@ -101,7 +101,7 @@ rcpp_knn_from_distance_matrix <- function(D, K, agroups, bgroups, sort_nbrs = TR
 #'   pca <- matrix(rnorm(30), nrow=10, ncol=3)
 #'   result <- rcpp_knn_from_pca_matrix(pca, K=3L, agroups=1:10, bgroups=1:10)
 #' }
-#' @export
+#' @keywords internal
 rcpp_knn_from_pca_matrix <- function(pca_matrix, K, agroups, bgroups, sort_nbrs = TRUE) {
     .Call(`_tcrdistR_rcpp_knn_from_pca_matrix`, pca_matrix, K, agroups, bgroups, sort_nbrs)
 }
@@ -126,7 +126,7 @@ rcpp_poisson_test_loop <- function(all_nbr_indices, all_nbr_distances, bg_freqs,
 #' \dontrun{
 #'   rcpp_count_nuc_matches("ATCGATCG", "ATCGTTCG")
 #' }
-#' @export
+#' @keywords internal
 rcpp_count_nuc_matches <- function(a, b, mismatch_score = -4L) {
     .Call(`_tcrdistR_rcpp_count_nuc_matches`, a, b, mismatch_score)
 }
@@ -165,7 +165,7 @@ rcpp_count_nuc_matches <- function(a, b, mismatch_score = -4L) {
 #'     all_gene_names, all_v_cdr3_nucseqs, all_j_cdr3_nucseqs
 #'   )
 #' }
-#' @export
+#' @keywords internal
 rcpp_find_alternate_alleles_batch <- function(va_genes, ja_genes, cdr3a_nucseqs, vb_genes, jb_genes, cdr3b_nucseqs, all_gene_names, all_v_cdr3_nucseqs, all_j_cdr3_nucseqs, mismatch_score = -4L, min_improvement = 2L) {
     .Call(`_tcrdistR_rcpp_find_alternate_alleles_batch`, va_genes, ja_genes, cdr3a_nucseqs, vb_genes, jb_genes, cdr3b_nucseqs, all_gene_names, all_v_cdr3_nucseqs, all_j_cdr3_nucseqs, mismatch_score, min_improvement)
 }
@@ -198,7 +198,7 @@ rcpp_find_alternate_alleles_batch <- function(va_genes, ja_genes, cdr3a_nucseqs,
 #'     v_genes, j_genes, nucseqs, bp_pre, bp_post, "B", 1000L, 100000L
 #'   )
 #' }
-#' @export
+#' @keywords internal
 rcpp_resample_shuffled_tcr_chains <- function(junction_v_genes, junction_j_genes, junction_nucseqs, junction_breakpoints_pre_d, junction_breakpoints_post_d, chain, num_samples, max_attempts) {
     .Call(`_tcrdistR_rcpp_resample_shuffled_tcr_chains`, junction_v_genes, junction_j_genes, junction_nucseqs, junction_breakpoints_pre_d, junction_breakpoints_post_d, chain, num_samples, max_attempts)
 }
@@ -230,7 +230,7 @@ rcpp_calc_background_distributions <- function(fg_va, fg_cdr3a, fg_vb, fg_cdr3b,
 #' \dontrun{
 #'   rcpp_weighted_cdr3_distance("CASSIRSSYEQYF", "CASSIRSYEQYF")
 #' }
-#' @export
+#' @keywords internal
 rcpp_weighted_cdr3_distance <- function(seq1, seq2, weight_cdr3_region = 3L, gap_penalty_cdr3_region = 12L) {
     .Call(`_tcrdistR_rcpp_weighted_cdr3_distance`, seq1, seq2, weight_cdr3_region, gap_penalty_cdr3_region)
 }
@@ -262,7 +262,7 @@ rcpp_weighted_cdr3_distance <- function(seq1, seq2, weight_cdr3_region = 3L, gap
 #' \dontrun{
 #'   rcpp_blosum_sequence_distance("ACDE", "ACDF")
 #' }
-#' @export
+#' @keywords internal
 rcpp_blosum_sequence_distance <- function(seq1, seq2, gap_penalty = 4.0) {
     .Call(`_tcrdistR_rcpp_blosum_sequence_distance`, seq1, seq2, gap_penalty)
 }
@@ -322,7 +322,7 @@ rcpp_hamming_matrix <- function(seqs) {
 #'     agroups = 1:2, bgroups = 1:2
 #'   )
 #' }
-#' @export
+#' @keywords internal
 rcpp_tcrdist_knn <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, K, agroups, bgroups, sort_nbrs = TRUE, weight_cdr3_region = 3L, gap_penalty_cdr3_region = 12L) {
     .Call(`_tcrdistR_rcpp_tcrdist_knn`, va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, K, agroups, bgroups, sort_nbrs, weight_cdr3_region, gap_penalty_cdr3_region)
 }
@@ -368,7 +368,7 @@ rcpp_tcrdist_knn <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_
 #'     v_dist_b = v_beta_mat
 #'   )
 #' }
-#' @export
+#' @keywords internal
 rcpp_tcrdist_matrix <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, weight_cdr3_region = 3L, gap_penalty_cdr3_region = 12L) {
     .Call(`_tcrdistR_rcpp_tcrdist_matrix`, va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, weight_cdr3_region, gap_penalty_cdr3_region)
 }
@@ -420,7 +420,7 @@ rcpp_tcrdist_matrix <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_di
 #'     radius = 50, agroups = 1:2, bgroups = 1:2
 #'   )
 #' }
-#' @export
+#' @keywords internal
 rcpp_tcrdist_radius_neighbors <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, radius, agroups, bgroups, weight_cdr3_region = 3L, gap_penalty_cdr3_region = 12L) {
     .Call(`_tcrdistR_rcpp_tcrdist_radius_neighbors`, va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, radius, agroups, bgroups, weight_cdr3_region, gap_penalty_cdr3_region)
 }
@@ -472,7 +472,7 @@ rcpp_tcrdist_radius_neighbors <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_
 #'     v_dist_b = v_beta_mat
 #'   )
 #' }
-#' @export
+#' @keywords internal
 rcpp_tcrdist_rect <- function(query_va, query_cdr3a, query_vb, query_cdr3b, ref_va, ref_cdr3a, ref_vb, ref_cdr3b, v_dist_a, v_dist_b, weight_cdr3_region = 3L, gap_penalty_cdr3_region = 12L) {
     .Call(`_tcrdistR_rcpp_tcrdist_rect`, query_va, query_cdr3a, query_vb, query_cdr3b, ref_va, ref_cdr3a, ref_vb, ref_cdr3b, v_dist_a, v_dist_b, weight_cdr3_region, gap_penalty_cdr3_region)
 }
@@ -525,7 +525,7 @@ rcpp_tcrdist_rect <- function(query_va, query_cdr3a, query_vb, query_cdr3b, ref_
 #'     threshold = 50
 #'   )
 #' }
-#' @export
+#' @keywords internal
 rcpp_tcrdist_sparse <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, threshold, weight_cdr3_region = 3L, gap_penalty_cdr3_region = 12L) {
     .Call(`_tcrdistR_rcpp_tcrdist_sparse`, va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, threshold, weight_cdr3_region, gap_penalty_cdr3_region)
 }
@@ -560,7 +560,7 @@ rcpp_tcrdist_sparse <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_di
 #'   seqs <- c("ACDE FGHI", "ACDE FGHK")
 #'   rcpp_compute_v_region_distances(ids, seqs)
 #' }
-#' @export
+#' @keywords internal
 rcpp_compute_v_region_distances <- function(gene_ids, loop_seqs, weight_v_region = 1.0, gap_penalty_v_region = 4.0) {
     .Call(`_tcrdistR_rcpp_compute_v_region_distances`, gene_ids, loop_seqs, weight_v_region, gap_penalty_v_region)
 }

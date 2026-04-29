@@ -55,3 +55,4 @@ Uses an inline standard genetic code table (no external codon map needed).
   )
 }
 }
+\keyword{internal}

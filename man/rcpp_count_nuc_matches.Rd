@@ -28,3 +28,4 @@ cumulative score was highest).
   rcpp_count_nuc_matches("ATCGATCG", "ATCGTTCG")
 }
 }
+\keyword{internal}

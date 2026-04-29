@@ -58,7 +58,7 @@ using namespace Rcpp;
 //'     v_dist_b = v_beta_mat
 //'   )
 //' }
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 NumericMatrix rcpp_tcrdist_rect(
     const CharacterVector& query_va,
@@ -74,119 +74,34 @@ NumericMatrix rcpp_tcrdist_rect(
     int weight_cdr3_region       = 3,
     int gap_penalty_cdr3_region  = 12
 ) {
-    const int nq = query_va.size();
-    const int nr = ref_va.size();
-
-    // ---- validate input lengths --------------------------------------------
-    if (query_cdr3a.size() != nq || query_vb.size() != nq || query_cdr3b.size() != nq) {
-        Rcpp::stop(
-            "rcpp_tcrdist_rect: query_va, query_cdr3a, query_vb, query_cdr3b "
-            "must all have the same length"
-        );
-    }
-    if (ref_cdr3a.size() != nr || ref_vb.size() != nr || ref_cdr3b.size() != nr) {
-        Rcpp::stop(
-            "rcpp_tcrdist_rect: ref_va, ref_cdr3a, ref_vb, ref_cdr3b "
-            "must all have the same length"
-        );
-    }
-
-    // ---- build V-gene lookup tables ----------------------------------------
+    // ---- prepare inputs -------------------------------------------------------
     VDistLookup vla, vlb;
     vla.build(v_dist_a);
     vlb.build(v_dist_b);
 
-    // ---- pre-convert CharacterVectors to std::string -----------------------
-    std::vector<std::string> qva(nq), qcdr3a(nq), qvb(nq), qcdr3b(nq);
-    for (int k = 0; k < nq; ++k) {
-        qva[k]    = Rcpp::as<std::string>(query_va[k]);
-        qcdr3a[k] = Rcpp::as<std::string>(query_cdr3a[k]);
-        qvb[k]    = Rcpp::as<std::string>(query_vb[k]);
-        qcdr3b[k] = Rcpp::as<std::string>(query_cdr3b[k]);
-    }
-
-    std::vector<std::string> rva(nr), rcdr3a(nr), rvb(nr), rcdr3b(nr);
-    for (int k = 0; k < nr; ++k) {
-        rva[k]    = Rcpp::as<std::string>(ref_va[k]);
-        rcdr3a[k] = Rcpp::as<std::string>(ref_cdr3a[k]);
-        rvb[k]    = Rcpp::as<std::string>(ref_vb[k]);
-        rcdr3b[k] = Rcpp::as<std::string>(ref_cdr3b[k]);
-    }
-
-    // ---- pre-resolve V-gene names to indices -------------------------------
-    std::vector<int> qri_a(nq), qri_b(nq);
-    for (int k = 0; k < nq; ++k) {
-        int ia = vla.resolve(qva[k]);
-        if (ia < 0) {
-            Rcpp::stop(
-                "rcpp_tcrdist_rect: query alpha V-gene '%s' not found in v_dist_a",
-                qva[k].c_str()
-            );
-        }
-        qri_a[k] = ia;
-
-        int ib = vlb.resolve(qvb[k]);
-        if (ib < 0) {
-            Rcpp::stop(
-                "rcpp_tcrdist_rect: query beta V-gene '%s' not found in v_dist_b",
-                qvb[k].c_str()
-            );
-        }
-        qri_b[k] = ib;
-    }
-
-    std::vector<int> rri_a(nr), rri_b(nr);
-    for (int k = 0; k < nr; ++k) {
-        int ia = vla.resolve(rva[k]);
-        if (ia < 0) {
-            Rcpp::stop(
-                "rcpp_tcrdist_rect: reference alpha V-gene '%s' not found in v_dist_a",
-                rva[k].c_str()
-            );
-        }
-        rri_a[k] = ia;
-
-        int ib = vlb.resolve(rvb[k]);
-        if (ib < 0) {
-            Rcpp::stop(
-                "rcpp_tcrdist_rect: reference beta V-gene '%s' not found in v_dist_b",
-                rvb[k].c_str()
-            );
-        }
-        rri_b[k] = ib;
-    }
-
-    // ---- preprocess all CDR3 sequences -------------------------------------
-    std::vector<CDR3Data> qcdr3a_d(nq), qcdr3b_d(nq);
-    for (int k = 0; k < nq; ++k) {
-        qcdr3a_d[k] = preprocess_cdr3(qcdr3a[k]);
-        qcdr3b_d[k] = preprocess_cdr3(qcdr3b[k]);
-    }
-
-    std::vector<CDR3Data> rcdr3a_d(nr), rcdr3b_d(nr);
-    for (int k = 0; k < nr; ++k) {
-        rcdr3a_d[k] = preprocess_cdr3(rcdr3a[k]);
-        rcdr3b_d[k] = preprocess_cdr3(rcdr3b[k]);
-    }
+    PreparedTCRs q = prepare_tcrs(query_va, query_cdr3a, query_vb, query_cdr3b,
+                                  vla, vlb, "rcpp_tcrdist_rect (query)");
+    PreparedTCRs r = prepare_tcrs(ref_va, ref_cdr3a, ref_vb, ref_cdr3b,
+                                  vla, vlb, "rcpp_tcrdist_rect (reference)");
 
     // ---- allocate result matrix --------------------------------------------
-    NumericMatrix result(nq, nr);
+    NumericMatrix result(q.n, r.n);
 
     // ---- full rectangular loop: no symmetry --------------------------------
-    for (int i = 0; i < nq; ++i) {
+    for (int i = 0; i < q.n; ++i) {
         if (i % 100 == 0) Rcpp::checkUserInterrupt();
 
-        const int qria = qri_a[i];
-        const int qrib = qri_b[i];
+        const int qria = q.vi_a[i];
+        const int qrib = q.vi_b[i];
 
-        for (int j = 0; j < nr; ++j) {
-            const double vd_a = vla.lookup(qria, rri_a[j]);
-            const double vd_b = vlb.lookup(qrib, rri_b[j]);
+        for (int j = 0; j < r.n; ++j) {
+            const double vd_a = vla.lookup(qria, r.vi_a[j]);
+            const double vd_b = vlb.lookup(qrib, r.vi_b[j]);
 
-            const double cd_a = cdr3_dist_fast(qcdr3a_d[i], rcdr3a_d[j],
+            const double cd_a = cdr3_dist_fast(q.cdr3a[i], r.cdr3a[j],
                                                weight_cdr3_region,
                                                gap_penalty_cdr3_region);
-            const double cd_b = cdr3_dist_fast(qcdr3b_d[i], rcdr3b_d[j],
+            const double cd_b = cdr3_dist_fast(q.cdr3b[i], r.cdr3b[j],
                                                weight_cdr3_region,
                                                gap_penalty_cdr3_region);
 

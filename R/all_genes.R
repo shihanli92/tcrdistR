@@ -86,6 +86,12 @@
         paste(cdrs[-length(cdrs)], collapse = " ")
     }, character(1L))
 
+    # ---- Pre-split all loop sequences once ------------------------------------
+    split_loopseqs <- strsplit(merged_loopseqs, "", fixed = TRUE)
+
+    # Helper: check if a character is a gap or stop codon
+    is_gap_or_stop <- function(ch) ch == "*" || ch == "."
+
     # ---- Exact neighbours and mm1 neighbours --------------------------------
     all_loopseq_nbrs     <- vector("list", length(ids))
     all_loopseq_nbrs_mm1 <- vector("list", length(ids))
@@ -95,13 +101,10 @@
     for (id1 in ids) {
         seq1   <- merged_loopseqs[[id1]]
         g1     <- genes_vc[[id1]]
-        # cpos: 0-indexed start of last CDR (Python: cdr_columns[-1][0] - 1)
-        # used only to bound the all_mismatches slice: alseq[:cpos+2] in Python
-        # = substr(alseq, 1, cpos + 2) in R  where cpos = last_cdr_start_R - 1
         cpos   <- g1$cdr_columns[[length(g1$cdr_columns)]][1L] - 1L
         alseq1 <- g1$alseq
 
-        chars1 <- strsplit(seq1, "", fixed = TRUE)[[1L]]
+        chars1 <- split_loopseqs[[id1]]
         nchar1 <- length(chars1)
 
         exact_nbrs <- character(0)
@@ -117,10 +120,7 @@
             }
 
             # ---- Count loop-sequence mismatches ----------------------------
-            chars2 <- strsplit(seq2, "", fixed = TRUE)[[1L]]
-            nchar2 <- length(chars2)
-            stopifnot(nchar1 == nchar2)  # must be equal (same organism/chain)
-            compare_len <- nchar1
+            chars2 <- split_loopseqs[[id2]]
 
             loop_mismatches      <- 0L
             loop_mismatches_cdrx <- 0L
@@ -128,7 +128,7 @@
             spaces               <- 0L
             too_many             <- FALSE
 
-            for (i in seq_len(compare_len)) {
+            for (i in seq_len(nchar1)) {
                 a <- chars1[i]
                 b <- chars2[i]
                 if (a == " ") {
@@ -136,19 +136,15 @@
                     next
                 }
                 if (a != b) {
-                    # Gaps or stop codons count heavily
-                    if (grepl("[*.]", a, fixed = FALSE) ||
-                        grepl("[*.]", b, fixed = FALSE)) {
+                    if (is_gap_or_stop(a) || is_gap_or_stop(b)) {
                         loop_mismatches <- loop_mismatches + 10L
                         too_many <- TRUE
                         break
                     }
                     if (spaces <= 1L) {
-                        # CDR1 or CDR2 mismatch
                         loop_mismatches <- loop_mismatches + 1L
                         loop_mismatch_seqs <- c(loop_mismatch_seqs, list(c(a, b)))
                     } else {
-                        # CDR3 stub mismatch
                         loop_mismatches_cdrx <- loop_mismatches_cdrx + 1L
                     }
                     if (loop_mismatches > 1L) {
@@ -162,7 +158,7 @@
 
             # ---- Count all mismatches up to CDR3+2 boundary ----------------
             alseq2        <- genes_vc[[id2]]$alseq
-            slice_end     <- cpos + 2L  # = last_cdr_start_R + 1  (1-indexed inclusive)
+            slice_end     <- cpos + 2L
             alseq1_slice  <- substr(alseq1, 1L, slice_end)
             alseq2_slice  <- substr(alseq2, 1L, slice_end)
             achars1       <- strsplit(alseq1_slice, "", fixed = TRUE)[[1L]]
@@ -172,8 +168,7 @@
             all_mismatches <- 0L
             for (i in seq_len(compare_alen)) {
                 if (achars1[i] != achars2[i]) {
-                    if (grepl("[*.]", achars1[i], fixed = FALSE) ||
-                        grepl("[*.]", achars2[i], fixed = FALSE)) {
+                    if (is_gap_or_stop(achars1[i]) || is_gap_or_stop(achars2[i])) {
                         all_mismatches <- all_mismatches + 10L
                     } else {
                         all_mismatches <- all_mismatches + 1L

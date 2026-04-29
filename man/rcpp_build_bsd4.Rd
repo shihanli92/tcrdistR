@@ -34,3 +34,4 @@ code that needs the matrix.
   bsd4["A", "C"]  # 4 (BLOSUM62=-something negative)
 }
 }
+\keyword{internal}

@@ -68,3 +68,4 @@ argument is needed (unlike the rconga equivalent).
   )
 }
 }
+\keyword{internal}

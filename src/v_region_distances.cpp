@@ -42,7 +42,7 @@ using namespace Rcpp;
 //'   seqs <- c("ACDE FGHI", "ACDE FGHK")
 //'   rcpp_compute_v_region_distances(ids, seqs)
 //' }
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 NumericMatrix rcpp_compute_v_region_distances(
     const CharacterVector& gene_ids,

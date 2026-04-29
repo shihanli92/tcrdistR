@@ -33,7 +33,7 @@ using namespace Rcpp;
 //'   bsd4["A", "A"]  # 0 (diagonal)
 //'   bsd4["A", "C"]  # 4 (BLOSUM62=-something negative)
 //' }
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 NumericMatrix rcpp_build_bsd4() {
     const int n = tcrdist::AA_COUNT;  // 20

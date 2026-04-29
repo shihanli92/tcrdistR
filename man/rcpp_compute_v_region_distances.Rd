@@ -49,3 +49,4 @@ Spaces mark position padding and are skipped (both positions must be space).
   rcpp_compute_v_region_distances(ids, seqs)
 }
 }
+\keyword{internal}

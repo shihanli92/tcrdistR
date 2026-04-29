@@ -48,7 +48,7 @@ using namespace Rcpp;
 //' \dontrun{
 //'   rcpp_count_nuc_matches("ATCGATCG", "ATCGTTCG")
 //' }
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 int rcpp_count_nuc_matches(const std::string& a, const std::string& b,
                            int mismatch_score = -4) {
@@ -141,7 +141,7 @@ int count_nuc_matches_inline(const std::string& a, const std::string& b,
 //'     all_gene_names, all_v_cdr3_nucseqs, all_j_cdr3_nucseqs
 //'   )
 //' }
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 Rcpp::List rcpp_find_alternate_alleles_batch(
     const CharacterVector& va_genes,
@@ -470,7 +470,7 @@ std::unordered_map<std::string, char> init_codon_table() {
 //'     v_genes, j_genes, nucseqs, bp_pre, bp_post, "B", 1000L, 100000L
 //'   )
 //' }
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 Rcpp::DataFrame rcpp_resample_shuffled_tcr_chains(
     const CharacterVector& junction_v_genes,
@@ -646,9 +646,6 @@ Rcpp::DataFrame rcpp_resample_shuffled_tcr_chains(
             max_attempts, count, num_samples,
             attempts > 0 ? 100.0 * successes / attempts : 0.0);
     }
-
-    Rprintf("rcpp_resample_shuffled_tcr_chains: success_rate: %.2f\n",
-            attempts > 0 ? 100.0 * successes / attempts : 0.0);
 
     CharacterVector out_v(count), out_j(count), out_c(count), out_n(count);
     for (int i = 0; i < count; ++i) {

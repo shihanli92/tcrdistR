@@ -40,3 +40,4 @@ The function stops with an error if only one character is a space.
   rcpp_blosum_sequence_distance("ACDE", "ACDF")
 }
 }
+\keyword{internal}

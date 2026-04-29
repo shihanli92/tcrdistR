@@ -41,3 +41,4 @@ Memory: O(N\emph{D + N}K) instead of O(N^2).
   result <- rcpp_knn_from_pca_matrix(pca, K=3L, agroups=1:10, bgroups=1:10)
 }
 }
+\keyword{internal}

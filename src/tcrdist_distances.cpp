@@ -38,7 +38,7 @@ using namespace Rcpp;
 //' \dontrun{
 //'   rcpp_weighted_cdr3_distance("CASSIRSSYEQYF", "CASSIRSYEQYF")
 //' }
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 double rcpp_weighted_cdr3_distance(
     const std::string& seq1,
@@ -86,7 +86,7 @@ double rcpp_weighted_cdr3_distance(
 //' \dontrun{
 //'   rcpp_blosum_sequence_distance("ACDE", "ACDF")
 //' }
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 double rcpp_blosum_sequence_distance(
     const std::string& seq1,

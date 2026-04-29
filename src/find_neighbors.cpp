@@ -44,7 +44,7 @@ using namespace Rcpp;
 //'   D <- matrix(c(0,1,2,1,0,3,2,3,0), nrow=3)
 //'   result <- rcpp_knn_from_distance_matrix(D, K=1L, agroups=1:3, bgroups=1:3)
 //' }
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 Rcpp::List rcpp_knn_from_distance_matrix(
     const NumericMatrix& D,
@@ -164,7 +164,7 @@ Rcpp::List rcpp_knn_from_distance_matrix(
 //'   pca <- matrix(rnorm(30), nrow=10, ncol=3)
 //'   result <- rcpp_knn_from_pca_matrix(pca, K=3L, agroups=1:10, bgroups=1:10)
 //' }
-//' @export
+//' @keywords internal
 // [[Rcpp::export]]
 Rcpp::List rcpp_knn_from_pca_matrix(
     const NumericMatrix& pca_matrix,

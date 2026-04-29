@@ -82,3 +82,4 @@ No symmetry is exploited; all nq * nr distances are computed.
   )
 }
 }
+\keyword{internal}

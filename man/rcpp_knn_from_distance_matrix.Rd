@@ -44,3 +44,4 @@ followed by \code{std::sort} of the K selected neighbors.
   result <- rcpp_knn_from_distance_matrix(D, K=1L, agroups=1:3, bgroups=1:3)
 }
 }
+\keyword{internal}
