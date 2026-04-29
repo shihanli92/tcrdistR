@@ -18,7 +18,7 @@ All computation in C++ via Rcpp. R layer is thin wrappers (input validation, S4 
 
 ## Current State
 
-**498 tests, R CMD check: 0 errors, 0 warnings, 3 NOTEs** (C++14, extdata size, timestamp)
+**583 tests, R CMD check: 0 errors, 0 warnings, 2 NOTEs** (C++14, extdata size)
 
 ### Completed Phases
 
@@ -64,7 +64,7 @@ All computation in C++ via Rcpp. R layer is thin wrappers (input validation, S4 
 
 ```
 tcrdistR/
-├── R/                            # 17 R files (~5,500 lines)
+├── R/                            # 21 R files (~7,400 lines)
 │   ├── tcrdistR-package.R        # Package doc, .onLoad, .tcrdistR_env
 │   ├── classes.R                 # S4 class: TCRrep
 │   ├── constructors.R            # TCRrep() constructor
@@ -87,6 +87,10 @@ tcrdistR/
 │   ├── io_10x.R                  # 10x Genomics reader
 │   ├── io_generic.R              # Generic CSV/TSV reader
 │   ├── io_utils.R                # Shared I/O utilities
+│   ├── plot_utils.R              # Palette helpers, ggplot2 check
+│   ├── plot_logo.R               # CDR3 logos, junction bars, gene usage
+│   ├── plot_distances.R          # Heatmap, dendrogram, distribution
+│   ├── plot_scatter.R            # Generic 2D scatter (PCA/UMAP)
 │   └── RcppExports.R             # Auto-generated
 ├── src/                          # 12 C++ files (~3,000 lines)
 │   ├── tcrdist_core.h            # Shared: CDR3Data, cdr3_dist_fast, VDistLookup, BSD4
@@ -110,7 +114,7 @@ tcrdistR/
 │   ├── mouse_tcr_db_for_matching.tsv       # Single-chain DB, mouse (882 KB)
 │   ├── cd8_logreg_params_A.txt             # CD8 model, alpha chain (10 KB)
 │   └── cd8_logreg_params_B.txt             # CD8 model, beta chain (9.4 KB)
-├── tests/testthat/               # 12 test files, 498 tests
+├── tests/testthat/               # 13 test files, 583 tests
 │   ├── test-blosum.R
 │   ├── test-cdr3-distance.R
 │   ├── test-tcrdist.R
@@ -124,13 +128,14 @@ tcrdistR/
 │   ├── test-db-matching.R
 │   ├── test-kernel-pca.R         # Cross-validated against scipy/sklearn
 │   ├── test-cd8-scoring.R
+│   ├── test-plotting.R           # Visualization tests (85 tests)
 │   └── fixtures/                 # dash.csv, kernel_pca_ref.json, I/O fixtures
 └── tests/generate_kernel_pca_fixture.py  # Regenerates scipy reference
 ```
 
 ---
 
-## Exported Functions (44)
+## Exported Functions (51)
 
 **Distance computation:** `tcrdist_matrix`, `tcrdist_rect`, `tcrdist_sparse`, `weighted_cdr3_distance`, `bsd4_matrix`
 **Neighbor search:** `tcrdist_knn`, `tcrdist_radius_neighbors`, `knn_from_matrix`, `knn_from_pca`
@@ -138,20 +143,22 @@ tcrdistR/
 **DB matching:** `find_significant_tcrdist_matches`, `match_tcrs_to_db`, `strict_single_chain_match_tcrs_to_db`
 **Kernel PCA:** `compute_tcrdist_kernel_pca`
 **CD8 scoring:** `make_cd8_score_table_column`
+**Visualization:** `plot_cdr3_logo`, `plot_junction_bars`, `plot_gene_usage`, `plot_tcrdist_heatmap`, `plot_tcrdist_dendrogram`, `plot_distance_distribution`, `plot_tcr_scatter`
 **I/O:** `read_airr`, `read_adaptive`, `read_10x`, `read_tcr_table`
 **Utilities:** `load_gene_database`, `get_translation`, `reverse_complement`, `trim_allele_to_gene`, `AMINO_ACIDS`, `TCRrep`
 **Rcpp (advanced):** 14 `rcpp_*` functions for direct C++ access
 
+#### Phase 6: Visualization ✅
+- `R/plot_utils.R` — `.tcrdistR_palette()`, `.check_ggplot2()` shared helpers
+- `R/plot_logo.R` — `.align_cdr3_regions()`, `.build_cdr3_pwm()`, `plot_cdr3_logo()`, `plot_junction_bars()`, `plot_gene_usage()`
+- `R/plot_distances.R` — `.hclust_to_segments()`, `plot_tcrdist_heatmap()`, `plot_tcrdist_dendrogram()`, `plot_distance_distribution()`
+- `R/plot_scatter.R` — `plot_tcr_scatter()` (kernel PCA / UMAP 2D scatter)
+- `R/constants.R` — added BLOSUM62 substitution matrix for CDR3 alignment scoring
+- Dependencies: ggplot2, ggseqlogo, patchwork, ggrepel (all Suggests)
+
 ---
 
 ## Remaining Work
-
-### Phase 6: Visualization (R only)
-- Sequence logos (ggseqlogo)
-- V/J gene usage plots
-- TCRdist dendrograms
-- Distance heatmaps / distributions
-- UMAP scatter plots
 
 ### Phase 7: Additional Features
 - Meta-clonotype detection
