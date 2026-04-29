@@ -8,6 +8,7 @@ TCRrep(
   clone_df,
   organism = "human",
   chains = "AB",
+  deduplicate = TRUE,
   metric = "tcrdist",
   compute_distances = FALSE,
   weight_cdr3 = WEIGHT_CDR3_REGION,
@@ -33,6 +34,18 @@ on the \code{chains} argument:
 
 \item{chains}{Character string. One of \code{"AB"} (default), \code{"A"},
 \code{"B"}, or \code{"GD"}.}
+
+\item{deduplicate}{Controls clone deduplication (matching tcrdist3 behavior).
+\describe{
+\item{\code{TRUE} (default)}{Deduplicate using chain columns
+(\code{va}, \code{cdr3a}, \code{vb}, \code{cdr3b}) plus \code{subject}
+if present. Within-subject duplicates are merged and \code{count}
+values summed.}
+\item{\code{FALSE}}{No deduplication; \code{clone_df} is stored as-is.}
+\item{Character vector}{Custom grouping columns. Only rows identical
+across all specified columns are merged. Example:
+\code{c("va", "cdr3a", "vb", "cdr3b")} to ignore subject.}
+}}
 
 \item{metric}{Character string. Distance metric to use. One of
 \code{"tcrdist"} (default), \code{"hamming"}, \code{"levenshtein"}, or
@@ -78,15 +91,19 @@ tcrs <- data.frame(
     stringsAsFactors = FALSE
 )
 
-# Basic construction (no distance computation)
+# Basic construction (deduplicates by default)
 obj <- TCRrep(tcrs, organism = "human")
 
 # With distance computation
 obj <- TCRrep(tcrs, organism = "human", compute_distances = TRUE)
 dim(obj@paired_dist)  # 2 x 2
 
-# Alpha chain only
-obj_a <- TCRrep(tcrs[, c("va", "cdr3a")], organism = "human", chains = "A")
+# Custom dedup columns (ignore subject, collapse across individuals)
+obj <- TCRrep(tcrs, organism = "human",
+              deduplicate = c("va", "cdr3a", "vb", "cdr3b"))
+
+# No deduplication
+obj <- TCRrep(tcrs, organism = "human", deduplicate = FALSE)
 }
 
 }

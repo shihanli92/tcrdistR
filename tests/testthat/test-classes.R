@@ -45,7 +45,7 @@ test_that("TCRrep single-chain 'A' works with only alpha columns", {
         stringsAsFactors = FALSE
     )
 
-    obj <- TCRrep(tcrs_alpha, "human", chains = "A")
+    obj <- TCRrep(tcrs_alpha, "human", chains = "A", deduplicate = FALSE)
     expect_true(is(obj, "TCRrep"))
     expect_equal(obj@chains, "A")
     expect_equal(nrow(obj@clone_df), 3L)

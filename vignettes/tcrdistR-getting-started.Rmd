@@ -168,11 +168,29 @@ tcr_clonality(pa_counts)
 
 ## The TCRrep Object
 
-For more structured workflows, wrap your data in a `TCRrep` S4 object:
+For more structured workflows, wrap your data in a `TCRrep` S4 object.
+By default, `TCRrep()` deduplicates identical clones (matching tcrdist3
+behavior), grouping by chain columns plus `subject` if present, and summing
+clone counts:
 
 ```{r tcrrep}
-rep <- TCRrep(pa_sub, organism = "mouse", chains = "AB")
+rep <- TCRrep(pa_sub, organism = "mouse")
+nrow(pa_sub)        # before dedup
+nrow(rep@clone_df)  # after dedup (within-subject duplicates merged)
 rep
+```
+
+You can control deduplication with the `deduplicate` argument:
+
+```{r tcrrep-dedup}
+# Custom grouping: collapse across subjects too
+rep_strict <- TCRrep(pa_sub, organism = "mouse",
+                     deduplicate = c("va", "cdr3a", "vb", "cdr3b"))
+nrow(rep_strict@clone_df)
+
+# No deduplication
+rep_raw <- TCRrep(pa_sub, organism = "mouse", deduplicate = FALSE)
+nrow(rep_raw@clone_df)
 ```
 
 ## Next Steps
