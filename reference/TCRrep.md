@@ -57,13 +57,13 @@ TCRrep(
 
 - deduplicate:
 
-  Controls clone deduplication (matching tcrdist3 behavior).
+  Controls clone deduplication (matching tcrdist3 behavior). Chain
+  columns are always included in grouping automatically.
 
   `TRUE` (default)
 
-  :   Deduplicate using chain columns (`va`, `cdr3a`, `vb`, `cdr3b`)
-      plus `subject` if present. Within-subject duplicates are merged
-      and `count` values summed.
+  :   Deduplicate using chain columns plus `subject` if present.
+      Within-subject duplicates are merged and `count` values summed.
 
   `FALSE`
 
@@ -71,9 +71,9 @@ TCRrep(
 
   Character vector
 
-  :   Custom grouping columns. Only rows identical across all specified
-      columns are merged. Example: `c("va", "cdr3a", "vb", "cdr3b")` to
-      ignore subject.
+  :   Additional grouping columns beyond the chain columns. For example,
+      `c("subject")` groups by chain columns + subject (same as default
+      when subject exists); `character(0)` groups by chain columns only.
 
 - metric:
 
@@ -141,9 +141,8 @@ obj <- TCRrep(tcrs, organism = "human", compute_distances = TRUE)
 dim(obj@paired_dist)  # 2 x 2
 #> [1] 2 2
 
-# Custom dedup columns (ignore subject, collapse across individuals)
-obj <- TCRrep(tcrs, organism = "human",
-              deduplicate = c("va", "cdr3a", "vb", "cdr3b"))
+# Chain columns only (collapse across subjects)
+obj <- TCRrep(tcrs, organism = "human", deduplicate = character(0))
 
 # No deduplication
 obj <- TCRrep(tcrs, organism = "human", deduplicate = FALSE)

@@ -216,9 +216,8 @@ rep
 You can control deduplication with the `deduplicate` argument:
 
 ``` r
-# Custom grouping: collapse across subjects too
-rep_strict <- TCRrep(pa_sub, organism = "mouse",
-                     deduplicate = c("va", "cdr3a", "vb", "cdr3b"))
+# Chain columns only (collapse across subjects)
+rep_strict <- TCRrep(pa_sub, organism = "mouse", deduplicate = character(0))
 #> deduplicate: 50 -> 47 clones
 nrow(rep_strict@clone_df)
 #> [1] 47

@@ -97,19 +97,20 @@ on the <code>chains</code> argument:</p><dl><dt><code>"AB"</code></dt>
 
 
 <dt id="arg-deduplicate">deduplicate<a class="anchor" aria-label="anchor" href="#arg-deduplicate"></a></dt>
-<dd><p>Controls clone deduplication (matching tcrdist3 behavior).</p><dl><dt><code>TRUE</code> (default)</dt>
-<dd><p>Deduplicate using chain columns
-(<code>va</code>, <code>cdr3a</code>, <code>vb</code>, <code>cdr3b</code>) plus <code>subject</code>
-if present. Within-subject duplicates are merged and <code>count</code>
-values summed.</p></dd>
+<dd><p>Controls clone deduplication (matching tcrdist3 behavior).
+Chain columns are always included in grouping automatically.</p><dl><dt><code>TRUE</code> (default)</dt>
+<dd><p>Deduplicate using chain columns plus
+<code>subject</code> if present. Within-subject duplicates are merged and
+<code>count</code> values summed.</p></dd>
 
 <dt><code>FALSE</code></dt>
 <dd><p>No deduplication; <code>clone_df</code> is stored as-is.</p></dd>
 
 <dt>Character vector</dt>
-<dd><p>Custom grouping columns. Only rows identical
-across all specified columns are merged. Example:
-<code>c("va", "cdr3a", "vb", "cdr3b")</code> to ignore subject.</p></dd>
+<dd><p>Additional grouping columns beyond the chain
+columns. For example, <code>c("subject")</code> groups by chain columns +
+subject (same as default when subject exists);
+<code>character(0)</code> groups by chain columns only.</p></dd>
 
 
 </dl></dd>
@@ -181,9 +182,8 @@ bundled gene database on construction.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">obj</span><span class="op">@</span><span class="va">paired_dist</span><span class="op">)</span>  <span class="co"># 2 x 2</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2 2</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Custom dedup columns (ignore subject, collapse across individuals)</span></span></span>
-<span class="r-in"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">TCRrep</span><span class="op">(</span><span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"human"</span>,</span></span>
-<span class="r-in"><span>              deduplicate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"va"</span>, <span class="st">"cdr3a"</span>, <span class="st">"vb"</span>, <span class="st">"cdr3b"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Chain columns only (collapse across subjects)</span></span></span>
+<span class="r-in"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">TCRrep</span><span class="op">(</span><span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"human"</span>, deduplicate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># No deduplication</span></span></span>
 <span class="r-in"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">TCRrep</span><span class="op">(</span><span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"human"</span>, deduplicate <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>

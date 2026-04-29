@@ -263,9 +263,8 @@ counts:</p>
 <p>You can control deduplication with the <code>deduplicate</code>
 argument:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Custom grouping: collapse across subjects too</span></span>
-<span><span class="va">rep_strict</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/TCRrep.html">TCRrep</a></span><span class="op">(</span><span class="va">pa_sub</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>,</span>
-<span>                     deduplicate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"va"</span>, <span class="st">"cdr3a"</span>, <span class="st">"vb"</span>, <span class="st">"cdr3b"</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="co"># Chain columns only (collapse across subjects)</span></span>
+<span><span class="va">rep_strict</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/TCRrep.html">TCRrep</a></span><span class="op">(</span><span class="va">pa_sub</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, deduplicate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; deduplicate: 50 -&gt; 47 clones</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">rep_strict</span><span class="op">@</span><span class="va">clone_df</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 47</span></span>
