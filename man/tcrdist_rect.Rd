@@ -71,3 +71,6 @@ rect <- tcrdist_rect(tcrs, tcrs, "human")
 mat  <- tcrdist_matrix(tcrs, "human")
 }
 }
+\seealso{
+\code{\link{tcrdist_matrix}}, \code{\link{tcrdist_sparse}}, \code{\link{tcrdist_join}}
+}

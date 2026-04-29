@@ -28,3 +28,6 @@ plot_distance_distribution(mat)
 }
 
 }
+\seealso{
+\code{\link{plot_tcrdist_heatmap}}, \code{\link{tcrdist_matrix}}
+}

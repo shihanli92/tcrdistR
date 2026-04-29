@@ -245,6 +245,7 @@
 #' )
 #' scores <- make_cd8_score_table_column(tcr_df)
 #' }
+#' @seealso \code{\link{match_tcrs_to_db}}
 #' @export
 make_cd8_score_table_column <- function(tcr_df, use_sigmoid = FALSE) {
     if (!is.data.frame(tcr_df)) {

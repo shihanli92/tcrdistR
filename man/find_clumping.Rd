@@ -88,3 +88,6 @@ result$results_df
 sum(result$is_clumped)
 }
 }
+\seealso{
+\code{\link{setup_tcr_groups}}, \code{\link{tcrdist_radius_neighbors}}, \code{\link{find_meta_clonotypes}}
+}

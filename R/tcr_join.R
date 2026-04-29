@@ -36,6 +36,7 @@
 #' matches <- tcrdist_join(query_tcrs, reference_tcrs, "human", radius = 50)
 #' }
 #'
+#' @seealso \code{\link{tcrdist_rect}}, \code{\link{tcrdist_radius_neighbors}}
 #' @export
 tcrdist_join <- function(left_df, right_df, organism, radius,
                           max_n = 5L, type = c("inner", "left"),

@@ -26,3 +26,6 @@ Renders stacked coloured bars showing the fraction of nucleotides derived
 from V-gene, N-region, D-gene, or J-gene segments at each codon position
 within a CDR3 alignment. Designed to sit below a CDR3 sequence logo.
 }
+\seealso{
+\code{\link{plot_cdr3_logo}}
+}

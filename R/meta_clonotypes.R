@@ -131,6 +131,7 @@
 #'                               subject_col = "subject")
 #' }
 #'
+#' @seealso \code{\link{summarize_meta_clonotype}}, \code{\link{find_clumping}}
 #' @export
 find_meta_clonotypes <- function(tcr_df, organism,
                                   radius = NULL,
@@ -261,6 +262,20 @@ find_meta_clonotypes <- function(tcr_df, organism,
 #'     \item{\code{cdr3b_lengths}}{Integer vector of CDR3-beta lengths.}
 #'   }
 #'
+#' @examples
+#' \dontrun{
+#' meta <- find_meta_clonotypes(tcr_df, "mouse", radius = 30,
+#'                               subject_col = "subject")
+#' if (nrow(meta) > 0) {
+#'     indices <- as.integer(strsplit(meta$neighbor_indices[1], ",")[[1]])
+#'     summary <- summarize_meta_clonotype(
+#'         tcr_df, meta$center_index[1], indices)
+#'     summary$n_members
+#'     summary$va_usage
+#' }
+#' }
+#'
+#' @seealso \code{\link{find_meta_clonotypes}}
 #' @export
 summarize_meta_clonotype <- function(tcr_df, center_idx, neighbor_indices) {
     stopifnot(center_idx >= 1L, center_idx <= nrow(tcr_df))

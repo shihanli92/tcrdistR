@@ -31,6 +31,7 @@
 #' # obj <- TCRrep(df, organism = "human")
 #' }
 #'
+#' @seealso \code{\link{read_tcr_table}}, \code{\link{read_airr}}, \code{\link{read_adaptive}}
 #' @export
 read_10x <- function(file,
                      pair_by         = "barcode",

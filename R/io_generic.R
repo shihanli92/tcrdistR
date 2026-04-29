@@ -39,6 +39,7 @@ NULL
 #' #                    vb = "V_beta",  cdr3b = "CDR3_beta"))
 #' }
 #'
+#' @seealso \code{\link{read_airr}}, \code{\link{read_adaptive}}, \code{\link{read_10x}}, \code{\link{TCRrep}}
 #' @export
 read_tcr_table <- function(file, col_map = NULL, sep = "\t",
                            normalize_genes = TRUE, ...) {

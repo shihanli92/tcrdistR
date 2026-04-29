@@ -29,6 +29,7 @@
 #' # obj <- TCRrep(df, organism = "human")
 #' }
 #'
+#' @seealso \code{\link{read_tcr_table}}, \code{\link{read_adaptive}}, \code{\link{read_10x}}
 #' @export
 read_airr <- function(file,
                       pair_by         = "cell_id",

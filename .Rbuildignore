@@ -6,3 +6,9 @@
 ^\.claude$
 ^PROGRESS\.md$
 ^LICENSE\.md$
+^README\.Rmd$
+^_pkgdown\.yml$
+^docs$
+^benchmarks$
+^tcrdistR\.Rcheck$
+^tcrdistR_.*\.tar\.gz$

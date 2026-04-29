@@ -22,3 +22,6 @@ length of the longer sequence (maximum penalty).
 seqs <- c("CASSI", "CASSK", "CASRL")
 hamming_matrix(seqs)
 }
+\seealso{
+\code{\link{hamming_distance}}, \code{\link{tcrdist_matrix}}
+}

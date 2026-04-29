@@ -25,6 +25,7 @@
 #' weighted_cdr3_distance("CASSIRSSYEQYF", "CASSIRSYEQYF")
 #' weighted_cdr3_distance("CASSIRSSYEQYF", "CASSIRSSYEQYF")  # 0
 #' }
+#' @seealso \code{\link{tcrdist_matrix}}, \code{\link{bsd4_matrix}}
 #' @export
 weighted_cdr3_distance <- function(seq1, seq2,
                                    weight      = WEIGHT_CDR3_REGION,
@@ -86,6 +87,7 @@ weighted_cdr3_distance <- function(seq1, seq2,
 #' )
 #' mat <- tcrdist_matrix(tcrs, "human")
 #' }
+#' @seealso \code{\link{tcrdist_sparse}}, \code{\link{tcrdist_rect}}, \code{\link{tcrdist_knn}}, \code{\link{TCRrep}}
 #' @export
 tcrdist_matrix <- function(tcrs, organism,
                            weight_cdr3      = WEIGHT_CDR3_REGION,
@@ -204,6 +206,7 @@ tcrdist_matrix <- function(tcrs, organism,
 #' hamming_distance("CASSI", "CASSK")  # 1
 #' hamming_distance("CASSI", "CASSI")  # 0
 #' hamming_distance("CASSI", "CASSILY")  # -1 (different lengths)
+#' @seealso \code{\link{hamming_matrix}}, \code{\link{weighted_cdr3_distance}}
 #' @export
 hamming_distance <- function(a, b) {
     stopifnot(
@@ -230,6 +233,7 @@ hamming_distance <- function(a, b) {
 #' @examples
 #' seqs <- c("CASSI", "CASSK", "CASRL")
 #' hamming_matrix(seqs)
+#' @seealso \code{\link{hamming_distance}}, \code{\link{tcrdist_matrix}}
 #' @export
 hamming_matrix <- function(cdr3_seqs) {
     stopifnot(is.character(cdr3_seqs), length(cdr3_seqs) >= 1L)
@@ -259,6 +263,7 @@ hamming_matrix <- function(cdr3_seqs) {
 #' bsd4["A", "A"]  # 0
 #' bsd4["A", "G"]  # small positive value
 #' }
+#' @seealso \code{\link{weighted_cdr3_distance}}, \code{\link{AMINO_ACIDS}}
 #' @export
 bsd4_matrix <- function() {
     rcpp_build_bsd4()

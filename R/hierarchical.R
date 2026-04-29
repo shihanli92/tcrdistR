@@ -70,6 +70,7 @@
 #' clusters <- cutree(result$hclust, k = 5)
 #' }
 #'
+#' @seealso \code{\link{cluster_tcrs}}, \code{\link{neighborhood_test}}, \code{\link{plot_tcrdist_dendrogram}}
 #' @export
 tcrdist_hclust <- function(tcr_df, organism, method = "average",
                             max_tcrs = 2000L) {
@@ -120,6 +121,7 @@ tcrdist_hclust <- function(tcr_df, organism, method = "average",
 #' table(clusters)
 #' }
 #'
+#' @seealso \code{\link{tcrdist_hclust}}, \code{\link{neighborhood_test}}
 #' @export
 cluster_tcrs <- function(tcr_df, organism, k = NULL, h = NULL,
                           method = "average") {
@@ -175,6 +177,7 @@ cluster_tcrs <- function(tcr_df, organism, k = NULL, h = NULL,
 #' significant <- result[result$p_adjusted < 0.05, ]
 #' }
 #'
+#' @seealso \code{\link{tcrdist_hclust}}, \code{\link{cluster_tcrs}}, \code{\link{find_clumping}}
 #' @export
 neighborhood_test <- function(tcr_df, organism, variable, radius = 50,
                                 test = c("fisher", "chisq"),

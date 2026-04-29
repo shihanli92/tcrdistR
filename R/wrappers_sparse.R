@@ -51,6 +51,7 @@
 #' )
 #' sp <- tcrdist_sparse(tcrs, "human", threshold = 50)
 #' }
+#' @seealso \code{\link{tcrdist_matrix}}, \code{\link{tcrdist_rect}}, \code{\link{tcrdist_radius_neighbors}}
 #' @export
 tcrdist_sparse <- function(tcrs, organism, threshold,
                            weight_cdr3      = WEIGHT_CDR3_REGION,

@@ -39,6 +39,7 @@
 #' # Single dominant clonotype: low diversity
 #' tcr_diversity(c(100, 1, 1, 1))
 #'
+#' @seealso \code{\link{tcr_fuzzy_diversity}}, \code{\link{tcr_richness}}, \code{\link{tcr_clonality}}
 #' @export
 tcr_diversity <- function(counts, order = 2L, ci = TRUE, alpha = 0.05) {
     counts <- as.integer(counts)
@@ -167,6 +168,7 @@ tcr_diversity <- function(counts, order = 2L, ci = TRUE, alpha = 0.05) {
 #' tcr_fuzzy_diversity(tcr_df, "human", threshold = 50)
 #' }
 #'
+#' @seealso \code{\link{tcr_diversity}}, \code{\link{tcrdist_matrix}}
 #' @export
 tcr_fuzzy_diversity <- function(tcr_df, organism, threshold = 50,
                                  order = 2L, counts = NULL) {
@@ -267,6 +269,7 @@ tcr_fuzzy_diversity <- function(tcr_df, organism, threshold = 50,
 #' @examples
 #' tcr_richness(c(10, 5, 3, 1, 1))  # 5
 #'
+#' @seealso \code{\link{tcr_diversity}}, \code{\link{tcr_clonality}}
 #' @export
 tcr_richness <- function(counts) {
     counts <- as.integer(counts)
@@ -295,6 +298,7 @@ tcr_richness <- function(counts) {
 #' # Dominated: clonality near 1
 #' tcr_clonality(c(1000, 1, 1))
 #'
+#' @seealso \code{\link{tcr_diversity}}, \code{\link{tcr_richness}}
 #' @export
 tcr_clonality <- function(counts) {
     counts <- as.integer(counts)

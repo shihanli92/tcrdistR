@@ -37,3 +37,6 @@ clusters <- cutree(result$hclust, k = 5)
 }
 
 }
+\seealso{
+\code{\link{cluster_tcrs}}, \code{\link{neighborhood_test}}, \code{\link{plot_tcrdist_dendrogram}}
+}

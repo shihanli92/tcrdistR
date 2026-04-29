@@ -52,3 +52,17 @@ database TCRs. Background distributions are estimated via the V(D)J
 rearrangement model in
 \code{.estimate_background_tcrdist_distributions()}.
 }
+\examples{
+\dontrun{
+matches <- find_significant_tcrdist_matches(
+    query_tcrs_df = query_df,
+    db_tcrs_df = db_df,
+    organism = "human",
+    adjusted_pvalue_threshold = 0.05
+)
+}
+
+}
+\seealso{
+\code{\link{match_tcrs_to_db}}, \code{\link{strict_single_chain_match_tcrs_to_db}}
+}

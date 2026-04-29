@@ -51,6 +51,7 @@
 #' groups <- setup_tcr_groups(tcr_df)
 #' groups$agroups  # c(0, 0, 1)  (first two share alpha chain)
 #' }
+#' @seealso \code{\link{find_clumping}}
 #' @export
 setup_tcr_groups <- function(tcr_df) {
     required <- c("va", "ja", "cdr3a", "vb", "jb", "cdr3b")
@@ -406,6 +407,7 @@ setup_tcr_groups <- function(tcr_df) {
 #' result$results_df
 #' sum(result$is_clumped)
 #' }
+#' @seealso \code{\link{setup_tcr_groups}}, \code{\link{tcrdist_radius_neighbors}}, \code{\link{find_meta_clonotypes}}
 #' @importFrom stats ppois p.adjust
 #' @export
 find_clumping <- function(

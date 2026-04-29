@@ -22,3 +22,14 @@ A list with elements \code{alpha_matches} and
 Finds database entries where the CDR3alpha or CDR3beta amino acid
 sequence exactly matches a query TCR.
 }
+\examples{
+\dontrun{
+hits <- strict_single_chain_match_tcrs_to_db(tcr_df, "human")
+hits$alpha_matches
+hits$beta_matches
+}
+
+}
+\seealso{
+\code{\link{match_tcrs_to_db}}, \code{\link{find_significant_tcrdist_matches}}
+}

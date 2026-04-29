@@ -22,3 +22,4 @@ Thumbs.db
 # Build output
 *.tar.gz
 *.Rcheck/
+README.html

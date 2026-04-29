@@ -35,3 +35,6 @@ table(clusters)
 }
 
 }
+\seealso{
+\code{\link{tcrdist_hclust}}, \code{\link{neighborhood_test}}
+}

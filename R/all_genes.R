@@ -464,6 +464,7 @@
 #' @examples
 #' trim_allele_to_gene("TRAV1*01")    # "TRAV1"
 #' trim_allele_to_gene("IGHV1-18*03") # "IGHV1-18"
+#' @seealso \code{\link{load_gene_database}}
 #' @export
 trim_allele_to_gene <- function(gene_id) {
     sub("\\*.*$", "", gene_id)
@@ -519,6 +520,7 @@ trim_allele_to_gene <- function(gene_id) {
 #' human_genes <- load_gene_database("human")
 #' human_genes[["TRAV1-1*01"]]$protseq
 #' }
+#' @seealso \code{\link{tcrdist_matrix}}, \code{\link{trim_allele_to_gene}}
 #' @export
 load_gene_database <- function(organism = NULL) {
     # Lazy-load and cache

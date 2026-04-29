@@ -67,3 +67,6 @@ tcrs <- data.frame(
 sp <- tcrdist_sparse(tcrs, "human", threshold = 50)
 }
 }
+\seealso{
+\code{\link{tcrdist_matrix}}, \code{\link{tcrdist_rect}}, \code{\link{tcrdist_radius_neighbors}}
+}

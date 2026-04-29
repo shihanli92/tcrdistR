@@ -56,3 +56,6 @@ plot_cdr3_logo(seqs, chain = "beta", method = "prob")
 }
 
 }
+\seealso{
+\code{\link{plot_junction_bars}}, \code{\link{plot_gene_usage}}
+}

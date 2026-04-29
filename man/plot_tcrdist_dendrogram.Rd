@@ -47,3 +47,6 @@ plot_tcrdist_dendrogram(tcr_df, "human", color_by = tcr_df$cluster)
 }
 
 }
+\seealso{
+\code{\link{plot_tcrdist_heatmap}}, \code{\link{tcrdist_hclust}}, \code{\link{cluster_tcrs}}
+}

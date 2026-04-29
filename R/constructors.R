@@ -64,6 +64,7 @@ NULL
 #' obj_a <- TCRrep(tcrs[, c("va", "cdr3a")], organism = "human", chains = "A")
 #' }
 #'
+#' @seealso \code{\link{tcrdist_matrix}}, \code{\link{read_tcr_table}}
 #' @export
 TCRrep <- function(clone_df,
                    organism             = "human",

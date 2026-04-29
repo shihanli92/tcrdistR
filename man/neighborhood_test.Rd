@@ -54,3 +54,6 @@ significant <- result[result$p_adjusted < 0.05, ]
 }
 
 }
+\seealso{
+\code{\link{tcrdist_hclust}}, \code{\link{cluster_tcrs}}, \code{\link{find_clumping}}
+}

@@ -46,3 +46,6 @@ conventions (e.g. tcrdist3/DASH format) are auto-detected when
 }
 
 }
+\seealso{
+\code{\link{read_airr}}, \code{\link{read_adaptive}}, \code{\link{read_10x}}, \code{\link{TCRrep}}
+}

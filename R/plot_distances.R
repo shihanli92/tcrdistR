@@ -99,6 +99,7 @@
 #' plot_tcrdist_heatmap(mat, labels = c("TCR1", "TCR2", "TCR3"))
 #' }
 #'
+#' @seealso \code{\link{plot_tcrdist_dendrogram}}, \code{\link{plot_distance_distribution}}, \code{\link{tcrdist_matrix}}
 #' @export
 plot_tcrdist_heatmap <- function(dist_matrix, labels = NULL,
                                   cluster = TRUE, title = NULL) {
@@ -193,6 +194,7 @@ plot_tcrdist_heatmap <- function(dist_matrix, labels = NULL,
 #' plot_tcrdist_dendrogram(tcr_df, "human", color_by = tcr_df$cluster)
 #' }
 #'
+#' @seealso \code{\link{plot_tcrdist_heatmap}}, \code{\link{tcrdist_hclust}}, \code{\link{cluster_tcrs}}
 #' @export
 plot_tcrdist_dendrogram <- function(tcr_df, organism, color_by = NULL,
                                      method = "average", max_tcrs = 500L,
@@ -298,6 +300,7 @@ plot_tcrdist_dendrogram <- function(tcr_df, organism, color_by = NULL,
 #' plot_distance_distribution(mat)
 #' }
 #'
+#' @seealso \code{\link{plot_tcrdist_heatmap}}, \code{\link{tcrdist_matrix}}
 #' @export
 plot_distance_distribution <- function(dist_matrix, title = NULL,
                                         binwidth = NULL) {

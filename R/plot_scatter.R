@@ -38,6 +38,7 @@
 #' plot_tcr_scatter(kpca$embeddings[, 1:2], color_by = tcr_df$epitope)
 #' }
 #'
+#' @seealso \code{\link{compute_tcrdist_kernel_pca}}, \code{\link{plot_tcrdist_heatmap}}
 #' @export
 plot_tcr_scatter <- function(coords, color_by = NULL, title = NULL,
                               point_size = 1, alpha = 1,

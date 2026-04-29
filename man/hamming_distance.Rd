@@ -24,3 +24,6 @@ hamming_distance("CASSI", "CASSK")  # 1
 hamming_distance("CASSI", "CASSI")  # 0
 hamming_distance("CASSI", "CASSILY")  # -1 (different lengths)
 }
+\seealso{
+\code{\link{hamming_matrix}}, \code{\link{weighted_cdr3_distance}}
+}

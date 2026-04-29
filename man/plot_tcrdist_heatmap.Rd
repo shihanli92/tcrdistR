@@ -32,3 +32,6 @@ plot_tcrdist_heatmap(mat, labels = c("TCR1", "TCR2", "TCR3"))
 }
 
 }
+\seealso{
+\code{\link{plot_tcrdist_dendrogram}}, \code{\link{plot_distance_distribution}}, \code{\link{tcrdist_matrix}}
+}

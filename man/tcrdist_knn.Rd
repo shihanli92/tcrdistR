@@ -73,3 +73,6 @@ tcrs <- data.frame(
 knn <- tcrdist_knn(tcrs, "human", K = 1L)
 }
 }
+\seealso{
+\code{\link{tcrdist_radius_neighbors}}, \code{\link{knn_from_matrix}}, \code{\link{knn_from_pca}}
+}

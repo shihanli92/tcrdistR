@@ -23,3 +23,6 @@ bsd4["A", "A"]  # 0
 bsd4["A", "G"]  # small positive value
 }
 }
+\seealso{
+\code{\link{weighted_cdr3_distance}}, \code{\link{AMINO_ACIDS}}
+}

@@ -84,3 +84,6 @@ result <- compute_tcrdist_kernel_pca(tcrs, "human", n_components = 2L)
 str(result)
 }
 }
+\seealso{
+\code{\link{plot_tcr_scatter}}, \code{\link{knn_from_pca}}, \code{\link{tcrdist_matrix}}
+}

@@ -178,14 +178,16 @@ tcrdistR/
 - `R/hierarchical.R` — `tcrdist_hclust()`, `cluster_tcrs()`, `neighborhood_test()` (Fisher/chi-sq per TCR)
 - `R/meta_clonotypes.R` — `find_meta_clonotypes()` (ECDF-based radius, subject counting, subset de-dup), `summarize_meta_clonotype()`
 
----
-
-## Remaining Work
-
-### Phase 8: Polish
-- Vignettes
-- pkgdown site
-- Benchmarks vs Python tcrdist3
+#### Phase 8: Polish ✅
+- `README.Rmd` / `README.md` — GitHub landing page with installation, quick start, feature overview
+- `vignettes/tcrdistR-getting-started.Rmd` — Tutorial: data loading, distances, neighbors, diversity
+- `vignettes/tcrdistR-advanced.Rmd` — Clustering, clumping, meta-clonotypes, DB matching, kernel PCA, joins
+- `vignettes/tcrdistR-visualization.Rmd` — All 7 plot functions with examples
+- `_pkgdown.yml` — Site config with 15 reference groups, 3 articles, navbar
+- `@seealso` cross-references added to ~40 exported functions across 22 R files
+- `@examples` added to 5 previously-missing functions
+- Package-level documentation (`tcrdistR-package.R`) rewritten with full narrative overview
+- `benchmarks/` — R + Python benchmark scripts for tcrdistR vs tcrdist3 comparison
 
 ---
 

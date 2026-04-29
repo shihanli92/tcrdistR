@@ -28,3 +28,20 @@ A named list:
 Reports the V/J gene usage, CDR3 length distribution, and subject
 representation within a meta-clonotype neighborhood.
 }
+\examples{
+\dontrun{
+meta <- find_meta_clonotypes(tcr_df, "mouse", radius = 30,
+                              subject_col = "subject")
+if (nrow(meta) > 0) {
+    indices <- as.integer(strsplit(meta$neighbor_indices[1], ",")[[1]])
+    summary <- summarize_meta_clonotype(
+        tcr_df, meta$center_index[1], indices)
+    summary$n_members
+    summary$va_usage
+}
+}
+
+}
+\seealso{
+\code{\link{find_meta_clonotypes}}
+}

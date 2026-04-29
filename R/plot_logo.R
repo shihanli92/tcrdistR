@@ -331,6 +331,7 @@
 #' plot_cdr3_logo(seqs, chain = "beta", method = "prob")
 #' }
 #'
+#' @seealso \code{\link{plot_junction_bars}}, \code{\link{plot_gene_usage}}
 #' @export
 plot_cdr3_logo <- function(cdr3_seqs,
                             chain = c("alpha", "beta"),
@@ -419,6 +420,7 @@ plot_cdr3_logo <- function(cdr3_seqs,
 #'
 #' @return A \code{ggplot} object.
 #'
+#' @seealso \code{\link{plot_cdr3_logo}}
 #' @export
 plot_junction_bars <- function(junction_pwm,
                                 chain = c("alpha", "beta"),
@@ -519,6 +521,7 @@ plot_junction_bars <- function(junction_pwm,
 #' plot_gene_usage(tcr_df, "va", title = "V-alpha usage")
 #' }
 #'
+#' @seealso \code{\link{plot_cdr3_logo}}, \code{\link{plot_tcrdist_dendrogram}}
 #' @export
 plot_gene_usage <- function(tcr_df, gene_col, strip_allele = TRUE,
                              max_genes = 20L, title = NULL) {

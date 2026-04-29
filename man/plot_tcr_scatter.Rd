@@ -60,3 +60,6 @@ plot_tcr_scatter(kpca$embeddings[, 1:2], color_by = tcr_df$epitope)
 }
 
 }
+\seealso{
+\code{\link{compute_tcrdist_kernel_pca}}, \code{\link{plot_tcrdist_heatmap}}
+}

@@ -39,3 +39,6 @@ Two column naming conventions are supported automatically:
 # head(df)
 }
 }
+\seealso{
+\code{\link{read_tcr_table}}, \code{\link{read_airr}}, \code{\link{read_10x}}
+}

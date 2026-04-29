@@ -22,3 +22,6 @@ BCR gene identifier, returning only the gene-level name.
 trim_allele_to_gene("TRAV1*01")    # "TRAV1"
 trim_allele_to_gene("IGHV1-18*03") # "IGHV1-18"
 }
+\seealso{
+\code{\link{load_gene_database}}
+}

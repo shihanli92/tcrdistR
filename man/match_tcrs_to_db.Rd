@@ -37,3 +37,13 @@ A data.frame of significant matches (see
 Wrapper around \code{\link{find_significant_tcrdist_matches}} that loads
 a default or custom database file.
 }
+\examples{
+\dontrun{
+results <- match_tcrs_to_db(tcr_df, organism = "human")
+results[results$pvalue_adj < 0.05, ]
+}
+
+}
+\seealso{
+\code{\link{find_significant_tcrdist_matches}}, \code{\link{strict_single_chain_match_tcrs_to_db}}
+}

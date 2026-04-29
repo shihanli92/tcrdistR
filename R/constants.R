@@ -65,6 +65,12 @@ ALIGN_CDR3S <- FALSE
 #' ported from Python CoNGA \code{amino_acids.py}.
 #'
 #' @format A character vector of length 20.
+#'
+#' @examples
+#' AMINO_ACIDS
+#' length(AMINO_ACIDS)  # 20
+#'
+#' @seealso \code{\link{bsd4_matrix}}, \code{\link{weighted_cdr3_distance}}
 #' @export
 AMINO_ACIDS <- c(
     "A", "C", "D", "E", "F", "G", "H", "I", "K", "L",

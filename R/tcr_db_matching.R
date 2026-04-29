@@ -73,6 +73,18 @@
 #'   \code{fdr_value}, \code{query_index} (0-based), \code{db_index}
 #'   (0-based), plus query and db TCR information. Sorted by
 #'   \code{pvalue_adj}.
+#'
+#' @examples
+#' \dontrun{
+#' matches <- find_significant_tcrdist_matches(
+#'     query_tcrs_df = query_df,
+#'     db_tcrs_df = db_df,
+#'     organism = "human",
+#'     adjusted_pvalue_threshold = 0.05
+#' )
+#' }
+#'
+#' @seealso \code{\link{match_tcrs_to_db}}, \code{\link{strict_single_chain_match_tcrs_to_db}}
 #' @export
 find_significant_tcrdist_matches <- function(
     query_tcrs_df, db_tcrs_df, organism,
@@ -248,6 +260,14 @@ find_significant_tcrdist_matches <- function(
 #' @param num_random_samples Integer. Default \code{50000L}.
 #' @return A data.frame of significant matches (see
 #'   \code{\link{find_significant_tcrdist_matches}}).
+#'
+#' @examples
+#' \dontrun{
+#' results <- match_tcrs_to_db(tcr_df, organism = "human")
+#' results[results$pvalue_adj < 0.05, ]
+#' }
+#'
+#' @seealso \code{\link{find_significant_tcrdist_matches}}, \code{\link{strict_single_chain_match_tcrs_to_db}}
 #' @export
 match_tcrs_to_db <- function(tcr_df, organism,
                               db_tcrs_tsvfile = NULL,
@@ -307,6 +327,15 @@ match_tcrs_to_db <- function(tcr_df, organism,
 #'   organism-specific single-chain database.
 #' @return A list with elements \code{alpha_matches} and
 #'   \code{beta_matches}, each a data.frame of matching database rows.
+#'
+#' @examples
+#' \dontrun{
+#' hits <- strict_single_chain_match_tcrs_to_db(tcr_df, "human")
+#' hits$alpha_matches
+#' hits$beta_matches
+#' }
+#'
+#' @seealso \code{\link{match_tcrs_to_db}}, \code{\link{find_significant_tcrdist_matches}}
 #' @export
 strict_single_chain_match_tcrs_to_db <- function(tcr_df, organism,
                                                    db_tcrs_tsvfile = NULL) {

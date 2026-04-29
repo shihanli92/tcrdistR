@@ -14,4 +14,12 @@ AMINO_ACIDS
 A character vector of the 20 standard amino acids in alphabetical order,
 ported from Python CoNGA \code{amino_acids.py}.
 }
+\examples{
+AMINO_ACIDS
+length(AMINO_ACIDS)  # 20
+
+}
+\seealso{
+\code{\link{bsd4_matrix}}, \code{\link{weighted_cdr3_distance}}
+}
 \keyword{datasets}

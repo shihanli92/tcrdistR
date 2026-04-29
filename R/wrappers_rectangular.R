@@ -54,6 +54,7 @@
 #' rect <- tcrdist_rect(tcrs, tcrs, "human")
 #' mat  <- tcrdist_matrix(tcrs, "human")
 #' }
+#' @seealso \code{\link{tcrdist_matrix}}, \code{\link{tcrdist_sparse}}, \code{\link{tcrdist_join}}
 #' @export
 tcrdist_rect <- function(query, ref, organism,
                          weight_cdr3      = WEIGHT_CDR3_REGION,

@@ -59,3 +59,6 @@ tcrs <- data.frame(
 mat <- tcrdist_matrix(tcrs, "human")
 }
 }
+\seealso{
+\code{\link{tcrdist_sparse}}, \code{\link{tcrdist_rect}}, \code{\link{tcrdist_knn}}, \code{\link{TCRrep}}
+}

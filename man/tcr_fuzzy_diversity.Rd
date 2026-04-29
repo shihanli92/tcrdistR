@@ -45,3 +45,6 @@ tcr_fuzzy_diversity(tcr_df, "human", threshold = 50)
 }
 
 }
+\seealso{
+\code{\link{tcr_diversity}}, \code{\link{tcrdist_matrix}}
+}

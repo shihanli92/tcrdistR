@@ -46,3 +46,6 @@ D   <- tcrdist_matrix(tcrs, "human")
 knn <- knn_from_matrix(D, K = 1L)
 }
 }
+\seealso{
+\code{\link{knn_from_pca}}, \code{\link{tcrdist_knn}}
+}

@@ -42,3 +42,6 @@ plot_gene_usage(tcr_df, "va", title = "V-alpha usage")
 }
 
 }
+\seealso{
+\code{\link{plot_cdr3_logo}}, \code{\link{plot_tcrdist_dendrogram}}
+}

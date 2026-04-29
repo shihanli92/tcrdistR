@@ -63,3 +63,6 @@ meta <- find_meta_clonotypes(tcr_df, "human", radius = 30,
 }
 
 }
+\seealso{
+\code{\link{summarize_meta_clonotype}}, \code{\link{find_clumping}}
+}

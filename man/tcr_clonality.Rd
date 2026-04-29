@@ -26,3 +26,6 @@ tcr_clonality(rep(10, 5))
 tcr_clonality(c(1000, 1, 1))
 
 }
+\seealso{
+\code{\link{tcr_diversity}}, \code{\link{tcr_richness}}
+}

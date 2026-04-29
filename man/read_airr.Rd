@@ -46,3 +46,6 @@ are resolved by taking the first listed allele.
 }
 
 }
+\seealso{
+\code{\link{read_tcr_table}}, \code{\link{read_adaptive}}, \code{\link{read_10x}}
+}

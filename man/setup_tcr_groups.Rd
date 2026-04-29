@@ -42,3 +42,6 @@ groups <- setup_tcr_groups(tcr_df)
 groups$agroups  # c(0, 0, 1)  (first two share alpha chain)
 }
 }
+\seealso{
+\code{\link{find_clumping}}
+}

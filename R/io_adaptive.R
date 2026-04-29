@@ -78,6 +78,7 @@
 #' # df <- read_adaptive("sample_immunoseq.tsv")
 #' # head(df)
 #' }
+#' @seealso \code{\link{read_tcr_table}}, \code{\link{read_airr}}, \code{\link{read_10x}}
 #' @export
 read_adaptive <- function(file, normalize_genes = TRUE) {
     # ---- Validate inputs ------------------------------------------------------

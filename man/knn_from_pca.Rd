@@ -39,3 +39,6 @@ pca <- matrix(rnorm(30), nrow = 10, ncol = 3)
 knn <- knn_from_pca(pca, K = 3L)
 }
 }
+\seealso{
+\code{\link{knn_from_matrix}}, \code{\link{compute_tcrdist_kernel_pca}}
+}

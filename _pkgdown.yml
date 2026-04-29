@@ -1,0 +1,131 @@
+url: https://shihanli92.github.io/tcrdistR/
+
+template:
+  bootstrap: 5
+
+reference:
+  - title: "TCRrep Object"
+    desc: "S4 class and constructor for TCR repertoire data"
+    contents:
+      - TCRrep-class
+      - TCRrep
+      - show,TCRrep-method
+
+  - title: "Distance Computation"
+    desc: "Pairwise TCRdist distance calculations"
+    contents:
+      - tcrdist_matrix
+      - tcrdist_rect
+      - tcrdist_sparse
+      - weighted_cdr3_distance
+      - bsd4_matrix
+      - hamming_distance
+      - hamming_matrix
+
+  - title: "Neighbor Search"
+    desc: "K-nearest neighbor and radius-based neighbor queries"
+    contents:
+      - tcrdist_knn
+      - tcrdist_radius_neighbors
+      - knn_from_matrix
+      - knn_from_pca
+
+  - title: "Clumping & Background Models"
+    desc: "TCR clumping detection with background-corrected significance"
+    contents:
+      - find_clumping
+      - setup_tcr_groups
+
+  - title: "Database Matching"
+    desc: "Match TCRs against literature epitope databases"
+    contents:
+      - find_significant_tcrdist_matches
+      - match_tcrs_to_db
+      - strict_single_chain_match_tcrs_to_db
+
+  - title: "Dimensionality Reduction"
+    desc: "Kernel PCA for TCRdist distance matrices"
+    contents:
+      - compute_tcrdist_kernel_pca
+
+  - title: "CD8 Scoring"
+    desc: "Logistic regression-based CD8 phenotype scoring"
+    contents:
+      - make_cd8_score_table_column
+
+  - title: "Diversity Metrics"
+    desc: "Repertoire diversity, richness, and clonality"
+    contents:
+      - tcr_diversity
+      - tcr_fuzzy_diversity
+      - tcr_richness
+      - tcr_clonality
+
+  - title: "Clustering & Neighborhood Tests"
+    desc: "Hierarchical clustering and neighborhood-based statistics"
+    contents:
+      - tcrdist_hclust
+      - cluster_tcrs
+      - neighborhood_test
+
+  - title: "Meta-Clonotypes"
+    desc: "Quasi-public TCR motif discovery across subjects"
+    contents:
+      - find_meta_clonotypes
+      - summarize_meta_clonotype
+
+  - title: "Joins"
+    desc: "Distance-based fuzzy joining of TCR datasets"
+    contents:
+      - tcrdist_join
+
+  - title: "Visualization"
+    desc: "Plotting functions for TCR repertoire data"
+    contents:
+      - plot_tcrdist_heatmap
+      - plot_tcrdist_dendrogram
+      - plot_distance_distribution
+      - plot_cdr3_logo
+      - plot_junction_bars
+      - plot_gene_usage
+      - plot_tcr_scatter
+
+  - title: "I/O"
+    desc: "Read TCR data from various formats"
+    contents:
+      - read_tcr_table
+      - read_airr
+      - read_adaptive
+      - read_10x
+
+  - title: "Utilities"
+    desc: "Gene database, constants, and helper functions"
+    contents:
+      - load_gene_database
+      - trim_allele_to_gene
+      - get_translation
+      - reverse_complement
+      - AMINO_ACIDS
+
+  - title: "Rcpp (Advanced)"
+    desc: "Direct C++ function access via Rcpp"
+    contents:
+      - starts_with("rcpp_")
+
+articles:
+  - title: "Getting Started"
+    contents:
+      - tcrdistR-getting-started
+  - title: "Guides"
+    contents:
+      - tcrdistR-advanced
+      - tcrdistR-visualization
+
+navbar:
+  structure:
+    left: [intro, reference, articles]
+    right: [search, github]
+  components:
+    github:
+      icon: fa-github
+      href: https://github.com/shihanli92/tcrdistR

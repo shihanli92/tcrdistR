@@ -39,3 +39,6 @@ weighted_cdr3_distance("CASSIRSSYEQYF", "CASSIRSYEQYF")
 weighted_cdr3_distance("CASSIRSSYEQYF", "CASSIRSSYEQYF")  # 0
 }
 }
+\seealso{
+\code{\link{tcrdist_matrix}}, \code{\link{bsd4_matrix}}
+}

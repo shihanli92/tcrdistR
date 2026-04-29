@@ -41,3 +41,6 @@ tcr_df <- data.frame(
 scores <- make_cd8_score_table_column(tcr_df)
 }
 }
+\seealso{
+\code{\link{match_tcrs_to_db}}
+}

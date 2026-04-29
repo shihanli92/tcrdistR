@@ -66,3 +66,6 @@ tcrs <- data.frame(
 nbrs <- tcrdist_radius_neighbors(tcrs, "human", radius = 50)
 }
 }
+\seealso{
+\code{\link{tcrdist_knn}}, \code{\link{find_clumping}}
+}

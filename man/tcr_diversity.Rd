@@ -43,3 +43,6 @@ tcr_diversity(rep(10, 5))
 tcr_diversity(c(100, 1, 1, 1))
 
 }
+\seealso{
+\code{\link{tcr_fuzzy_diversity}}, \code{\link{tcr_richness}}, \code{\link{tcr_clonality}}
+}

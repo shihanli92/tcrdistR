@@ -60,3 +60,6 @@ human_genes <- load_gene_database("human")
 human_genes[["TRAV1-1*01"]]$protseq
 }
 }
+\seealso{
+\code{\link{tcrdist_matrix}}, \code{\link{trim_allele_to_gene}}
+}

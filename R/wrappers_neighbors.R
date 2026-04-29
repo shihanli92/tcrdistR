@@ -59,6 +59,7 @@
 #' )
 #' knn <- tcrdist_knn(tcrs, "human", K = 1L)
 #' }
+#' @seealso \code{\link{tcrdist_radius_neighbors}}, \code{\link{knn_from_matrix}}, \code{\link{knn_from_pca}}
 #' @export
 tcrdist_knn <- function(tcrs, organism, K,
                         agroups          = NULL,
@@ -220,6 +221,7 @@ tcrdist_knn <- function(tcrs, organism, K,
 #' )
 #' nbrs <- tcrdist_radius_neighbors(tcrs, "human", radius = 50)
 #' }
+#' @seealso \code{\link{tcrdist_knn}}, \code{\link{find_clumping}}
 #' @export
 tcrdist_radius_neighbors <- function(tcrs, organism, radius,
                                      agroups          = NULL,
@@ -366,6 +368,7 @@ tcrdist_radius_neighbors <- function(tcrs, organism, radius,
 #' D   <- tcrdist_matrix(tcrs, "human")
 #' knn <- knn_from_matrix(D, K = 1L)
 #' }
+#' @seealso \code{\link{knn_from_pca}}, \code{\link{tcrdist_knn}}
 #' @export
 knn_from_matrix <- function(D, K,
                              agroups   = NULL,
@@ -443,6 +446,7 @@ knn_from_matrix <- function(D, K,
 #' pca <- matrix(rnorm(30), nrow = 10, ncol = 3)
 #' knn <- knn_from_pca(pca, K = 3L)
 #' }
+#' @seealso \code{\link{knn_from_matrix}}, \code{\link{compute_tcrdist_kernel_pca}}
 #' @export
 knn_from_pca <- function(pca_matrix, K,
                           agroups   = NULL,

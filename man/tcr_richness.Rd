@@ -19,3 +19,6 @@ Returns the number of unique clonotypes (species richness).
 tcr_richness(c(10, 5, 3, 1, 1))  # 5
 
 }
+\seealso{
+\code{\link{tcr_diversity}}, \code{\link{tcr_clonality}}
+}
