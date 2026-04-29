@@ -27,6 +27,7 @@ Suggests:
     patchwork,
     ggrepel,
     uwot,
+    igraph,
     knitr,
     rmarkdown
 VignetteBuilder: knitr

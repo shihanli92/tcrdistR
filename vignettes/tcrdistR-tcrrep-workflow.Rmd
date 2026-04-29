@@ -119,15 +119,45 @@ plot_tcr_scatter(
 ## UMAP
 
 UMAP provides a nonlinear 2D embedding that often separates clusters better
-than linear PCA. `compute_tcrdist_umap()` takes kernel PCA embeddings (or
-raw TCR data) and returns UMAP coordinates:
+than linear PCA. `compute_tcrdist_umap()` supports two modes:
+
+- **KNN path** (recommended): pass `tcr_df` + `organism`. Computes TCRdist
+  K-nearest-neighbors with chain group masking, builds a fuzzy simplicial set
+  graph, and runs UMAP from the precomputed KNN. This preserves the TCRdist
+  metric faithfully.
+- **PCA path**: pass pre-computed `pca_embeddings`. Runs standard UMAP in
+  Euclidean space.
 
 ```{r umap, eval=has_viz && requireNamespace("uwot", quietly = TRUE), fig.height=5}
-umap <- compute_tcrdist_umap(pca_embeddings = pca$embeddings, seed = 42)
+# KNN path: UMAP directly from TCRdist neighbors
+umap <- compute_tcrdist_umap(
+  rep@clone_df, organism = rep@organism, seed = 42
+)
 plot_tcr_scatter(
   umap$embeddings,
   color_by = rep@clone_df$epitope,
-  title = "UMAP of DASH TCRs",
+  title = "UMAP of DASH TCRs (KNN path)",
+  axis_label_prefix = "UMAP",
+  point_size = 1.5
+)
+```
+
+The KNN path also returns the fuzzy simplicial set graph and weighted
+nearest-neighbor distances:
+
+```{r umap-knn-artifacts, eval=has_viz && requireNamespace("uwot", quietly = TRUE)}
+dim(umap$knn_graph)         # N x N sparse matrix
+summary(umap$nndists)       # weighted NN distances per clone
+```
+
+Alternatively, use the PCA path for a quicker approximation:
+
+```{r umap-pca, eval=has_viz && requireNamespace("uwot", quietly = TRUE), fig.height=5}
+umap_pca <- compute_tcrdist_umap(pca_embeddings = pca$embeddings, seed = 42)
+plot_tcr_scatter(
+  umap_pca$embeddings,
+  color_by = rep@clone_df$epitope,
+  title = "UMAP of DASH TCRs (PCA path)",
   axis_label_prefix = "UMAP",
   point_size = 1.5
 )
