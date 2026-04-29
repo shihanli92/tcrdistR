@@ -18,198 +18,215 @@ knitr::opts_chunk$set(
 
 This vignette demonstrates the advanced analysis features in tcrdistR:
 hierarchical clustering, neighborhood statistical tests, clumping detection,
-meta-clonotype discovery, database matching, and more.
+meta-clonotype discovery, database matching, kernel PCA, and more.
 
-We use a small inline dataset of mouse TCRs from different subjects responding
-to different epitopes:
+We use the DASH dataset --- 1924 paired alpha-beta mouse TCRs across 7 viral
+epitopes from 78 subjects.
 
-```{r setup, eval=FALSE}
+```{r setup}
 library(tcrdistR)
+data(dash)
 
-tcrs <- data.frame(
-  va    = c("TRAV7-3*01",  "TRAV6D-6*01", "TRAV6D-6*01",
-            "TRAV6-4*01",  "TRAV6-4*01",  "TRAV7-3*01",
-            "TRAV6D-6*01", "TRAV6-4*01",  "TRAV7-3*01",
-            "TRAV6D-6*01", "TRAV6-4*01",  "TRAV7-3*01",
-            "TRAV6D-6*01", "TRAV6-4*01",  "TRAV7-3*01"),
-  cdr3a = c("CAVSLDSNYQLIW",  "CALGDRATGGNNKLTF", "CALGSNTGYQNFYF",
-            "CALAPSNTNKVVF",  "CALVPSNTNKVVF",    "CAVSLDSNYQLIW",
-            "CALGDRATGGNNKLTF","CALAPSNTNKVVF",    "CAVSLDSNYQLIW",
-            "CALGSNTGYQNFYF", "CALVPSNTNKVVF",    "CAVSLDSNYQLIW",
-            "CALGDRATGGNNKLTF","CALAPSNTNKVVF",    "CAVSLDSNYQLIW"),
-  vb    = c("TRBV13-1*01", "TRBV29*01",   "TRBV29*01",
-            "TRBV2*01",    "TRBV29*01",   "TRBV13-1*01",
-            "TRBV29*01",   "TRBV2*01",    "TRBV13-1*01",
-            "TRBV29*01",   "TRBV29*01",   "TRBV13-1*01",
-            "TRBV29*01",   "TRBV2*01",    "TRBV13-1*01"),
-  cdr3b = c("CASSDFDWGGDAETLYF", "CASSPDRGEVFF",    "CASTGGGAPLF",
-            "CASSQDPGDYEQYF",   "CASSLGGENTLYF",   "CASSDFDWGGDAETLYF",
-            "CASSPDRGEVFF",      "CASSQDPGDYEQYF",  "CASSDFDWGGDAETLYF",
-            "CASTGGGAPLF",       "CASSLGGENTLYF",    "CASSDFDWGGDAETLYF",
-            "CASSPDRGEVFF",      "CASSQDPGDYEQYF",  "CASSDFDWGGDAETLYF"),
-  epitope = c("PA", "PA", "PA", "PA", "PA",
-              "NP", "NP", "NP", "NP", "NP",
-              "M1", "M1", "M1", "M1", "M1"),
-  subject = c("S1", "S1", "S2", "S2", "S3",
-              "S1", "S2", "S3", "S1", "S2",
-              "S3", "S1", "S2", "S3", "S1"),
-  stringsAsFactors = FALSE
-)
+# Work with PA-specific TCRs for clustering demos (N = 324)
+pa <- dash[dash$epitope == "PA", ]
+nrow(pa)
 ```
 
 ## Hierarchical Clustering
 
 Cluster TCRs by distance using hierarchical agglomerative clustering:
 
-```{r hclust, eval=FALSE}
-hc <- tcrdist_hclust(tcrs, organism = "mouse", method = "average")
+```{r hclust}
+hc <- tcrdist_hclust(pa, organism = "mouse", method = "average")
 
 # hc contains:
-# - hc$hclust: an hclust object (pass to plot(), cutree(), etc.)
-# - hc$dist_matrix: the underlying distance matrix
-# - hc$indices: row indices used (relevant if subsampled)
-
-plot(hc$hclust, main = "TCR Hierarchical Clustering")
+#   hc$hclust      - an hclust object (pass to plot(), cutree(), etc.)
+#   hc$dist_matrix - the underlying distance matrix
+#   hc$indices     - row indices used (relevant if subsampled)
+names(hc)
 ```
 
 Cut the dendrogram into a fixed number of clusters:
 
-```{r cluster, eval=FALSE}
-clusters <- cluster_tcrs(tcrs, organism = "mouse", k = 3)
+```{r cluster}
+clusters <- cluster_tcrs(pa, organism = "mouse", k = 5)
 table(clusters)
 
 # Or cut by height threshold
-clusters_h <- cluster_tcrs(tcrs, organism = "mouse", h = 100)
+clusters_h <- cluster_tcrs(pa, organism = "mouse", h = 100)
+table(clusters_h)
 ```
 
 ## Neighborhood Statistical Tests
 
-Test whether a categorical variable (e.g., epitope specificity) is enriched
-in TCR neighborhoods:
+Test whether epitope specificity is enriched in TCR neighborhoods. This
+computes TCRdist radius-based neighborhoods and runs a statistical test for
+each TCR.
 
-```{r nhood-test, eval=FALSE}
-# Fisher's exact test for binary variables
+```{r nhood-test}
+# Use a mixed-epitope subset for a meaningful test
+mixed <- dash[dash$epitope %in% c("PA", "NP"), ]
+mixed$is_PA <- ifelse(mixed$epitope == "PA", "PA", "other")
+
 result <- neighborhood_test(
-  tcrs, organism = "mouse",
-  variable = ifelse(tcrs$epitope == "PA", "PA", "other"),
-  radius = 100, test = "fisher"
+  mixed, organism = "mouse",
+  variable = mixed$is_PA,
+  radius = 50, test = "fisher"
 )
 
-# Each row reports the test result for one TCR's neighborhood
-head(result[, c("cdr3a", "cdr3b", "odds_ratio", "p_value", "p_adjusted")])
+head(result[order(result$p_adjusted), c("index", "n_neighbors", "odds_ratio",
+                                         "p_value", "p_adjusted")])
+```
 
-# Chi-squared test for multi-level variables
+For multi-level categorical variables, use the chi-squared test:
+
+```{r nhood-chisq, eval=FALSE}
 result_chi <- neighborhood_test(
-  tcrs, organism = "mouse",
-  variable = tcrs$epitope,
-  radius = 100, test = "chisq"
+  dash, organism = "mouse",
+  variable = dash$epitope,
+  radius = 50, test = "chisq"
 )
 ```
 
 ## Meta-Clonotype Discovery
 
-Identify quasi-public TCR motifs shared across multiple subjects:
+Identify quasi-public TCR motifs shared across multiple subjects. A
+meta-clonotype is defined by a center TCR and a radius: all TCRs within the
+radius from multiple subjects form the meta-clonotype.
 
-```{r meta-clonotypes, eval=FALSE}
+```{r meta-clonotypes}
 meta <- find_meta_clonotypes(
-  tcrs, organism = "mouse",
-  radius = 100,
+  pa, organism = "mouse",
+  radius = 48,
   min_nsubject = 2L,
   subject_col = "subject"
 )
 
-# Returns a data.frame with center TCR info, radius, neighbor count,
-# number of subjects, and neighbor indices
-print(meta[, c("cdr3a", "cdr3b", "radius", "K_neighbors", "nsubject")])
+nrow(meta)
+head(meta[, c("cdr3a", "cdr3b", "radius", "K_neighbors", "nsubject")])
 ```
 
 Summarize the composition of a discovered meta-clonotype:
 
-```{r summarize-meta, eval=FALSE}
+```{r summarize-meta}
 if (nrow(meta) > 0) {
   indices <- as.integer(strsplit(meta$neighbor_indices[1], ",")[[1]])
-  summary <- summarize_meta_clonotype(tcrs, meta$center_index[1], indices)
+  summary <- summarize_meta_clonotype(pa, meta$center_index[1], indices)
   summary$n_members
   summary$va_usage
   summary$vb_usage
 }
 ```
 
+## Clumping Detection
+
+Test whether TCRs form statistically significant clusters beyond what is
+expected by chance. This uses a background resampling model to compute
+expected neighbor counts.
+
+The `find_clumping()` function requires nucleotide sequences and J-gene
+annotations, which the DASH dataset provides:
+
+```{r clumping, eval=FALSE}
+clump <- find_clumping(
+  pa, organism = "mouse",
+  radii = c(24L, 48L, 72L),
+  num_random_samples = 50000L,
+  verbose = TRUE
+)
+
+# How many TCRs are in significant clumps?
+sum(clump$is_clumped)
+
+# Detailed results sorted by significance
+head(clump$results_df[, c("cdr3a", "cdr3b", "nbr_radius",
+                            "pvalue_adj", "num_nbrs")])
+```
+
 ## Database Matching
 
-Match query TCRs against the built-in literature epitope databases:
+Match query TCRs against the built-in literature epitope database. This
+requires background sampling and is available for human TCRs:
 
 ```{r db-match, eval=FALSE}
 # Paired-chain matching with background-corrected p-values
-results <- match_tcrs_to_db(tcrs, organism = "mouse")
+results <- match_tcrs_to_db(human_tcrs, organism = "human")
 significant <- results[results$pvalue_adj < 0.05, ]
 
 # Single-chain exact CDR3 matching (no background model needed)
-hits <- strict_single_chain_match_tcrs_to_db(tcrs, organism = "mouse")
-hits$alpha_matches  # matches on CDR3-alpha
-hits$beta_matches   # matches on CDR3-beta
-```
-
-## CD8 Scoring
-
-Score TCRs for CD8 phenotype using a logistic regression model:
-
-```{r cd8, eval=FALSE}
-# Requires human TCRs
-human_tcrs <- data.frame(
-  va    = c("TRAV1-1*01", "TRAV1-2*01"),
-  cdr3a = c("CAVRDSSYKLIF", "CAVKDSSYKLIF"),
-  vb    = c("TRBV5-1*01", "TRBV6-1*01"),
-  cdr3b = c("CASSIRSSYEQYF", "CASSIKSSYEQYF"),
-  stringsAsFactors = FALSE
-)
-
-scores <- make_cd8_score_table_column(human_tcrs)
-# Returns a numeric vector of CD8 probability scores
+hits <- strict_single_chain_match_tcrs_to_db(human_tcrs, organism = "human")
+hits$alpha_matches
+hits$beta_matches
 ```
 
 ## Kernel PCA
 
-Embed TCRs in lower-dimensional space via kernel PCA on the distance matrix:
+Embed TCRs in lower-dimensional space via kernel PCA on the distance matrix.
+The default kernel is linear (`1 - D/Dmax`); a Gaussian kernel is also
+available.
 
-```{r kpca, eval=FALSE}
-pca <- compute_tcrdist_kernel_pca(tcrs, organism = "mouse", n_components = 10)
-
-# pca$embeddings: N x n_components matrix
-# pca$eigenvalues: eigenvalues
-# pca$indices: row indices used
-
-# Use with plot_tcr_scatter for visualization
-plot_tcr_scatter(
-  pca$embeddings[, 1], pca$embeddings[, 2],
-  color = tcrs$epitope[pca$indices],
-  xlab = "KPC1", ylab = "KPC2"
+```{r kpca}
+pca <- compute_tcrdist_kernel_pca(
+  pa, organism = "mouse",
+  n_components = 10L,
+  method = "eigen"
 )
+
+# Return structure
+names(pca)
+dim(pca$embeddings)     # N x n_components
+length(pca$eigenvalues)
+
+# Top eigenvalues (variance captured)
+head(pca$eigenvalues)
+```
+
+With Gaussian kernel:
+
+```{r kpca-gaussian}
+pca_gauss <- compute_tcrdist_kernel_pca(
+  pa, organism = "mouse",
+  n_components = 10L,
+  kernel = "gaussian",
+  gaussian_kernel_sdev = 100
+)
+head(pca_gauss$eigenvalues)
 ```
 
 ## Fuzzy Diversity
 
-Compute TCR-aware diversity that accounts for sequence similarity:
+Compute TCR-aware diversity that accounts for sequence similarity. Unlike
+standard diversity which treats each unique clonotype as completely distinct,
+fuzzy diversity merges clonotypes within a distance threshold:
 
-```{r fuzzy-div, eval=FALSE}
-fd <- tcr_fuzzy_diversity(tcrs, organism = "mouse", threshold = 50)
+```{r fuzzy-div}
+fd <- tcr_fuzzy_diversity(pa, organism = "mouse", threshold = 50)
 fd$fuzzy_diversity     # diversity accounting for similar TCRs
 fd$standard_diversity  # standard Simpson's for comparison
 ```
 
 ## Distance-Based Joins
 
-Fuzzy-join two TCR datasets by distance threshold:
+Fuzzy-join two TCR datasets by distance threshold. This finds all pairs of
+TCRs (one from each dataset) within a specified radius:
 
-```{r join, eval=FALSE}
-left <- tcrs[1:5, ]
-right <- tcrs[6:15, ]
+```{r join}
+left <- pa[1:20, ]
+right <- pa[21:100, ]
 
 # Inner join: only matched pairs within radius
 joined <- tcrdist_join(left, right, organism = "mouse",
                        radius = 100, max_n = 3)
+dim(joined)
+head(joined[, c("cdr3a_x", "cdr3b_x", "cdr3a_y", "cdr3b_y", "tcrdist")])
+```
 
-# Left join: all left rows, NAs for unmatched
-joined_left <- tcrdist_join(left, right, organism = "mouse",
-                            radius = 100, type = "left")
+## CD8 Scoring
+
+Score TCRs for CD8 phenotype using a logistic regression model trained on
+known CD4/CD8 repertoires. This is only available for human TCRs:
+
+```{r cd8, eval=FALSE}
+scores <- make_cd8_score_table_column(human_tcrs)
+# Returns a numeric vector of CD8 probability scores
 ```

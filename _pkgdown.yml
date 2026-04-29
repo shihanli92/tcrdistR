@@ -98,6 +98,11 @@ reference:
       - read_adaptive
       - read_10x
 
+  - title: "Data"
+    desc: "Built-in datasets"
+    contents:
+      - dash
+
   - title: "Utilities"
     desc: "Gene database, constants, and helper functions"
     contents:
@@ -106,11 +111,6 @@ reference:
       - get_translation
       - reverse_complement
       - AMINO_ACIDS
-
-  - title: "Rcpp (Advanced)"
-    desc: "Direct C++ function access via Rcpp"
-    contents:
-      - starts_with("rcpp_")
 
 articles:
   - title: "Getting Started"
