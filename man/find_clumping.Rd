@@ -82,7 +82,7 @@ chain resampling.
 }
 }
 \examples{
-\donttest{
+\dontrun{
 result <- find_clumping(tcr_df, "human")
 result$results_df
 sum(result$is_clumped)

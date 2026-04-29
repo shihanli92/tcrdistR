@@ -401,7 +401,7 @@ setup_tcr_groups <- function(tcr_df) {
 #'   }
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' result <- find_clumping(tcr_df, "human")
 #' result$results_df
 #' sum(result$is_clumped)

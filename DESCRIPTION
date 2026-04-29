@@ -18,7 +18,9 @@ Imports:
     stats
 Suggests:
     testthat (>= 3.0.0),
-    roxygen2
+    roxygen2,
+    jsonlite,
+    RSpectra
 LinkingTo: Rcpp
 Config/testthat/edition: 3
 Encoding: UTF-8
@@ -27,6 +29,7 @@ RoxygenNote: 7.3.2
 Collate:
     'RcppExports.R'
     'all_genes.R'
+    'cd8_scoring.R'
     'constants.R'
     'classes.R'
     'constructors.R'
@@ -36,8 +39,10 @@ Collate:
     'io_airr.R'
     'io_utils.R'
     'io_generic.R'
+    'kernel_pca.R'
     'show-methods.R'
     'tcr_clumping.R'
+    'tcr_db_matching.R'
     'tcr_sampler.R'
     'tcrdistR-package.R'
     'translation.R'
