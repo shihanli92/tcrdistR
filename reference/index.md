@@ -158,6 +158,13 @@ Read TCR data from various formats
 - [`read_10x()`](https://shihanli92.github.io/tcrdistR/reference/read_10x.md)
   : Read 10X Genomics VDJ contig annotations
 
+## Data
+
+Built-in datasets
+
+- [`dash`](https://shihanli92.github.io/tcrdistR/reference/dash.md) :
+  DASH dataset: paired alpha-beta mouse TCRs across 7 epitopes
+
 ## Utilities
 
 Gene database, constants, and helper functions
@@ -172,7 +179,3 @@ Gene database, constants, and helper functions
   : Reverse complement of a nucleotide sequence
 - [`AMINO_ACIDS`](https://shihanli92.github.io/tcrdistR/reference/AMINO_ACIDS.md)
   : Standard 20 amino acid single-letter codes
-
-## Rcpp (Advanced)
-
-Direct C++ function access via Rcpp

@@ -64,42 +64,18 @@
 </h2>
 <p>This vignette demonstrates the advanced analysis features in
 tcrdistR: hierarchical clustering, neighborhood statistical tests,
-clumping detection, meta-clonotype discovery, database matching, and
-more.</p>
-<p>We use a small inline dataset of mouse TCRs from different subjects
-responding to different epitopes:</p>
+clumping detection, meta-clonotype discovery, database matching, kernel
+PCA, and more.</p>
+<p>We use the DASH dataset — 1924 paired alpha-beta mouse TCRs across 7
+viral epitopes from 78 subjects.</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shihanli92.github.io/tcrdistR/">tcrdistR</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">dash</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">tcrs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  va    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TRAV7-3*01"</span>,  <span class="st">"TRAV6D-6*01"</span>, <span class="st">"TRAV6D-6*01"</span>,</span>
-<span>            <span class="st">"TRAV6-4*01"</span>,  <span class="st">"TRAV6-4*01"</span>,  <span class="st">"TRAV7-3*01"</span>,</span>
-<span>            <span class="st">"TRAV6D-6*01"</span>, <span class="st">"TRAV6-4*01"</span>,  <span class="st">"TRAV7-3*01"</span>,</span>
-<span>            <span class="st">"TRAV6D-6*01"</span>, <span class="st">"TRAV6-4*01"</span>,  <span class="st">"TRAV7-3*01"</span>,</span>
-<span>            <span class="st">"TRAV6D-6*01"</span>, <span class="st">"TRAV6-4*01"</span>,  <span class="st">"TRAV7-3*01"</span><span class="op">)</span>,</span>
-<span>  cdr3a <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CAVSLDSNYQLIW"</span>,  <span class="st">"CALGDRATGGNNKLTF"</span>, <span class="st">"CALGSNTGYQNFYF"</span>,</span>
-<span>            <span class="st">"CALAPSNTNKVVF"</span>,  <span class="st">"CALVPSNTNKVVF"</span>,    <span class="st">"CAVSLDSNYQLIW"</span>,</span>
-<span>            <span class="st">"CALGDRATGGNNKLTF"</span>,<span class="st">"CALAPSNTNKVVF"</span>,    <span class="st">"CAVSLDSNYQLIW"</span>,</span>
-<span>            <span class="st">"CALGSNTGYQNFYF"</span>, <span class="st">"CALVPSNTNKVVF"</span>,    <span class="st">"CAVSLDSNYQLIW"</span>,</span>
-<span>            <span class="st">"CALGDRATGGNNKLTF"</span>,<span class="st">"CALAPSNTNKVVF"</span>,    <span class="st">"CAVSLDSNYQLIW"</span><span class="op">)</span>,</span>
-<span>  vb    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TRBV13-1*01"</span>, <span class="st">"TRBV29*01"</span>,   <span class="st">"TRBV29*01"</span>,</span>
-<span>            <span class="st">"TRBV2*01"</span>,    <span class="st">"TRBV29*01"</span>,   <span class="st">"TRBV13-1*01"</span>,</span>
-<span>            <span class="st">"TRBV29*01"</span>,   <span class="st">"TRBV2*01"</span>,    <span class="st">"TRBV13-1*01"</span>,</span>
-<span>            <span class="st">"TRBV29*01"</span>,   <span class="st">"TRBV29*01"</span>,   <span class="st">"TRBV13-1*01"</span>,</span>
-<span>            <span class="st">"TRBV29*01"</span>,   <span class="st">"TRBV2*01"</span>,    <span class="st">"TRBV13-1*01"</span><span class="op">)</span>,</span>
-<span>  cdr3b <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CASSDFDWGGDAETLYF"</span>, <span class="st">"CASSPDRGEVFF"</span>,    <span class="st">"CASTGGGAPLF"</span>,</span>
-<span>            <span class="st">"CASSQDPGDYEQYF"</span>,   <span class="st">"CASSLGGENTLYF"</span>,   <span class="st">"CASSDFDWGGDAETLYF"</span>,</span>
-<span>            <span class="st">"CASSPDRGEVFF"</span>,      <span class="st">"CASSQDPGDYEQYF"</span>,  <span class="st">"CASSDFDWGGDAETLYF"</span>,</span>
-<span>            <span class="st">"CASTGGGAPLF"</span>,       <span class="st">"CASSLGGENTLYF"</span>,    <span class="st">"CASSDFDWGGDAETLYF"</span>,</span>
-<span>            <span class="st">"CASSPDRGEVFF"</span>,      <span class="st">"CASSQDPGDYEQYF"</span>,  <span class="st">"CASSDFDWGGDAETLYF"</span><span class="op">)</span>,</span>
-<span>  epitope <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PA"</span>, <span class="st">"PA"</span>, <span class="st">"PA"</span>, <span class="st">"PA"</span>, <span class="st">"PA"</span>,</span>
-<span>              <span class="st">"NP"</span>, <span class="st">"NP"</span>, <span class="st">"NP"</span>, <span class="st">"NP"</span>, <span class="st">"NP"</span>,</span>
-<span>              <span class="st">"M1"</span>, <span class="st">"M1"</span>, <span class="st">"M1"</span>, <span class="st">"M1"</span>, <span class="st">"M1"</span><span class="op">)</span>,</span>
-<span>  subject <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"S1"</span>, <span class="st">"S1"</span>, <span class="st">"S2"</span>, <span class="st">"S2"</span>, <span class="st">"S3"</span>,</span>
-<span>              <span class="st">"S1"</span>, <span class="st">"S2"</span>, <span class="st">"S3"</span>, <span class="st">"S1"</span>, <span class="st">"S2"</span>,</span>
-<span>              <span class="st">"S3"</span>, <span class="st">"S1"</span>, <span class="st">"S2"</span>, <span class="st">"S3"</span>, <span class="st">"S1"</span><span class="op">)</span>,</span>
-<span>  stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Work with PA-specific TCRs for clustering demos (N = 324)</span></span>
+<span><span class="va">pa</span> <span class="op">&lt;-</span> <span class="va">dash</span><span class="op">[</span><span class="va">dash</span><span class="op">$</span><span class="va">epitope</span> <span class="op">==</span> <span class="st">"PA"</span>, <span class="op">]</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">pa</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 324</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="hierarchical-clustering">Hierarchical Clustering<a class="anchor" aria-label="anchor" href="#hierarchical-clustering"></a>
@@ -107,146 +83,228 @@ responding to different epitopes:</p>
 <p>Cluster TCRs by distance using hierarchical agglomerative
 clustering:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">hc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_hclust.html">tcrdist_hclust</a></span><span class="op">(</span><span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, method <span class="op">=</span> <span class="st">"average"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">hc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_hclust.html">tcrdist_hclust</a></span><span class="op">(</span><span class="va">pa</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, method <span class="op">=</span> <span class="st">"average"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># hc contains:</span></span>
-<span><span class="co"># - hc$hclust: an hclust object (pass to plot(), cutree(), etc.)</span></span>
-<span><span class="co"># - hc$dist_matrix: the underlying distance matrix</span></span>
-<span><span class="co"># - hc$indices: row indices used (relevant if subsampled)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">hc</span><span class="op">$</span><span class="va">hclust</span>, main <span class="op">=</span> <span class="st">"TCR Hierarchical Clustering"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co">#   hc$hclust      - an hclust object (pass to plot(), cutree(), etc.)</span></span>
+<span><span class="co">#   hc$dist_matrix - the underlying distance matrix</span></span>
+<span><span class="co">#   hc$indices     - row indices used (relevant if subsampled)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">hc</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "hclust"      "dist_matrix" "indices"</span></span></code></pre></div>
 <p>Cut the dendrogram into a fixed number of clusters:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_tcrs.html">cluster_tcrs</a></span><span class="op">(</span><span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, k <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">clusters</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_tcrs.html">cluster_tcrs</a></span><span class="op">(</span><span class="va">pa</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, k <span class="op">=</span> <span class="fl">5</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">clusters</span><span class="op">)</span></span>
+<span><span class="co">#&gt; clusters</span></span>
+<span><span class="co">#&gt;   1   2   3   4   5 </span></span>
+<span><span class="co">#&gt;   9 265  45   2   3</span></span>
 <span></span>
 <span><span class="co"># Or cut by height threshold</span></span>
-<span><span class="va">clusters_h</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_tcrs.html">cluster_tcrs</a></span><span class="op">(</span><span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, h <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">clusters_h</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/cluster_tcrs.html">cluster_tcrs</a></span><span class="op">(</span><span class="va">pa</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, h <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">clusters_h</span><span class="op">)</span></span>
+<span><span class="co">#&gt; clusters_h</span></span>
+<span><span class="co">#&gt;   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15  16  17  18  19  20 </span></span>
+<span><span class="co">#&gt;   2   9   2   1  12   1  16   1  12   1   1   1   1  25   2  61   5   1   2   1 </span></span>
+<span><span class="co">#&gt;  21  22  23  24  25  26  27  28  29  30  31  32  33  34  35  36  37  38  39  40 </span></span>
+<span><span class="co">#&gt;   1   1  20  15   4   2   2   7   2   1   6   4   1   1   1   1   1   1   4   3 </span></span>
+<span><span class="co">#&gt;  41  42  43  44  45  46  47  48  49  50  51  52  53  54  55  56  57  58  59  60 </span></span>
+<span><span class="co">#&gt;   1   1   1   1   2   1   1   1   2   1   1   1   1   1   1   1   1   5   1   1 </span></span>
+<span><span class="co">#&gt;  61  62  63  64  65  66  67  68  69  70  71  72  73  74  75  76  77  78  79  80 </span></span>
+<span><span class="co">#&gt;   1   3   1   1   1   1   1   1   1   1   1   2   1   1   1   1   1   2   1   1 </span></span>
+<span><span class="co">#&gt;  81  82  83  84  85  86  87  88  89  90  91  92  93  94  95  96  97  98  99 100 </span></span>
+<span><span class="co">#&gt;   1   1   1   1   1   1   2   1   2   1   1   1   1   1   1   1   1   1   2   1 </span></span>
+<span><span class="co">#&gt; 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 </span></span>
+<span><span class="co">#&gt;   1   1   2   1   1   1   1   1   1   1   1   1   1   1   1</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="neighborhood-statistical-tests">Neighborhood Statistical Tests<a class="anchor" aria-label="anchor" href="#neighborhood-statistical-tests"></a>
 </h2>
-<p>Test whether a categorical variable (e.g., epitope specificity) is
-enriched in TCR neighborhoods:</p>
+<p>Test whether epitope specificity is enriched in TCR neighborhoods.
+This computes TCRdist radius-based neighborhoods and runs a statistical
+test for each TCR.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Fisher's exact test for binary variables</span></span>
+<code class="sourceCode R"><span><span class="co"># Use a mixed-epitope subset for a meaningful test</span></span>
+<span><span class="va">mixed</span> <span class="op">&lt;-</span> <span class="va">dash</span><span class="op">[</span><span class="va">dash</span><span class="op">$</span><span class="va">epitope</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PA"</span>, <span class="st">"NP"</span><span class="op">)</span>, <span class="op">]</span></span>
+<span><span class="va">mixed</span><span class="op">$</span><span class="va">is_PA</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">mixed</span><span class="op">$</span><span class="va">epitope</span> <span class="op">==</span> <span class="st">"PA"</span>, <span class="st">"PA"</span>, <span class="st">"other"</span><span class="op">)</span></span>
+<span></span>
 <span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/neighborhood_test.html">neighborhood_test</a></span><span class="op">(</span></span>
-<span>  <span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>,</span>
-<span>  variable <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">tcrs</span><span class="op">$</span><span class="va">epitope</span> <span class="op">==</span> <span class="st">"PA"</span>, <span class="st">"PA"</span>, <span class="st">"other"</span><span class="op">)</span>,</span>
-<span>  radius <span class="op">=</span> <span class="fl">100</span>, test <span class="op">=</span> <span class="st">"fisher"</span></span>
+<span>  <span class="va">mixed</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>,</span>
+<span>  variable <span class="op">=</span> <span class="va">mixed</span><span class="op">$</span><span class="va">is_PA</span>,</span>
+<span>  radius <span class="op">=</span> <span class="fl">50</span>, test <span class="op">=</span> <span class="st">"fisher"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Each row reports the test result for one TCR's neighborhood</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cdr3a"</span>, <span class="st">"cdr3b"</span>, <span class="st">"odds_ratio"</span>, <span class="st">"p_value"</span>, <span class="st">"p_adjusted"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Chi-squared test for multi-level variables</span></span>
-<span><span class="va">result_chi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/neighborhood_test.html">neighborhood_test</a></span><span class="op">(</span></span>
-<span>  <span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>,</span>
-<span>  variable <span class="op">=</span> <span class="va">tcrs</span><span class="op">$</span><span class="va">epitope</span>,</span>
-<span>  radius <span class="op">=</span> <span class="fl">100</span>, test <span class="op">=</span> <span class="st">"chisq"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">result</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/order.html" class="external-link">order</a></span><span class="op">(</span><span class="va">result</span><span class="op">$</span><span class="va">p_adjusted</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"index"</span>, <span class="st">"n_neighbors"</span>, <span class="st">"odds_ratio"</span>,</span>
+<span>                                         <span class="st">"p_value"</span>, <span class="st">"p_adjusted"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt;     index n_neighbors odds_ratio     p_value   p_adjusted</span></span>
+<span><span class="co">#&gt; 52     52          42        Inf 1.31689e-14 2.123907e-13</span></span>
+<span><span class="co">#&gt; 72     72          42        Inf 1.31689e-14 2.123907e-13</span></span>
+<span><span class="co">#&gt; 170   170          42        Inf 1.31689e-14 2.123907e-13</span></span>
+<span><span class="co">#&gt; 171   171          42        Inf 1.31689e-14 2.123907e-13</span></span>
+<span><span class="co">#&gt; 174   174          42        Inf 1.31689e-14 2.123907e-13</span></span>
+<span><span class="co">#&gt; 175   175          42        Inf 1.31689e-14 2.123907e-13</span></span></code></pre></div>
+<p>For multi-level categorical variables, use the chi-squared test:</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">result_chi</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/neighborhood_test.html">neighborhood_test</a></span><span class="op">(</span></span>
+<span>  <span class="va">dash</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>,</span>
+<span>  variable <span class="op">=</span> <span class="va">dash</span><span class="op">$</span><span class="va">epitope</span>,</span>
+<span>  radius <span class="op">=</span> <span class="fl">50</span>, test <span class="op">=</span> <span class="st">"chisq"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="meta-clonotype-discovery">Meta-Clonotype Discovery<a class="anchor" aria-label="anchor" href="#meta-clonotype-discovery"></a>
 </h2>
-<p>Identify quasi-public TCR motifs shared across multiple subjects:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<p>Identify quasi-public TCR motifs shared across multiple subjects. A
+meta-clonotype is defined by a center TCR and a radius: all TCRs within
+the radius from multiple subjects form the meta-clonotype.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">meta</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_meta_clonotypes.html">find_meta_clonotypes</a></span><span class="op">(</span></span>
-<span>  <span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>,</span>
-<span>  radius <span class="op">=</span> <span class="fl">100</span>,</span>
+<span>  <span class="va">pa</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>,</span>
+<span>  radius <span class="op">=</span> <span class="fl">48</span>,</span>
 <span>  min_nsubject <span class="op">=</span> <span class="fl">2L</span>,</span>
 <span>  subject_col <span class="op">=</span> <span class="st">"subject"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Returns a data.frame with center TCR info, radius, neighbor count,</span></span>
-<span><span class="co"># number of subjects, and neighbor indices</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">meta</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cdr3a"</span>, <span class="st">"cdr3b"</span>, <span class="st">"radius"</span>, <span class="st">"K_neighbors"</span>, <span class="st">"nsubject"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">meta</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 113</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">meta</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cdr3a"</span>, <span class="st">"cdr3b"</span>, <span class="st">"radius"</span>, <span class="st">"K_neighbors"</span>, <span class="st">"nsubject"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt;              cdr3a          cdr3b radius K_neighbors nsubject</span></span>
+<span><span class="co">#&gt; 1 CALGDRATGGNNKLTF   CASSPDRGEVFF     48           3        3</span></span>
+<span><span class="co">#&gt; 2 CILRVGATGGNNKLTL   CASSLDRGEVFF     48          15       10</span></span>
+<span><span class="co">#&gt; 3    CALVPSNTNKVVF   CASSLSGYEQYF     48          10        9</span></span>
+<span><span class="co">#&gt; 4    CALGGGSNYQLIW    CASSLGGEVFF     48          29       12</span></span>
+<span><span class="co">#&gt; 5  CVLSARAEGADRLTF CASSQAGDSYEQYF     48           4        4</span></span>
+<span><span class="co">#&gt; 6 CAASGGTTASLGKLQF   CTCSADENTLYF     48           2        2</span></span></code></pre></div>
 <p>Summarize the composition of a discovered meta-clonotype:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">meta</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="va">indices</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/integer.html" class="external-link">as.integer</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/strsplit.html" class="external-link">strsplit</a></span><span class="op">(</span><span class="va">meta</span><span class="op">$</span><span class="va">neighbor_indices</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="st">","</span><span class="op">)</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">)</span></span>
-<span>  <span class="va">summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/summarize_meta_clonotype.html">summarize_meta_clonotype</a></span><span class="op">(</span><span class="va">tcrs</span>, <span class="va">meta</span><span class="op">$</span><span class="va">center_index</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">indices</span><span class="op">)</span></span>
+<span>  <span class="va">summary</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/summarize_meta_clonotype.html">summarize_meta_clonotype</a></span><span class="op">(</span><span class="va">pa</span>, <span class="va">meta</span><span class="op">$</span><span class="va">center_index</span><span class="op">[</span><span class="fl">1</span><span class="op">]</span>, <span class="va">indices</span><span class="op">)</span></span>
 <span>  <span class="va">summary</span><span class="op">$</span><span class="va">n_members</span></span>
 <span>  <span class="va">summary</span><span class="op">$</span><span class="va">va_usage</span></span>
 <span>  <span class="va">summary</span><span class="op">$</span><span class="va">vb_usage</span></span>
-<span><span class="op">}</span></span></code></pre></div>
+<span><span class="op">}</span></span>
+<span><span class="co">#&gt; TRBV29*01 </span></span>
+<span><span class="co">#&gt;         3</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="clumping-detection">Clumping Detection<a class="anchor" aria-label="anchor" href="#clumping-detection"></a>
+</h2>
+<p>Test whether TCRs form statistically significant clusters beyond what
+is expected by chance. This uses a background resampling model to
+compute expected neighbor counts.</p>
+<p>The <code><a href="../reference/find_clumping.html">find_clumping()</a></code> function requires nucleotide
+sequences and J-gene annotations, which the DASH dataset provides:</p>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">clump</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_clumping.html">find_clumping</a></span><span class="op">(</span></span>
+<span>  <span class="va">pa</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>,</span>
+<span>  radii <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">24L</span>, <span class="fl">48L</span>, <span class="fl">72L</span><span class="op">)</span>,</span>
+<span>  num_random_samples <span class="op">=</span> <span class="fl">50000L</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># How many TCRs are in significant clumps?</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/sum.html" class="external-link">sum</a></span><span class="op">(</span><span class="va">clump</span><span class="op">$</span><span class="va">is_clumped</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Detailed results sorted by significance</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">clump</span><span class="op">$</span><span class="va">results_df</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cdr3a"</span>, <span class="st">"cdr3b"</span>, <span class="st">"nbr_radius"</span>,</span>
+<span>                            <span class="st">"pvalue_adj"</span>, <span class="st">"num_nbrs"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="database-matching">Database Matching<a class="anchor" aria-label="anchor" href="#database-matching"></a>
 </h2>
-<p>Match query TCRs against the built-in literature epitope
-databases:</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<p>Match query TCRs against the built-in literature epitope database.
+This requires background sampling and is available for human TCRs:</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Paired-chain matching with background-corrected p-values</span></span>
-<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/match_tcrs_to_db.html">match_tcrs_to_db</a></span><span class="op">(</span><span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"mouse"</span><span class="op">)</span></span>
+<span><span class="va">results</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/match_tcrs_to_db.html">match_tcrs_to_db</a></span><span class="op">(</span><span class="va">human_tcrs</span>, organism <span class="op">=</span> <span class="st">"human"</span><span class="op">)</span></span>
 <span><span class="va">significant</span> <span class="op">&lt;-</span> <span class="va">results</span><span class="op">[</span><span class="va">results</span><span class="op">$</span><span class="va">pvalue_adj</span> <span class="op">&lt;</span> <span class="fl">0.05</span>, <span class="op">]</span></span>
 <span></span>
 <span><span class="co"># Single-chain exact CDR3 matching (no background model needed)</span></span>
-<span><span class="va">hits</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/strict_single_chain_match_tcrs_to_db.html">strict_single_chain_match_tcrs_to_db</a></span><span class="op">(</span><span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"mouse"</span><span class="op">)</span></span>
-<span><span class="va">hits</span><span class="op">$</span><span class="va">alpha_matches</span>  <span class="co"># matches on CDR3-alpha</span></span>
-<span><span class="va">hits</span><span class="op">$</span><span class="va">beta_matches</span>   <span class="co"># matches on CDR3-beta</span></span></code></pre></div>
-</div>
-<div class="section level2">
-<h2 id="cd8-scoring">CD8 Scoring<a class="anchor" aria-label="anchor" href="#cd8-scoring"></a>
-</h2>
-<p>Score TCRs for CD8 phenotype using a logistic regression model:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Requires human TCRs</span></span>
-<span><span class="va">human_tcrs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  va    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TRAV1-1*01"</span>, <span class="st">"TRAV1-2*01"</span><span class="op">)</span>,</span>
-<span>  cdr3a <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CAVRDSSYKLIF"</span>, <span class="st">"CAVKDSSYKLIF"</span><span class="op">)</span>,</span>
-<span>  vb    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TRBV5-1*01"</span>, <span class="st">"TRBV6-1*01"</span><span class="op">)</span>,</span>
-<span>  cdr3b <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CASSIRSSYEQYF"</span>, <span class="st">"CASSIKSSYEQYF"</span><span class="op">)</span>,</span>
-<span>  stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_cd8_score_table_column.html">make_cd8_score_table_column</a></span><span class="op">(</span><span class="va">human_tcrs</span><span class="op">)</span></span>
-<span><span class="co"># Returns a numeric vector of CD8 probability scores</span></span></code></pre></div>
+<span><span class="va">hits</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/strict_single_chain_match_tcrs_to_db.html">strict_single_chain_match_tcrs_to_db</a></span><span class="op">(</span><span class="va">human_tcrs</span>, organism <span class="op">=</span> <span class="st">"human"</span><span class="op">)</span></span>
+<span><span class="va">hits</span><span class="op">$</span><span class="va">alpha_matches</span></span>
+<span><span class="va">hits</span><span class="op">$</span><span class="va">beta_matches</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="kernel-pca">Kernel PCA<a class="anchor" aria-label="anchor" href="#kernel-pca"></a>
 </h2>
 <p>Embed TCRs in lower-dimensional space via kernel PCA on the distance
-matrix:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_tcrdist_kernel_pca.html">compute_tcrdist_kernel_pca</a></span><span class="op">(</span><span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, n_components <span class="op">=</span> <span class="fl">10</span><span class="op">)</span></span>
+matrix. The default kernel is linear (<code>1 - D/Dmax</code>); a
+Gaussian kernel is also available.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_tcrdist_kernel_pca.html">compute_tcrdist_kernel_pca</a></span><span class="op">(</span></span>
+<span>  <span class="va">pa</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>,</span>
+<span>  n_components <span class="op">=</span> <span class="fl">10L</span>,</span>
+<span>  method <span class="op">=</span> <span class="st">"eigen"</span></span>
+<span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># pca$embeddings: N x n_components matrix</span></span>
-<span><span class="co"># pca$eigenvalues: eigenvalues</span></span>
-<span><span class="co"># pca$indices: row indices used</span></span>
+<span><span class="co"># Return structure</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">pca</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "embeddings"   "eigenvalues"  "n_components"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">embeddings</span><span class="op">)</span>     <span class="co"># N x n_components</span></span>
+<span><span class="co">#&gt; [1] 324  10</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">eigenvalues</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 10</span></span>
 <span></span>
-<span><span class="co"># Use with plot_tcr_scatter for visualization</span></span>
-<span><span class="fu"><a href="../reference/plot_tcr_scatter.html">plot_tcr_scatter</a></span><span class="op">(</span></span>
-<span>  <span class="va">pca</span><span class="op">$</span><span class="va">embeddings</span><span class="op">[</span>, <span class="fl">1</span><span class="op">]</span>, <span class="va">pca</span><span class="op">$</span><span class="va">embeddings</span><span class="op">[</span>, <span class="fl">2</span><span class="op">]</span>,</span>
-<span>  color <span class="op">=</span> <span class="va">tcrs</span><span class="op">$</span><span class="va">epitope</span><span class="op">[</span><span class="va">pca</span><span class="op">$</span><span class="va">indices</span><span class="op">]</span>,</span>
-<span>  xlab <span class="op">=</span> <span class="st">"KPC1"</span>, ylab <span class="op">=</span> <span class="st">"KPC2"</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Top eigenvalues (variance captured)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pca</span><span class="op">$</span><span class="va">eigenvalues</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 24.786698 15.525856 11.676165 10.940108  7.882001  5.825661</span></span></code></pre></div>
+<p>With Gaussian kernel:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pca_gauss</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_tcrdist_kernel_pca.html">compute_tcrdist_kernel_pca</a></span><span class="op">(</span></span>
+<span>  <span class="va">pa</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>,</span>
+<span>  n_components <span class="op">=</span> <span class="fl">10L</span>,</span>
+<span>  kernel <span class="op">=</span> <span class="st">"gaussian"</span>,</span>
+<span>  gaussian_kernel_sdev <span class="op">=</span> <span class="fl">100</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pca_gauss</span><span class="op">$</span><span class="va">eigenvalues</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 35.031673 21.435992 16.936445 15.145947 11.507637  8.617358</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="fuzzy-diversity">Fuzzy Diversity<a class="anchor" aria-label="anchor" href="#fuzzy-diversity"></a>
 </h2>
-<p>Compute TCR-aware diversity that accounts for sequence
-similarity:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">fd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcr_fuzzy_diversity.html">tcr_fuzzy_diversity</a></span><span class="op">(</span><span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, threshold <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
+<p>Compute TCR-aware diversity that accounts for sequence similarity.
+Unlike standard diversity which treats each unique clonotype as
+completely distinct, fuzzy diversity merges clonotypes within a distance
+threshold:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">fd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcr_fuzzy_diversity.html">tcr_fuzzy_diversity</a></span><span class="op">(</span><span class="va">pa</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, threshold <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
 <span><span class="va">fd</span><span class="op">$</span><span class="va">fuzzy_diversity</span>     <span class="co"># diversity accounting for similar TCRs</span></span>
-<span><span class="va">fd</span><span class="op">$</span><span class="va">standard_diversity</span>  <span class="co"># standard Simpson's for comparison</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 0.977633</span></span>
+<span><span class="va">fd</span><span class="op">$</span><span class="va">standard_diversity</span>  <span class="co"># standard Simpson's for comparison</span></span>
+<span><span class="co">#&gt; [1] 1</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="distance-based-joins">Distance-Based Joins<a class="anchor" aria-label="anchor" href="#distance-based-joins"></a>
 </h2>
-<p>Fuzzy-join two TCR datasets by distance threshold:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">left</span> <span class="op">&lt;-</span> <span class="va">tcrs</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span></span>
-<span><span class="va">right</span> <span class="op">&lt;-</span> <span class="va">tcrs</span><span class="op">[</span><span class="fl">6</span><span class="op">:</span><span class="fl">15</span>, <span class="op">]</span></span>
+<p>Fuzzy-join two TCR datasets by distance threshold. This finds all
+pairs of TCRs (one from each dataset) within a specified radius:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">left</span> <span class="op">&lt;-</span> <span class="va">pa</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">20</span>, <span class="op">]</span></span>
+<span><span class="va">right</span> <span class="op">&lt;-</span> <span class="va">pa</span><span class="op">[</span><span class="fl">21</span><span class="op">:</span><span class="fl">100</span>, <span class="op">]</span></span>
 <span></span>
 <span><span class="co"># Inner join: only matched pairs within radius</span></span>
 <span><span class="va">joined</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_join.html">tcrdist_join</a></span><span class="op">(</span><span class="va">left</span>, <span class="va">right</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>,</span>
 <span>                       radius <span class="op">=</span> <span class="fl">100</span>, max_n <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Left join: all left rows, NAs for unmatched</span></span>
-<span><span class="va">joined_left</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_join.html">tcrdist_join</a></span><span class="op">(</span><span class="va">left</span>, <span class="va">right</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>,</span>
-<span>                            radius <span class="op">=</span> <span class="fl">100</span>, type <span class="op">=</span> <span class="st">"left"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">joined</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 24 25</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">joined</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cdr3a_x"</span>, <span class="st">"cdr3b_x"</span>, <span class="st">"cdr3a_y"</span>, <span class="st">"cdr3b_y"</span>, <span class="st">"tcrdist"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
+<span><span class="co">#&gt;            cdr3a_x       cdr3b_x          cdr3a_y      cdr3b_y tcrdist</span></span>
+<span><span class="co">#&gt; 1 CALGDRATGGNNKLTF  CASSPDRGEVFF CALGGGATGGNNKLTF CASTPDRGEVFF      33</span></span>
+<span><span class="co">#&gt; 2 CALGDRATGGNNKLTF  CASSPDRGEVFF  CALGDRRTGNYKYVF CASSLDRGEQYF      72</span></span>
+<span><span class="co">#&gt; 3 CALGDRATGGNNKLTF  CASSPDRGEVFF    CALGAGSGNKLIF CASSWDRGEVFF      84</span></span>
+<span><span class="co">#&gt; 4    CALVPSNTNKVVF CASSLGGENTLYF    CALAPSNTNKVVF CASSYGGGEQYF      72</span></span>
+<span><span class="co">#&gt; 5    CALVPSNTNKVVF CASSLGGENTLYF    CALVPSNTNKVVF   CASSQAEVFF      81</span></span>
+<span><span class="co">#&gt; 6   CALGKNYNQGKLIF   CASDRAGEQYF    CALGEGSNYKLTF  CASSLGGEQYF      93</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="cd8-scoring">CD8 Scoring<a class="anchor" aria-label="anchor" href="#cd8-scoring"></a>
+</h2>
+<p>Score TCRs for CD8 phenotype using a logistic regression model
+trained on known CD4/CD8 repertoires. This is only available for human
+TCRs:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_cd8_score_table_column.html">make_cd8_score_table_column</a></span><span class="op">(</span><span class="va">human_tcrs</span><span class="op">)</span></span>
+<span><span class="co"># Returns a numeric vector of CD8 probability scores</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

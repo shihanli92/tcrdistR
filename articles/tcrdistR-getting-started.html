@@ -66,9 +66,10 @@
 receptors (TCRs) using the TCRdist metric. Each TCR is represented by
 its V-gene and CDR3 amino acid sequence for both alpha and beta chains.
 The distance incorporates V-region similarity (via BLOSUM62-derived
-substitution matrices) and CDR3 sequence alignment.</p>
+substitution matrices) and CDR3 sequence alignment with variable gap
+positioning matching tcrdist3.</p>
 <p>All distance computations are implemented in C++ for high
-performance. This vignette walks through the core functionality.</p>
+performance.</p>
 </div>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
@@ -78,33 +79,40 @@ performance. This vignette walks through the core functionality.</p>
 <span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"shihanli92/tcrdistR"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="creating-tcr-data">Creating TCR Data<a class="anchor" aria-label="anchor" href="#creating-tcr-data"></a>
+<h2 id="the-dash-dataset">The DASH Dataset<a class="anchor" aria-label="anchor" href="#the-dash-dataset"></a>
 </h2>
-<p>tcrdistR works with data.frames containing at minimum four columns:
-<code>va</code>, <code>cdr3a</code>, <code>vb</code>, <code>cdr3b</code>
-(V-gene and CDR3 for alpha and beta chains).</p>
+<p>tcrdistR ships with the <strong>DASH</strong> dataset (Dash et al.,
+2017) — 1924 paired alpha-beta mouse TCRs responding to 7 viral
+epitopes, collected from 78 subjects. We use it throughout these
+vignettes.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shihanli92.github.io/tcrdistR/">tcrdistR</a></span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">dash</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">tcrs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  va    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TRAV7-3*01"</span>, <span class="st">"TRAV6D-6*01"</span>, <span class="st">"TRAV6D-6*01"</span>,</span>
-<span>            <span class="st">"TRAV6-4*01"</span>, <span class="st">"TRAV6-4*01"</span><span class="op">)</span>,</span>
-<span>  cdr3a <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CAVSLDSNYQLIW"</span>, <span class="st">"CALGDRATGGNNKLTF"</span>, <span class="st">"CALGSNTGYQNFYF"</span>,</span>
-<span>            <span class="st">"CALAPSNTNKVVF"</span>, <span class="st">"CALVPSNTNKVVF"</span><span class="op">)</span>,</span>
-<span>  vb    <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"TRBV13-1*01"</span>, <span class="st">"TRBV29*01"</span>, <span class="st">"TRBV29*01"</span>,</span>
-<span>            <span class="st">"TRBV2*01"</span>, <span class="st">"TRBV29*01"</span><span class="op">)</span>,</span>
-<span>  cdr3b <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"CASSDFDWGGDAETLYF"</span>, <span class="st">"CASSPDRGEVFF"</span>, <span class="st">"CASTGGGAPLF"</span>,</span>
-<span>            <span class="st">"CASSQDPGDYEQYF"</span>, <span class="st">"CASSLGGENTLYF"</span><span class="op">)</span>,</span>
-<span>  stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">dash</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 1924   12</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">dash</span><span class="op">)</span></span>
+<span><span class="co">#&gt;  [1] "subject"      "epitope"      "count"        "va"           "ja"          </span></span>
+<span><span class="co">#&gt;  [6] "cdr3a"        "cdr3a_nucseq" "vb"           "jb"           "cdr3b"       </span></span>
+<span><span class="co">#&gt; [11] "cdr3b_nucseq" "clone_id"</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">dash</span><span class="op">$</span><span class="va">epitope</span><span class="op">)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   F2 m139  M38  M45   NP   PA  PB1 </span></span>
+<span><span class="co">#&gt;  117   87  158  291  305  324  642</span></span></code></pre></div>
+<p>The required columns for distance computation are <code>va</code>,
+<code>cdr3a</code>, <code>vb</code>, and <code>cdr3b</code>. Additional
+columns like <code>epitope</code> and <code>subject</code> are carried
+along for downstream analysis.</p>
 </div>
 <div class="section level2">
 <h2 id="reading-tcr-data-from-files">Reading TCR Data from Files<a class="anchor" aria-label="anchor" href="#reading-tcr-data-from-files"></a>
 </h2>
-<p>tcrdistR can read TCR data from multiple common formats:</p>
+<p>tcrdistR can read TCR data from multiple common formats. All readers
+produce a data.frame with standardized column names (<code>va</code>,
+<code>cdr3a</code>, <code>vb</code>, <code>cdr3b</code>).</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Auto-detect format from column naming conventions</span></span>
-<span><span class="va">tcrs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_tcr_table.html">read_tcr_table</a></span><span class="op">(</span><span class="st">"my_data.csv"</span><span class="op">)</span></span>
+<span><span class="va">tcrs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_tcr_table.html">read_tcr_table</a></span><span class="op">(</span><span class="st">"my_data.tsv"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Format-specific readers</span></span>
 <span><span class="va">tcrs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_10x.html">read_10x</a></span><span class="op">(</span><span class="st">"filtered_contig_annotations.csv"</span><span class="op">)</span></span>
@@ -112,23 +120,25 @@ performance. This vignette walks through the core functionality.</p>
 <span><span class="va">tcrs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/read_adaptive.html">read_adaptive</a></span><span class="op">(</span><span class="st">"immunoseq_export.tsv"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="the-tcrrep-object">The TCRrep Object<a class="anchor" aria-label="anchor" href="#the-tcrrep-object"></a>
-</h2>
-<p>For more structured workflows, wrap your data in a
-<code>TCRrep</code> S4 object:</p>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/TCRrep.html">TCRrep</a></span><span class="op">(</span><span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, chains <span class="op">=</span> <span class="st">"paired"</span><span class="op">)</span></span>
-<span><span class="va">rep</span></span></code></pre></div>
-</div>
-<div class="section level2">
 <h2 id="computing-the-distance-matrix">Computing the Distance Matrix<a class="anchor" aria-label="anchor" href="#computing-the-distance-matrix"></a>
 </h2>
 <p>The core function <code><a href="../reference/tcrdist_matrix.html">tcrdist_matrix()</a></code> computes a dense N x
-N pairwise distance matrix:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">dist_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_matrix.html">tcrdist_matrix</a></span><span class="op">(</span><span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"mouse"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">dist_mat</span><span class="op">)</span>   <span class="co"># 5 x 5</span></span>
-<span><span class="va">dist_mat</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span></span></code></pre></div>
+N pairwise distance matrix. We use a subset of 50 PA-specific TCRs for
+speed:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">pa</span> <span class="op">&lt;-</span> <span class="va">dash</span><span class="op">[</span><span class="va">dash</span><span class="op">$</span><span class="va">epitope</span> <span class="op">==</span> <span class="st">"PA"</span>, <span class="op">]</span></span>
+<span><span class="va">pa_sub</span> <span class="op">&lt;-</span> <span class="va">pa</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">50</span>, <span class="op">]</span></span>
+<span></span>
+<span><span class="va">dist_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_matrix.html">tcrdist_matrix</a></span><span class="op">(</span><span class="va">pa_sub</span>, organism <span class="op">=</span> <span class="st">"mouse"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">dist_mat</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 50 50</span></span>
+<span><span class="va">dist_mat</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">]</span></span>
+<span><span class="co">#&gt;     1   2   3   4   5</span></span>
+<span><span class="co">#&gt; 1   0 317 341 326 281</span></span>
+<span><span class="co">#&gt; 2 317   0 177 243 204</span></span>
+<span><span class="co">#&gt; 3 341 177   0 288 216</span></span>
+<span><span class="co">#&gt; 4 326 243 288   0 138</span></span>
+<span><span class="co">#&gt; 5 281 204 216 138   0</span></span></code></pre></div>
 <p>Each entry is an integer TCRdist value. Identical TCRs have distance
 0; typical distances range from 0 to ~400.</p>
 </div>
@@ -138,87 +148,119 @@ N pairwise distance matrix:</p>
 <p>For large datasets, storing the full N x N matrix is impractical. Use
 <code><a href="../reference/tcrdist_sparse.html">tcrdist_sparse()</a></code> to only store distances below a
 threshold:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">sparse_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_sparse.html">tcrdist_sparse</a></span><span class="op">(</span><span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, threshold <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">sparse_mat</span><span class="op">)</span>  <span class="co"># dgCMatrix (sparse)</span></span></code></pre></div>
-<p>The result is a <code>Matrix::dgCMatrix</code> where zero entries
-represent distances above the threshold (not distance 0 — actual zeros
-are stored as well).</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sparse_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_sparse.html">tcrdist_sparse</a></span><span class="op">(</span><span class="va">pa_sub</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, threshold <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/class.html" class="external-link">class</a></span><span class="op">(</span><span class="va">sparse_mat</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] "dgCMatrix"</span></span>
+<span><span class="co">#&gt; attr(,"package")</span></span>
+<span><span class="co">#&gt; [1] "Matrix"</span></span></code></pre></div>
+<p>The result is a <code>Matrix::dgCMatrix</code>. Non-stored entries
+represent distances above the threshold.</p>
 </div>
 <div class="section level2">
 <h2 id="rectangular-distances">Rectangular Distances<a class="anchor" aria-label="anchor" href="#rectangular-distances"></a>
 </h2>
 <p>Compute distances between two different sets of TCRs (query vs
 reference):</p>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">query</span> <span class="op">&lt;-</span> <span class="va">tcrs</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span>, <span class="op">]</span></span>
-<span><span class="va">reference</span> <span class="op">&lt;-</span> <span class="va">tcrs</span><span class="op">[</span><span class="fl">3</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span></span>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">query</span> <span class="op">&lt;-</span> <span class="va">pa_sub</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">5</span>, <span class="op">]</span></span>
+<span><span class="va">reference</span> <span class="op">&lt;-</span> <span class="va">pa_sub</span><span class="op">[</span><span class="fl">6</span><span class="op">:</span><span class="fl">50</span>, <span class="op">]</span></span>
 <span><span class="va">rect_mat</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_rect.html">tcrdist_rect</a></span><span class="op">(</span><span class="va">query</span>, <span class="va">reference</span>, organism <span class="op">=</span> <span class="st">"mouse"</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">rect_mat</span><span class="op">)</span>  <span class="co"># 2 x 3</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">rect_mat</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1]  5 45</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="k-nearest-neighbors">K-Nearest Neighbors<a class="anchor" aria-label="anchor" href="#k-nearest-neighbors"></a>
 </h2>
-<p>Find the K closest TCRs for each input:</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_knn.html">tcrdist_knn</a></span><span class="op">(</span><span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, K <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
-<span><span class="va">knn</span><span class="op">$</span><span class="va">knn_indices</span>   <span class="co"># K x N matrix of neighbor indices</span></span>
-<span><span class="va">knn</span><span class="op">$</span><span class="va">knn_distances</span>  <span class="co"># K x N matrix of distances</span></span></code></pre></div>
+<p>Find the K closest TCRs for each input. This computes distances and
+extracts neighbors in a single pass without materializing the full N x N
+matrix:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">knn</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_knn.html">tcrdist_knn</a></span><span class="op">(</span><span class="va">pa_sub</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, K <span class="op">=</span> <span class="fl">5L</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">knn</span><span class="op">$</span><span class="va">knn_indices</span><span class="op">)</span>    <span class="co"># N x K</span></span>
+<span><span class="co">#&gt; [1] 50  5</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">knn</span><span class="op">$</span><span class="va">knn_distances</span><span class="op">)</span>  <span class="co"># N x K</span></span>
+<span><span class="co">#&gt; [1] 50  5</span></span>
+<span></span>
+<span><span class="co"># Nearest neighbor of TCR 1</span></span>
+<span><span class="va">knn</span><span class="op">$</span><span class="va">knn_indices</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span></span>
+<span><span class="co">#&gt; [1] 49 43  9 14 15</span></span>
+<span><span class="va">knn</span><span class="op">$</span><span class="va">knn_distances</span><span class="op">[</span><span class="fl">1</span>, <span class="op">]</span></span>
+<span><span class="co">#&gt; [1] 211 227 235 245 248</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="radius-based-neighbors">Radius-Based Neighbors<a class="anchor" aria-label="anchor" href="#radius-based-neighbors"></a>
 </h2>
 <p>Find all neighbors within a distance threshold:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">neighbors</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_radius_neighbors.html">tcrdist_radius_neighbors</a></span><span class="op">(</span></span>
-<span>  <span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, radius <span class="op">=</span> <span class="fl">50</span></span>
-<span><span class="op">)</span></span>
-<span><span class="co"># Returns a list of neighbor indices and distances per TCR</span></span></code></pre></div>
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">neighbors</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_radius_neighbors.html">tcrdist_radius_neighbors</a></span><span class="op">(</span><span class="va">pa_sub</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, radius <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/length.html" class="external-link">length</a></span><span class="op">(</span><span class="va">neighbors</span><span class="op">)</span>  <span class="co"># one entry per TCR</span></span>
+<span><span class="co">#&gt; [1] 50</span></span>
+<span></span>
+<span><span class="co"># First TCR's neighbors</span></span>
+<span><span class="va">neighbors</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">indices</span></span>
+<span><span class="co">#&gt; integer(0)</span></span>
+<span><span class="va">neighbors</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">distances</span></span>
+<span><span class="co">#&gt; numeric(0)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="single-pair-distances">Single-Pair Distances<a class="anchor" aria-label="anchor" href="#single-pair-distances"></a>
 </h2>
 <p>For comparing individual CDR3 sequences:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Weighted CDR3 distance (uses BLOSUM62-derived BSD4 matrix)</span></span>
-<span><span class="va">d</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/weighted_cdr3_distance.html">weighted_cdr3_distance</a></span><span class="op">(</span><span class="st">"CAVRDSSYKLIF"</span>, <span class="st">"CAVKDSSYKLIF"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/weighted_cdr3_distance.html">weighted_cdr3_distance</a></span><span class="op">(</span><span class="st">"CAVSLDSNYQLIW"</span>, <span class="st">"CALGDRATGGNNKLTF"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 102</span></span>
 <span></span>
-<span><span class="co"># Simple Hamming distance (counts mismatches)</span></span>
-<span><span class="va">h</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/hamming_distance.html">hamming_distance</a></span><span class="op">(</span><span class="st">"CASSI"</span>, <span class="st">"CASSK"</span><span class="op">)</span>  <span class="co"># returns 1</span></span></code></pre></div>
+<span><span class="co"># Simple Hamming distance (counts mismatches at each position)</span></span>
+<span><span class="fu"><a href="../reference/hamming_distance.html">hamming_distance</a></span><span class="op">(</span><span class="st">"CASSI"</span>, <span class="st">"CASSK"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 1</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="diversity-metrics">Diversity Metrics<a class="anchor" aria-label="anchor" href="#diversity-metrics"></a>
 </h2>
-<p>Repertoire diversity functions work on count vectors (no C++
-needed):</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://shihanli92.github.io/tcrdistR/">tcrdistR</a></span><span class="op">)</span></span>
+<p>Repertoire diversity functions work on clone count vectors:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Clone counts for PA-specific TCRs</span></span>
+<span><span class="va">pa_counts</span> <span class="op">&lt;-</span> <span class="va">pa</span><span class="op">$</span><span class="va">count</span></span>
 <span></span>
-<span><span class="co"># Clone counts for 5 clonotypes</span></span>
-<span><span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">100</span>, <span class="fl">50</span>, <span class="fl">30</span>, <span class="fl">15</span>, <span class="fl">5</span><span class="op">)</span></span>
-<span></span>
-<span><span class="co"># Generalized Simpson's diversity (order 2)</span></span>
-<span><span class="va">div</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcr_diversity.html">tcr_diversity</a></span><span class="op">(</span><span class="va">counts</span>, order <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co"># Generalized diversity (order 2 = inverse Simpson)</span></span>
+<span><span class="va">div</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcr_diversity.html">tcr_diversity</a></span><span class="op">(</span><span class="va">pa_counts</span>, order <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="va">div</span><span class="op">$</span><span class="va">entropy</span></span>
-<span><span class="co">#&gt; [1] 0.6620603</span></span>
+<span><span class="co">#&gt; [1] 0.9958049</span></span>
 <span><span class="va">div</span><span class="op">$</span><span class="va">effective_number</span></span>
-<span><span class="co">#&gt; [1] 2.959108</span></span>
+<span><span class="co">#&gt; [1] 238.3727</span></span>
 <span></span>
-<span><span class="co"># Species richness (number of unique clonotypes)</span></span>
-<span><span class="fu"><a href="../reference/tcr_richness.html">tcr_richness</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 5</span></span>
+<span><span class="co"># Species richness</span></span>
+<span><span class="fu"><a href="../reference/tcr_richness.html">tcr_richness</a></span><span class="op">(</span><span class="va">pa_counts</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 324</span></span>
 <span></span>
 <span><span class="co"># Clonality (1 - normalized Shannon entropy)</span></span>
-<span><span class="fu"><a href="../reference/tcr_clonality.html">tcr_clonality</a></span><span class="op">(</span><span class="va">counts</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 0.2145039</span></span></code></pre></div>
+<span><span class="fu"><a href="../reference/tcr_clonality.html">tcr_clonality</a></span><span class="op">(</span><span class="va">pa_counts</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 0.05175504</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="the-tcrrep-object">The TCRrep Object<a class="anchor" aria-label="anchor" href="#the-tcrrep-object"></a>
+</h2>
+<p>For more structured workflows, wrap your data in a
+<code>TCRrep</code> S4 object:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/TCRrep.html">TCRrep</a></span><span class="op">(</span><span class="va">pa_sub</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, chains <span class="op">=</span> <span class="st">"AB"</span><span class="op">)</span></span>
+<span><span class="va">rep</span></span>
+<span><span class="co">#&gt; TCRrep object: 50 clonotypes</span></span>
+<span><span class="co">#&gt;   organism: mouse</span></span>
+<span><span class="co">#&gt;   chains: AB</span></span>
+<span><span class="co">#&gt;   metric: tcrdist</span></span>
+<span><span class="co">#&gt;   distances: not computed</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
 </h2>
 <ul>
 <li>
-<code><a href="../articles/tcrdistR-advanced.html">vignette("tcrdistR-advanced")</a></code> — Clumping,
-meta-clonotypes, clustering, database matching, kernel PCA</li>
+<code><a href="../articles/tcrdistR-advanced.html">vignette("tcrdistR-advanced")</a></code> — Clustering,
+neighborhood tests, meta-clonotypes, database matching, kernel PCA,
+fuzzy diversity</li>
 <li>
 <code><a href="../articles/tcrdistR-visualization.html">vignette("tcrdistR-visualization")</a></code> — Heatmaps,
 dendrograms, CDR3 logos, scatter plots</li>

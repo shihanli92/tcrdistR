@@ -2,160 +2,192 @@
 
 ## Setup
 
-tcrdistR provides seven plotting functions built on ggplot2. All return
-ggplot objects that can be further customized.
+tcrdistR provides plotting functions built on ggplot2. All return ggplot
+objects that can be further customized.
 
 ``` r
 library(tcrdistR)
-library(ggplot2)
+data(dash)
 
-tcrs <- data.frame(
-  va    = c("TRAV7-3*01",  "TRAV6D-6*01", "TRAV6D-6*01",
-            "TRAV6-4*01",  "TRAV6-4*01",  "TRAV7-3*01",
-            "TRAV6D-6*01", "TRAV6-4*01",  "TRAV7-3*01",
-            "TRAV6D-6*01"),
-  cdr3a = c("CAVSLDSNYQLIW",  "CALGDRATGGNNKLTF", "CALGSNTGYQNFYF",
-            "CALAPSNTNKVVF",  "CALVPSNTNKVVF",    "CAVSLDSNYQLIW",
-            "CALGDRATGGNNKLTF","CALAPSNTNKVVF",    "CAVSLDSNYQLIW",
-            "CALGSNTGYQNFYF"),
-  vb    = c("TRBV13-1*01", "TRBV29*01",   "TRBV29*01",
-            "TRBV2*01",    "TRBV29*01",   "TRBV13-1*01",
-            "TRBV29*01",   "TRBV2*01",    "TRBV13-1*01",
-            "TRBV29*01"),
-  cdr3b = c("CASSDFDWGGDAETLYF", "CASSPDRGEVFF",    "CASTGGGAPLF",
-            "CASSQDPGDYEQYF",   "CASSLGGENTLYF",   "CASSDFDWGGDAETLYF",
-            "CASSPDRGEVFF",      "CASSQDPGDYEQYF",  "CASSDFDWGGDAETLYF",
-            "CASTGGGAPLF"),
-  epitope = c("PA", "PA", "PA", "PA", "PA",
-              "NP", "NP", "NP", "NP", "NP"),
-  stringsAsFactors = FALSE
-)
+# Use 100 PA-specific TCRs for fast plots
+pa <- dash[dash$epitope == "PA", ]
+pa_sub <- pa[1:100, ]
 ```
 
 ## Distance Heatmap
 
-Visualize the pairwise distance matrix as a heatmap:
+Visualize the pairwise distance matrix as a heatmap. Note that
+[`plot_tcrdist_heatmap()`](https://shihanli92.github.io/tcrdistR/reference/plot_tcrdist_heatmap.md)
+takes a precomputed distance matrix, not a TCR data.frame:
 
 ``` r
-# Basic heatmap
-plot_tcrdist_heatmap(tcrs, organism = "mouse")
+library(ggplot2)
 
-# With hierarchical clustering reordering
-plot_tcrdist_heatmap(tcrs, organism = "mouse", cluster = TRUE)
-
-# Custom color scale
-plot_tcrdist_heatmap(tcrs, organism = "mouse") +
-  scale_fill_viridis_c(option = "magma")
+dist_mat <- tcrdist_matrix(pa_sub, organism = "mouse")
+plot_tcrdist_heatmap(dist_mat)
 ```
+
+![](tcrdistR-visualization_files/figure-html/heatmap-1.png)
+
+With hierarchical clustering reordering (the default) and custom labels:
+
+``` r
+# Use a small subset with unique labels for readability
+small_mat <- dist_mat[1:20, 1:20]
+plot_tcrdist_heatmap(
+  small_mat,
+  labels = paste0(pa_sub$cdr3b[1:20], " (", seq_len(20), ")"),
+  cluster = TRUE,
+  title = "PA-specific TCR Distances"
+)
+```
+
+![](tcrdistR-visualization_files/figure-html/heatmap-labels-1.png)
 
 ## Dendrogram
 
-Plot a hierarchical clustering dendrogram:
+Plot a hierarchical clustering dendrogram. Unlike the heatmap,
+[`plot_tcrdist_dendrogram()`](https://shihanli92.github.io/tcrdistR/reference/plot_tcrdist_dendrogram.md)
+takes a TCR data.frame and computes distances internally:
 
 ``` r
-# Basic dendrogram
-plot_tcrdist_dendrogram(tcrs, organism = "mouse")
-
-# Colored by a grouping variable
-plot_tcrdist_dendrogram(tcrs, organism = "mouse",
-                        color_by = tcrs$epitope)
+plot_tcrdist_dendrogram(pa_sub, organism = "mouse")
 ```
+
+![](tcrdistR-visualization_files/figure-html/dendrogram-1.png)
+
+Color by a grouping variable:
+
+``` r
+# Mix epitopes for a more interesting dendrogram
+mixed <- dash[dash$epitope %in% c("PA", "NP"), ]
+mixed_sub <- mixed[sample(nrow(mixed), 80), ]
+
+plot_tcrdist_dendrogram(
+  mixed_sub, organism = "mouse",
+  color_by = mixed_sub$epitope,
+  title = "PA vs NP TCRs"
+)
+```
+
+![](tcrdistR-visualization_files/figure-html/dendrogram-colored-1.png)
 
 ## Distance Distribution
 
-Histogram and density of pairwise distances:
+Histogram and density of pairwise distances. Like the heatmap, this
+takes a precomputed distance matrix:
 
 ``` r
-# Basic distribution plot (histogram + density + median line)
-plot_distance_distribution(tcrs, organism = "mouse")
-
-# Adjust number of bins
-plot_distance_distribution(tcrs, organism = "mouse", bins = 50)
+plot_distance_distribution(dist_mat)
 ```
 
-## CDR3 Sequence Logos
+![](tcrdistR-visualization_files/figure-html/dist-distrib-1.png)
 
-Display amino acid frequency at each position as a sequence logo:
+With custom bin width:
 
 ``` r
-cdr3_seqs <- tcrs$cdr3b
-
-# Information content ("bits") mode
-plot_cdr3_logo(cdr3_seqs, chain = "beta", method = "bits")
-
-# Frequency ("prob") mode
-plot_cdr3_logo(cdr3_seqs, chain = "beta", method = "prob")
+plot_distance_distribution(dist_mat, binwidth = 10,
+                           title = "PA TCR distance distribution")
 ```
 
-The logo construction aligns sequences using BLOSUM62-optimal gap
-placement, selects a center sequence, and builds a position weight
-matrix (PWM) from the aligned set.
-
-## Junction Composition Bars
-
-Stacked bar chart showing V, N-insertion, D, and J nucleotide
-composition at each CDR3 position:
-
-``` r
-# Requires nucleotide sequences
-cdr3b_nucseqs <- c(
-  "tgtgccagcagtgatttcgactggggaggggatgcagaaacgctgtatttt",
-  "tgtgctagcagtccggacaggggtgaagtcttcttt",
-  "tgtgctagcacagggggaggggctccgcttttt",
-  "tgtgccagcagccaagatcctggggactatgaacagtacttc",
-  "tgtgctagcagtcttggaggggaaaacacgctgtacttt"
-)
-
-plot_junction_bars(cdr3b_nucseqs, chain = "beta")
-```
-
-## Gene Usage
-
-Horizontal bar chart of V-gene frequencies:
-
-``` r
-# V-alpha gene usage
-plot_gene_usage(tcrs$va, chain = "alpha")
-
-# V-beta gene usage
-plot_gene_usage(tcrs$vb, chain = "beta")
-```
+![](tcrdistR-visualization_files/figure-html/dist-distrib-bins-1.png)
 
 ## PCA Scatter Plot
 
-2D scatter plot from kernel PCA or any dimensionality reduction:
+2D scatter plot from kernel PCA or any dimensionality reduction.
+[`plot_tcr_scatter()`](https://shihanli92.github.io/tcrdistR/reference/plot_tcr_scatter.md)
+takes a N x 2 coordinate matrix:
 
 ``` r
-pca <- compute_tcrdist_kernel_pca(tcrs, organism = "mouse",
-                                   n_components = 5)
-
-# Colored by epitope
-plot_tcr_scatter(
-  pca$embeddings[, 1], pca$embeddings[, 2],
-  color = tcrs$epitope[pca$indices],
-  xlab = "KPC1", ylab = "KPC2"
+pca <- compute_tcrdist_kernel_pca(
+  mixed_sub, organism = "mouse", n_components = 5L
 )
 
-# Colored by a continuous variable
 plot_tcr_scatter(
-  pca$embeddings[, 1], pca$embeddings[, 2],
-  color = pca$embeddings[, 3],
-  xlab = "KPC1", ylab = "KPC2"
+  pca$embeddings[, 1:2],
+  color_by = mixed_sub$epitope,
+  title = "Kernel PCA: PA vs NP",
+  point_size = 2
 )
 ```
 
-## Combining Plots with patchwork
+![](tcrdistR-visualization_files/figure-html/scatter-1.png)
+
+Color by a continuous variable (e.g., third principal component):
+
+``` r
+plot_tcr_scatter(
+  pca$embeddings[, 1:2],
+  color_by = pca$embeddings[, 3],
+  title = "Colored by KPC3",
+  point_size = 2,
+  legend_title = "KPC3"
+)
+```
+
+![](tcrdistR-visualization_files/figure-html/scatter-continuous-1.png)
+
+## Gene Usage
+
+Horizontal bar chart of V-gene frequencies.
+[`plot_gene_usage()`](https://shihanli92.github.io/tcrdistR/reference/plot_gene_usage.md)
+takes a data.frame and a column name:
+
+``` r
+plot_gene_usage(pa, "va", title = "V-alpha usage (PA)")
+```
+
+![](tcrdistR-visualization_files/figure-html/gene-usage-1.png)
+
+``` r
+plot_gene_usage(pa, "vb", title = "V-beta usage (PA)")
+```
+
+![](tcrdistR-visualization_files/figure-html/gene-usage-2.png)
+
+## CDR3 Sequence Logos
+
+Display amino acid frequency at each position as a sequence logo. The
+logo construction aligns sequences using BLOSUM62-optimal gap placement:
+
+``` r
+plot_cdr3_logo(pa_sub$cdr3b, chain = "beta", method = "bits",
+               title = "CDR3-beta logo (PA)")
+#> Warning: `aes_string()` was deprecated in ggplot2 3.0.0.
+#> ℹ Please use tidy evaluation idioms with `aes()`.
+#> ℹ See also `vignette("ggplot2-in-packages")` for more information.
+#> ℹ The deprecated feature was likely used in the ggseqlogo package.
+#>   Please report the issue at <https://github.com/omarwagih/ggseqlogo/issues>.
+#> This warning is displayed once per session.
+#> Call `lifecycle::last_lifecycle_warnings()` to see where this warning was
+#> generated.
+```
+
+![](tcrdistR-visualization_files/figure-html/logo-1.png)
+
+Frequency (“prob”) mode:
+
+``` r
+plot_cdr3_logo(pa_sub$cdr3a, chain = "alpha", method = "prob",
+               title = "CDR3-alpha logo (PA)")
+```
+
+![](tcrdistR-visualization_files/figure-html/logo-prob-1.png)
+
+## Combining Plots
 
 Use the patchwork package to arrange multiple plots:
 
 ``` r
 library(patchwork)
 
-p1 <- plot_tcrdist_heatmap(tcrs, organism = "mouse")
-p2 <- plot_distance_distribution(tcrs, organism = "mouse")
-p3 <- plot_gene_usage(tcrs$va, chain = "alpha")
-p4 <- plot_gene_usage(tcrs$vb, chain = "beta")
+p1 <- plot_tcrdist_heatmap(dist_mat[1:30, 1:30], title = "Heatmap")
+p2 <- plot_distance_distribution(dist_mat, title = "Distribution")
+p3 <- plot_gene_usage(pa, "va", title = "V-alpha")
+p4 <- plot_gene_usage(pa, "vb", title = "V-beta")
 
 (p1 | p2) / (p3 | p4) +
-  plot_annotation(title = "TCR Repertoire Overview")
+  plot_annotation(title = "PA Repertoire Overview")
 ```
+
+![](tcrdistR-visualization_files/figure-html/patchwork-1.png)
