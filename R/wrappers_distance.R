@@ -187,6 +187,63 @@ tcrdist_matrix <- function(tcrs, organism,
 # bsd4_matrix
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# hamming_distance
+# ---------------------------------------------------------------------------
+
+#' Hamming distance between two CDR3 sequences
+#'
+#' Counts the number of positional mismatches between two equal-length amino
+#' acid sequences. Returns \code{-1L} if the sequences have different lengths.
+#'
+#' @param a Character string. First CDR3 amino acid sequence.
+#' @param b Character string. Second CDR3 amino acid sequence.
+#' @return An integer: the number of mismatches, or \code{-1L} if lengths
+#'   differ.
+#' @examples
+#' hamming_distance("CASSI", "CASSK")  # 1
+#' hamming_distance("CASSI", "CASSI")  # 0
+#' hamming_distance("CASSI", "CASSILY")  # -1 (different lengths)
+#' @export
+hamming_distance <- function(a, b) {
+    stopifnot(
+        is.character(a), length(a) == 1L, !is.na(a),
+        is.character(b), length(b) == 1L, !is.na(b)
+    )
+    rcpp_hamming_distance(a, b)
+}
+
+
+# ---------------------------------------------------------------------------
+# hamming_matrix
+# ---------------------------------------------------------------------------
+
+#' Pairwise Hamming distance matrix for CDR3 sequences
+#'
+#' Computes an N x N integer matrix of Hamming distances between CDR3
+#' sequences. For pairs of equal length, the distance is the number of
+#' mismatches. For pairs of unequal length, the distance is set to the
+#' length of the longer sequence (maximum penalty).
+#'
+#' @param cdr3_seqs Character vector. CDR3 amino acid sequences.
+#' @return An integer matrix of dimensions N x N.
+#' @examples
+#' seqs <- c("CASSI", "CASSK", "CASRL")
+#' hamming_matrix(seqs)
+#' @export
+hamming_matrix <- function(cdr3_seqs) {
+    stopifnot(is.character(cdr3_seqs), length(cdr3_seqs) >= 1L)
+    if (anyNA(cdr3_seqs)) {
+        stop("hamming_matrix: cdr3_seqs must not contain NA values")
+    }
+    rcpp_hamming_matrix(cdr3_seqs)
+}
+
+
+# ---------------------------------------------------------------------------
+# bsd4_matrix
+# ---------------------------------------------------------------------------
+
 #' Retrieve the BSD4 substitution matrix
 #'
 #' Returns the BSD4 (BLOSUM-derived substitution distance 4) matrix used

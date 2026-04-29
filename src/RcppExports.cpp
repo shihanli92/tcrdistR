@@ -186,6 +186,29 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rcpp_hamming_distance
+int rcpp_hamming_distance(const std::string& a, const std::string& b);
+RcppExport SEXP _tcrdistR_rcpp_hamming_distance(SEXP aSEXP, SEXP bSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const std::string& >::type a(aSEXP);
+    Rcpp::traits::input_parameter< const std::string& >::type b(bSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_hamming_distance(a, b));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rcpp_hamming_matrix
+Rcpp::IntegerMatrix rcpp_hamming_matrix(const Rcpp::CharacterVector& seqs);
+RcppExport SEXP _tcrdistR_rcpp_hamming_matrix(SEXP seqsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const Rcpp::CharacterVector& >::type seqs(seqsSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_hamming_matrix(seqs));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rcpp_tcrdist_knn
 Rcpp::List rcpp_tcrdist_knn(const CharacterVector& va_genes, const CharacterVector& cdr3a_seqs, const CharacterVector& vb_genes, const CharacterVector& cdr3b_seqs, const NumericMatrix& v_dist_a, const NumericMatrix& v_dist_b, int K, const IntegerVector& agroups, const IntegerVector& bgroups, bool sort_nbrs, int weight_cdr3_region, int gap_penalty_cdr3_region);
 RcppExport SEXP _tcrdistR_rcpp_tcrdist_knn(SEXP va_genesSEXP, SEXP cdr3a_seqsSEXP, SEXP vb_genesSEXP, SEXP cdr3b_seqsSEXP, SEXP v_dist_aSEXP, SEXP v_dist_bSEXP, SEXP KSEXP, SEXP agroupsSEXP, SEXP bgroupsSEXP, SEXP sort_nbrsSEXP, SEXP weight_cdr3_regionSEXP, SEXP gap_penalty_cdr3_regionSEXP) {
@@ -315,6 +338,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_tcrdistR_rcpp_calc_background_distributions", (DL_FUNC) &_tcrdistR_rcpp_calc_background_distributions, 14},
     {"_tcrdistR_rcpp_weighted_cdr3_distance", (DL_FUNC) &_tcrdistR_rcpp_weighted_cdr3_distance, 4},
     {"_tcrdistR_rcpp_blosum_sequence_distance", (DL_FUNC) &_tcrdistR_rcpp_blosum_sequence_distance, 3},
+    {"_tcrdistR_rcpp_hamming_distance", (DL_FUNC) &_tcrdistR_rcpp_hamming_distance, 2},
+    {"_tcrdistR_rcpp_hamming_matrix", (DL_FUNC) &_tcrdistR_rcpp_hamming_matrix, 1},
     {"_tcrdistR_rcpp_tcrdist_knn", (DL_FUNC) &_tcrdistR_rcpp_tcrdist_knn, 12},
     {"_tcrdistR_rcpp_tcrdist_matrix", (DL_FUNC) &_tcrdistR_rcpp_tcrdist_matrix, 8},
     {"_tcrdistR_rcpp_tcrdist_radius_neighbors", (DL_FUNC) &_tcrdistR_rcpp_tcrdist_radius_neighbors, 11},

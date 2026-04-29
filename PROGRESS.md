@@ -18,7 +18,7 @@ All computation in C++ via Rcpp. R layer is thin wrappers (input validation, S4 
 
 ## Current State
 
-**583 tests, R CMD check: 0 errors, 0 warnings, 2 NOTEs** (C++14, extdata size)
+**691 tests, R CMD check: 0 errors, 0 warnings, 2 NOTEs** (C++14, extdata size)
 
 ### Completed Phases
 
@@ -64,19 +64,23 @@ All computation in C++ via Rcpp. R layer is thin wrappers (input validation, S4 
 
 ```
 tcrdistR/
-├── R/                            # 21 R files (~7,400 lines)
+├── R/                            # 25 R files (~8,600 lines)
 │   ├── tcrdistR-package.R        # Package doc, .onLoad, .tcrdistR_env
 │   ├── classes.R                 # S4 class: TCRrep
 │   ├── constructors.R            # TCRrep() constructor
 │   ├── show-methods.R            # print/show/summary
-│   ├── constants.R               # AMINO_ACIDS, weights, gap penalties
+│   ├── constants.R               # AMINO_ACIDS, weights, gap penalties, BLOSUM62
 │   ├── all_genes.R               # Gene database loading, V-distance matrices
 │   ├── genetic_code.R            # Genetic code constants
 │   ├── translation.R             # Nucleotide translation
-│   ├── wrappers_distance.R       # tcrdist_matrix(), weighted_cdr3_distance()
+│   ├── wrappers_distance.R       # tcrdist_matrix(), hamming_distance/matrix()
 │   ├── wrappers_neighbors.R      # tcrdist_knn(), tcrdist_radius_neighbors(), knn_from_matrix/pca
 │   ├── wrappers_sparse.R         # tcrdist_sparse()
 │   ├── wrappers_rectangular.R    # tcrdist_rect()
+│   ├── diversity.R               # tcr_diversity(), tcr_fuzzy_diversity(), tcr_richness(), tcr_clonality()
+│   ├── hierarchical.R            # tcrdist_hclust(), cluster_tcrs(), neighborhood_test()
+│   ├── meta_clonotypes.R         # find_meta_clonotypes(), summarize_meta_clonotype()
+│   ├── tcr_join.R                # tcrdist_join() distance-based fuzzy joins
 │   ├── tcr_clumping.R            # find_clumping(), setup_tcr_groups()
 │   ├── tcr_sampler.R             # Junction parsing, allele optimization, resampling
 │   ├── tcr_db_matching.R         # DB matching with background-corrected p-values
@@ -92,7 +96,7 @@ tcrdistR/
 │   ├── plot_distances.R          # Heatmap, dendrogram, distribution
 │   ├── plot_scatter.R            # Generic 2D scatter (PCA/UMAP)
 │   └── RcppExports.R             # Auto-generated
-├── src/                          # 12 C++ files (~3,000 lines)
+├── src/                          # 13 C++ files (~3,100 lines)
 │   ├── tcrdist_core.h            # Shared: CDR3Data, cdr3_dist_fast, VDistLookup, BSD4
 │   ├── blosum.cpp                # BLOSUM62/BSD4 (constexpr)
 │   ├── tcrdist_distances.cpp     # Single-pair distances
@@ -106,6 +110,7 @@ tcrdistR/
 │   ├── tcrdist_background.cpp    # Background distributions
 │   ├── tcr_clumping.cpp          # Poisson test loop
 │   ├── tcr_sampler.cpp           # Junction parsing, resampling
+│   ├── tcrdist_hamming.cpp       # Hamming distance (single-pair + matrix)
 │   └── RcppExports.cpp           # Auto-generated
 ├── inst/extdata/
 │   ├── combo_xcr_2023-12-30.tsv            # Gene database (1.2 MB)
@@ -114,7 +119,7 @@ tcrdistR/
 │   ├── mouse_tcr_db_for_matching.tsv       # Single-chain DB, mouse (882 KB)
 │   ├── cd8_logreg_params_A.txt             # CD8 model, alpha chain (10 KB)
 │   └── cd8_logreg_params_B.txt             # CD8 model, beta chain (9.4 KB)
-├── tests/testthat/               # 13 test files, 583 tests
+├── tests/testthat/               # 18 test files, 691 tests
 │   ├── test-blosum.R
 │   ├── test-cdr3-distance.R
 │   ├── test-tcrdist.R
@@ -129,24 +134,33 @@ tcrdistR/
 │   ├── test-kernel-pca.R         # Cross-validated against scipy/sklearn
 │   ├── test-cd8-scoring.R
 │   ├── test-plotting.R           # Visualization tests (85 tests)
+│   ├── test-hamming.R            # Hamming distance tests
+│   ├── test-diversity.R          # Diversity metric tests
+│   ├── test-hierarchical.R       # Clustering + neighborhood tests
+│   ├── test-join.R               # Distance-based join tests
+│   ├── test-meta-clonotypes.R    # Meta-clonotype detection tests
 │   └── fixtures/                 # dash.csv, kernel_pca_ref.json, I/O fixtures
 └── tests/generate_kernel_pca_fixture.py  # Regenerates scipy reference
 ```
 
 ---
 
-## Exported Functions (51)
+## Exported Functions (65)
 
-**Distance computation:** `tcrdist_matrix`, `tcrdist_rect`, `tcrdist_sparse`, `weighted_cdr3_distance`, `bsd4_matrix`
+**Distance computation:** `tcrdist_matrix`, `tcrdist_rect`, `tcrdist_sparse`, `weighted_cdr3_distance`, `bsd4_matrix`, `hamming_distance`, `hamming_matrix`
 **Neighbor search:** `tcrdist_knn`, `tcrdist_radius_neighbors`, `knn_from_matrix`, `knn_from_pca`
 **Clumping:** `find_clumping`, `setup_tcr_groups`
 **DB matching:** `find_significant_tcrdist_matches`, `match_tcrs_to_db`, `strict_single_chain_match_tcrs_to_db`
 **Kernel PCA:** `compute_tcrdist_kernel_pca`
 **CD8 scoring:** `make_cd8_score_table_column`
+**Diversity:** `tcr_diversity`, `tcr_fuzzy_diversity`, `tcr_richness`, `tcr_clonality`
+**Clustering:** `tcrdist_hclust`, `cluster_tcrs`, `neighborhood_test`
+**Meta-clonotypes:** `find_meta_clonotypes`, `summarize_meta_clonotype`
+**Joins:** `tcrdist_join`
 **Visualization:** `plot_cdr3_logo`, `plot_junction_bars`, `plot_gene_usage`, `plot_tcrdist_heatmap`, `plot_tcrdist_dendrogram`, `plot_distance_distribution`, `plot_tcr_scatter`
 **I/O:** `read_airr`, `read_adaptive`, `read_10x`, `read_tcr_table`
 **Utilities:** `load_gene_database`, `get_translation`, `reverse_complement`, `trim_allele_to_gene`, `AMINO_ACIDS`, `TCRrep`
-**Rcpp (advanced):** 14 `rcpp_*` functions for direct C++ access
+**Rcpp (advanced):** 16 `rcpp_*` functions for direct C++ access
 
 #### Phase 6: Visualization ✅
 - `R/plot_utils.R` — `.tcrdistR_palette()`, `.check_ggplot2()` shared helpers
@@ -156,16 +170,17 @@ tcrdistR/
 - `R/constants.R` — added BLOSUM62 substitution matrix for CDR3 alignment scoring
 - Dependencies: ggplot2, ggseqlogo, patchwork, ggrepel (all Suggests)
 
+#### Phase 7: Additional Features ✅
+- `src/tcrdist_hamming.cpp` — Hamming distance (single-pair + N×N matrix) in C++
+- `R/wrappers_distance.R` — `hamming_distance()`, `hamming_matrix()` R wrappers
+- `R/diversity.R` — `tcr_diversity()` (generalized Simpson's with CI), `tcr_fuzzy_diversity()` (TCR-aware diversity), `tcr_richness()`, `tcr_clonality()`
+- `R/tcr_join.R` — `tcrdist_join()` distance-based fuzzy join (inner/left, max_n, suffix handling)
+- `R/hierarchical.R` — `tcrdist_hclust()`, `cluster_tcrs()`, `neighborhood_test()` (Fisher/chi-sq per TCR)
+- `R/meta_clonotypes.R` — `find_meta_clonotypes()` (ECDF-based radius, subject counting, subset de-dup), `summarize_meta_clonotype()`
+
 ---
 
 ## Remaining Work
-
-### Phase 7: Additional Features
-- Meta-clonotype detection
-- Additional distance metrics (Hamming, Levenshtein, Needleman-Wunsch)
-- Hierarchical clustering
-- Gene usage statistics
-- TCR join (query matching)
 
 ### Phase 8: Polish
 - Vignettes

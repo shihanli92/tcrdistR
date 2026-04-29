@@ -267,6 +267,14 @@ rcpp_blosum_sequence_distance <- function(seq1, seq2, gap_penalty = 4.0) {
     .Call(`_tcrdistR_rcpp_blosum_sequence_distance`, seq1, seq2, gap_penalty)
 }
 
+rcpp_hamming_distance <- function(a, b) {
+    .Call(`_tcrdistR_rcpp_hamming_distance`, a, b)
+}
+
+rcpp_hamming_matrix <- function(seqs) {
+    .Call(`_tcrdistR_rcpp_hamming_matrix`, seqs)
+}
+
 #' K-nearest-neighbors by TCRdist with group masking (C++ implementation)
 #'
 #' For each of the N input TCRs, finds the K nearest neighbors by TCRdist
