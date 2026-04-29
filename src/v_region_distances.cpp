@@ -145,7 +145,7 @@ NumericMatrix rcpp_compute_v_region_distances(
                 if (ca == CODE_STOP && cb == CODE_STOP)  continue;
                 if (ca == CODE_GAP || cb == CODE_GAP ||
                     ca == CODE_STOP || cb == CODE_STOP) {
-                    dist += gap_penalty_v_region;
+                    // Match tcrdist3: gap/stop vs AA scores 0
                     continue;
                 }
                 // Both are standard AAs: BSD4 lookup

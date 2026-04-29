@@ -53,16 +53,11 @@ inline std::array<int, 26> build_aa_index(const Rcpp::NumericMatrix& bsd4) {
 struct CDR3Data {
     std::vector<uint8_t> aa;  // AA indices in [0, 19]
     int len;
-    int gappos;     // gap insertion point (0 for short seqs)
-    int remainder;  // len - gappos (0 for short seqs)
 };
 
 // preprocess_cdr3 — converts a CDR3 string to CDR3Data.
 //
 // Uses tcrdist::aa_to_index() (constexpr, no runtime matrix needed).
-// For sequences with len < 5, gappos and remainder are set to 0; the
-// sentinel return in cdr3_dist_fast() handles them correctly.
-//
 // Throws Rcpp::exception on invalid amino acid characters.
 
 inline CDR3Data preprocess_cdr3(const std::string& seq) {
@@ -80,30 +75,19 @@ inline CDR3Data preprocess_cdr3(const std::string& seq) {
         d.aa[i] = static_cast<uint8_t>(idx);
     }
 
-    if (d.len >= 5) {
-        d.gappos    = std::min(6, 3 + (d.len - 5) / 2);
-        d.remainder = d.len - d.gappos;
-    } else {
-        d.gappos    = 0;
-        d.remainder = 0;
-    }
     return d;
 }
 
 // ---------------------------------------------------------------------------
 // cdr3_dist_fast — core CDR3 distance using BSD4_FLAT constexpr table
 // ---------------------------------------------------------------------------
-// Direct port of rconga/src/tcrdist_rcpp.cpp lines 702-741 (cdr3_dist_fast).
-// Uses the constexpr BSD4_FLAT array rather than a passed-in matrix pointer,
-// so no setup is required at call sites.
+// Matches tcrdist3's nb_tcrdist() with fixed_gappos=False for CDR3:
+//   - Same-length: score positions [ntrim, len-ctrim) directly
+//   - Different-length: try gap positions from min_gappos to max_gappos,
+//     pick the alignment that minimises the substitution score
 //
-// Algorithm (ALIGN_CDR3S = FALSE, TRIM_CDR3S = TRUE):
-//   ntrim = 3, ctrim = 2
-//   gappos = min(6, 3 + (lenshort - 5) / 2)   [integer division]
-//   remainder = lenshort - gappos
-//   N-terminal: sum BSD4[short[i]][long[i]] for i in [ntrim, gappos)
-//   C-terminal: sum BSD4[short[lenshort-1-i]][long[lenlong-1-i]] for i in [ctrim, remainder)
-//   return weight * dist + lendiff * gap_penalty
+// ntrim = 3, ctrim = 2
+// return weight * min_subst_dist + lendiff * gap_penalty
 
 inline double cdr3_dist_fast(const CDR3Data& s1,
                                const CDR3Data& s2,
@@ -129,20 +113,45 @@ inline double cdr3_dist_fast(const CDR3Data& s1,
     const int      short_last = shortd.len - 1;
     const int      long_last  = longd.len  - 1;
 
-    double dist = 0.0;
-
-    // N-terminal flank: positions [ntrim, gappos)
-    for (int i = ntrim; i < shortd.gappos; ++i) {
-        dist += tcrdist::BSD4_FLAT[short_aa[i] * 20 + long_aa[i]];
+    // Same-length: no gap needed
+    if (lendiff == 0) {
+        double dist = 0.0;
+        for (int i = ntrim; i < shortd.len - ctrim; ++i) {
+            dist += tcrdist::BSD4_FLAT[short_aa[i] * 20 + long_aa[i]];
+        }
+        return weight_cdr3_region * dist;
     }
 
-    // C-terminal flank: positions [ctrim, remainder)
-    for (int i = ctrim; i < shortd.remainder; ++i) {
-        dist += tcrdist::BSD4_FLAT[short_aa[short_last - i] * 20
-                                 + long_aa[long_last  - i]];
+    // Different-length: try multiple gap positions, pick minimum
+    int min_gappos = 5;
+    int max_gappos = shortd.len - 1 - 4;
+    while (min_gappos > max_gappos) {
+        --min_gappos;
+        ++max_gappos;
     }
 
-    return weight_cdr3_region * dist + gap_cost;
+    double best_dist = -1.0;
+    for (int gappos = min_gappos; gappos <= max_gappos; ++gappos) {
+        double tmp_dist = 0.0;
+        const int remainder = shortd.len - gappos;
+
+        // N-terminal flank: positions [ntrim, gappos)
+        for (int i = ntrim; i < gappos; ++i) {
+            tmp_dist += tcrdist::BSD4_FLAT[short_aa[i] * 20 + long_aa[i]];
+        }
+        // C-terminal flank: positions [ctrim, remainder)
+        for (int i = ctrim; i < remainder; ++i) {
+            tmp_dist += tcrdist::BSD4_FLAT[short_aa[short_last - i] * 20
+                                         + long_aa[long_last  - i]];
+        }
+
+        if (tmp_dist < best_dist || best_dist < 0.0) {
+            best_dist = tmp_dist;
+        }
+        if (best_dist == 0.0) break;
+    }
+
+    return weight_cdr3_region * best_dist + gap_cost;
 }
 
 // ---------------------------------------------------------------------------
@@ -180,18 +189,41 @@ inline double cdr3_dist_fast(const CDR3Data& s1,
     const int      short_last = shortd.len - 1;
     const int      long_last  = longd.len  - 1;
 
-    double dist = 0.0;
-
-    for (int i = ntrim; i < shortd.gappos; ++i) {
-        dist += tcrdist::BSD4_FLAT[short_aa[i] * 20 + long_aa[i]];
+    if (lendiff == 0) {
+        double dist = 0.0;
+        for (int i = ntrim; i < shortd.len - ctrim; ++i) {
+            dist += tcrdist::BSD4_FLAT[short_aa[i] * 20 + long_aa[i]];
+        }
+        return weight_cdr3_region * dist;
     }
 
-    for (int i = ctrim; i < shortd.remainder; ++i) {
-        dist += tcrdist::BSD4_FLAT[short_aa[short_last - i] * 20
-                                 + long_aa[long_last  - i]];
+    int min_gappos = 5;
+    int max_gappos = shortd.len - 1 - 4;
+    while (min_gappos > max_gappos) {
+        --min_gappos;
+        ++max_gappos;
     }
 
-    return weight_cdr3_region * dist + gap_cost;
+    double best_dist = -1.0;
+    for (int gappos = min_gappos; gappos <= max_gappos; ++gappos) {
+        double tmp_dist = 0.0;
+        const int remainder = shortd.len - gappos;
+
+        for (int i = ntrim; i < gappos; ++i) {
+            tmp_dist += tcrdist::BSD4_FLAT[short_aa[i] * 20 + long_aa[i]];
+        }
+        for (int i = ctrim; i < remainder; ++i) {
+            tmp_dist += tcrdist::BSD4_FLAT[short_aa[short_last - i] * 20
+                                         + long_aa[long_last  - i]];
+        }
+
+        if (tmp_dist < best_dist || best_dist < 0.0) {
+            best_dist = tmp_dist;
+        }
+        if (best_dist == 0.0) break;
+    }
+
+    return weight_cdr3_region * best_dist + gap_cost;
 }
 
 // ---------------------------------------------------------------------------

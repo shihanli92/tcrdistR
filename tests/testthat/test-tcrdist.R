@@ -92,7 +92,7 @@ test_that("tcrdist_matrix rejects unknown V genes", {
 })
 
 test_that("tcrdist_matrix produces known reference values", {
-    # Cross-validated against rconga: these 3 TCRs produce this exact matrix
+    # Cross-validated against tcrdist3 (variable gap position, gap-vs-AA = 0)
     tcrs <- data.frame(
         va    = c("TRAV1-1*01", "TRAV1-2*01", "TRAV12-1*01"),
         cdr3a = c("CAVRDSSYKLIF", "CAVRDSSYKLIF", "CALSDRSYEKLIF"),
@@ -102,6 +102,6 @@ test_that("tcrdist_matrix produces known reference values", {
     )
     mat <- tcrdist_matrix(tcrs, "human")
     expect_equal(mat[1, 2], 28)
-    expect_equal(mat[1, 3], 239)
-    expect_equal(mat[2, 3], 227)
+    expect_equal(mat[1, 3], 227)
+    expect_equal(mat[2, 3], 215)
 })

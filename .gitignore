@@ -19,6 +19,13 @@ Thumbs.db
 .vscode/
 .idea/
 
+# Benchmarks (internal testing, not published)
+benchmarks/
+
+# Fixture regeneration helpers
+tests/regenerate_kernel_pca_fixture.R
+tests/regenerate_kernel_pca_fixture.py
+
 # Build output
 *.tar.gz
 *.Rcheck/
