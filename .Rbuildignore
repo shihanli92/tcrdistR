@@ -12,3 +12,4 @@
 ^benchmarks$
 ^tcrdistR\.Rcheck$
 ^tcrdistR_.*\.tar\.gz$
+^\.github$
