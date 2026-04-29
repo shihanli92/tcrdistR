@@ -98,15 +98,16 @@ NULL
 #' @param chains Character string. One of \code{"AB"} (default), \code{"A"},
 #'   \code{"B"}, or \code{"GD"}.
 #' @param deduplicate Controls clone deduplication (matching tcrdist3 behavior).
+#'   Chain columns are always included in grouping automatically.
 #'   \describe{
-#'     \item{\code{TRUE} (default)}{Deduplicate using chain columns
-#'       (\code{va}, \code{cdr3a}, \code{vb}, \code{cdr3b}) plus \code{subject}
-#'       if present. Within-subject duplicates are merged and \code{count}
-#'       values summed.}
+#'     \item{\code{TRUE} (default)}{Deduplicate using chain columns plus
+#'       \code{subject} if present. Within-subject duplicates are merged and
+#'       \code{count} values summed.}
 #'     \item{\code{FALSE}}{No deduplication; \code{clone_df} is stored as-is.}
-#'     \item{Character vector}{Custom grouping columns. Only rows identical
-#'       across all specified columns are merged. Example:
-#'       \code{c("va", "cdr3a", "vb", "cdr3b")} to ignore subject.}
+#'     \item{Character vector}{Additional grouping columns beyond the chain
+#'       columns. For example, \code{c("subject")} groups by chain columns +
+#'       subject (same as default when subject exists);
+#'       \code{character(0)} groups by chain columns only.}
 #'   }
 #' @param metric Character string. Distance metric to use. One of
 #'   \code{"tcrdist"} (default), \code{"hamming"}, \code{"levenshtein"}, or
@@ -142,9 +143,8 @@ NULL
 #' obj <- TCRrep(tcrs, organism = "human", compute_distances = TRUE)
 #' dim(obj@paired_dist)  # 2 x 2
 #'
-#' # Custom dedup columns (ignore subject, collapse across individuals)
-#' obj <- TCRrep(tcrs, organism = "human",
-#'               deduplicate = c("va", "cdr3a", "vb", "cdr3b"))
+#' # Chain columns only (collapse across subjects)
+#' obj <- TCRrep(tcrs, organism = "human", deduplicate = character(0))
 #'
 #' # No deduplication
 #' obj <- TCRrep(tcrs, organism = "human", deduplicate = FALSE)
@@ -170,16 +170,19 @@ TCRrep <- function(clone_df,
 
     # ---- Deduplication ------------------------------------------------------
     if (!isFALSE(deduplicate) && nrow(clone_df) > 0L) {
+        # Chain columns are always included in grouping
+        chain_cols <- switch(chains,
+            "AB" = c("va", "cdr3a", "vb", "cdr3b"),
+            "A"  = c("va", "cdr3a"),
+            "B"  = c("vb", "cdr3b"),
+            "GD" = c("va", "cdr3a", "vb", "cdr3b"),
+            character(0L)
+        )
         if (is.character(deduplicate)) {
-            group_cols <- deduplicate
+            # User specifies additional grouping columns beyond chain cols
+            group_cols <- unique(c(chain_cols, deduplicate))
         } else {
-            chain_cols <- switch(chains,
-                "AB" = c("va", "cdr3a", "vb", "cdr3b"),
-                "A"  = c("va", "cdr3a"),
-                "B"  = c("vb", "cdr3b"),
-                "GD" = c("va", "cdr3a", "vb", "cdr3b"),
-                character(0L)
-            )
+            # TRUE: chain cols + subject (if present)
             group_cols <- chain_cols
             if ("subject" %in% colnames(clone_df)) {
                 group_cols <- c(group_cols, "subject")

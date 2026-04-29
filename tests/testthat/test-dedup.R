@@ -71,7 +71,7 @@ test_that("deduplicate=FALSE preserves all rows unchanged", {
     expect_equal(obj@clone_df$count, c(3L, 5L))
 })
 
-test_that("deduplicate with custom grouping columns", {
+test_that("deduplicate with custom additional grouping columns", {
     tcrs <- data.frame(
         va      = c("TRAV1-1*01", "TRAV1-1*01", "TRAV1-1*01"),
         cdr3a   = c("CAVRDSSYKLIF", "CAVRDSSYKLIF", "CAVRDSSYKLIF"),
@@ -82,11 +82,14 @@ test_that("deduplicate with custom grouping columns", {
         stringsAsFactors = FALSE
     )
 
-    # Custom: ignore subject -> all 3 merge into 1
-    obj <- TCRrep(tcrs, "human",
-                  deduplicate = c("va", "cdr3a", "vb", "cdr3b"))
+    # character(0): chain cols only, ignore subject -> all 3 merge into 1
+    obj <- TCRrep(tcrs, "human", deduplicate = character(0))
     expect_equal(nrow(obj@clone_df), 1L)
     expect_equal(obj@clone_df$count, 10L)
+
+    # c("subject"): chain cols + subject -> S1 rows merge, S2 stays separate
+    obj2 <- TCRrep(tcrs, "human", deduplicate = c("subject"))
+    expect_equal(nrow(obj2@clone_df), 2L)
 })
 
 test_that("deduplicate adds count=1 when count column is missing", {
@@ -161,7 +164,7 @@ test_that("deduplicate errors on nonexistent custom columns", {
     )
 
     expect_error(
-        TCRrep(tcrs, "human", deduplicate = c("va", "nonexistent")),
+        TCRrep(tcrs, "human", deduplicate = c("nonexistent")),
         "not found"
     )
 })
@@ -187,9 +190,8 @@ test_that("deduplicate on DASH dataset produces expected counts", {
     obj1 <- TCRrep(dash, "mouse", deduplicate = TRUE)
     expect_equal(nrow(obj1@clone_df), 1888L)
 
-    # Chain cols only -> merges cross-subject too
-    obj2 <- TCRrep(dash, "mouse",
-                   deduplicate = c("va", "cdr3a", "vb", "cdr3b"))
+    # Chain cols only (no extra columns) -> merges cross-subject too
+    obj2 <- TCRrep(dash, "mouse", deduplicate = character(0))
     expect_equal(nrow(obj2@clone_df), 1746L)
 
     # No dedup
