@@ -52,6 +52,7 @@ instance (following Bioconductor convention, rather than calling
 <span>  <span class="va">clone_df</span>,</span>
 <span>  organism <span class="op">=</span> <span class="st">"human"</span>,</span>
 <span>  chains <span class="op">=</span> <span class="st">"AB"</span>,</span>
+<span>  deduplicate <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  metric <span class="op">=</span> <span class="st">"tcrdist"</span>,</span>
 <span>  compute_distances <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  weight_cdr3 <span class="op">=</span> <span class="va">WEIGHT_CDR3_REGION</span>,</span>
@@ -93,6 +94,25 @@ on the <code>chains</code> argument:</p><dl><dt><code>"AB"</code></dt>
 <dt id="arg-chains">chains<a class="anchor" aria-label="anchor" href="#arg-chains"></a></dt>
 <dd><p>Character string. One of <code>"AB"</code> (default), <code>"A"</code>,
 <code>"B"</code>, or <code>"GD"</code>.</p></dd>
+
+
+<dt id="arg-deduplicate">deduplicate<a class="anchor" aria-label="anchor" href="#arg-deduplicate"></a></dt>
+<dd><p>Controls clone deduplication (matching tcrdist3 behavior).</p><dl><dt><code>TRUE</code> (default)</dt>
+<dd><p>Deduplicate using chain columns
+(<code>va</code>, <code>cdr3a</code>, <code>vb</code>, <code>cdr3b</code>) plus <code>subject</code>
+if present. Within-subject duplicates are merged and <code>count</code>
+values summed.</p></dd>
+
+<dt><code>FALSE</code></dt>
+<dd><p>No deduplication; <code>clone_df</code> is stored as-is.</p></dd>
+
+<dt>Character vector</dt>
+<dd><p>Custom grouping columns. Only rows identical
+across all specified columns are merged. Example:
+<code>c("va", "cdr3a", "vb", "cdr3b")</code> to ignore subject.</p></dd>
+
+
+</dl></dd>
 
 
 <dt id="arg-metric">metric<a class="anchor" aria-label="anchor" href="#arg-metric"></a></dt>
@@ -153,7 +173,7 @@ bundled gene database on construction.</p>
 <span class="r-in"><span>    stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Basic construction (no distance computation)</span></span></span>
+<span class="r-in"><span><span class="co"># Basic construction (deduplicates by default)</span></span></span>
 <span class="r-in"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">TCRrep</span><span class="op">(</span><span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"human"</span><span class="op">)</span></span></span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># With distance computation</span></span></span>
@@ -161,8 +181,12 @@ bundled gene database on construction.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">obj</span><span class="op">@</span><span class="va">paired_dist</span><span class="op">)</span>  <span class="co"># 2 x 2</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2 2</span>
 <span class="r-in"><span></span></span>
-<span class="r-in"><span><span class="co"># Alpha chain only</span></span></span>
-<span class="r-in"><span><span class="va">obj_a</span> <span class="op">&lt;-</span> <span class="fu">TCRrep</span><span class="op">(</span><span class="va">tcrs</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"va"</span>, <span class="st">"cdr3a"</span><span class="op">)</span><span class="op">]</span>, organism <span class="op">=</span> <span class="st">"human"</span>, chains <span class="op">=</span> <span class="st">"A"</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="co"># Custom dedup columns (ignore subject, collapse across individuals)</span></span></span>
+<span class="r-in"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">TCRrep</span><span class="op">(</span><span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"human"</span>,</span></span>
+<span class="r-in"><span>              deduplicate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"va"</span>, <span class="st">"cdr3a"</span>, <span class="st">"vb"</span>, <span class="st">"cdr3b"</span><span class="op">)</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
+<span class="r-in"><span><span class="co"># No deduplication</span></span></span>
+<span class="r-in"><span><span class="va">obj</span> <span class="op">&lt;-</span> <span class="fu">TCRrep</span><span class="op">(</span><span class="va">tcrs</span>, organism <span class="op">=</span> <span class="st">"human"</span>, deduplicate <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

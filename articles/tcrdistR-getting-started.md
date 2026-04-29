@@ -192,16 +192,41 @@ tcr_clonality(pa_counts)
 
 ## The TCRrep Object
 
-For more structured workflows, wrap your data in a `TCRrep` S4 object:
+For more structured workflows, wrap your data in a `TCRrep` S4 object.
+By default,
+[`TCRrep()`](https://shihanli92.github.io/tcrdistR/reference/TCRrep.md)
+deduplicates identical clones (matching tcrdist3 behavior), grouping by
+chain columns plus `subject` if present, and summing clone counts:
 
 ``` r
-rep <- TCRrep(pa_sub, organism = "mouse", chains = "AB")
+rep <- TCRrep(pa_sub, organism = "mouse")
+#> deduplicate: 50 -> 49 clones
+nrow(pa_sub)        # before dedup
+#> [1] 50
+nrow(rep@clone_df)  # after dedup (within-subject duplicates merged)
+#> [1] 49
 rep
-#> TCRrep object: 50 clonotypes
+#> TCRrep object: 49 clonotypes
 #>   organism: mouse
 #>   chains: AB
 #>   metric: tcrdist
 #>   distances: not computed
+```
+
+You can control deduplication with the `deduplicate` argument:
+
+``` r
+# Custom grouping: collapse across subjects too
+rep_strict <- TCRrep(pa_sub, organism = "mouse",
+                     deduplicate = c("va", "cdr3a", "vb", "cdr3b"))
+#> deduplicate: 50 -> 47 clones
+nrow(rep_strict@clone_df)
+#> [1] 47
+
+# No deduplication
+rep_raw <- TCRrep(pa_sub, organism = "mouse", deduplicate = FALSE)
+nrow(rep_raw@clone_df)
+#> [1] 50
 ```
 
 ## Next Steps

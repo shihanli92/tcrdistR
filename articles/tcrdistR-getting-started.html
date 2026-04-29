@@ -243,15 +243,37 @@ matrix:</p>
 <h2 id="the-tcrrep-object">The TCRrep Object<a class="anchor" aria-label="anchor" href="#the-tcrrep-object"></a>
 </h2>
 <p>For more structured workflows, wrap your data in a
-<code>TCRrep</code> S4 object:</p>
+<code>TCRrep</code> S4 object. By default, <code><a href="../reference/TCRrep.html">TCRrep()</a></code>
+deduplicates identical clones (matching tcrdist3 behavior), grouping by
+chain columns plus <code>subject</code> if present, and summing clone
+counts:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/TCRrep.html">TCRrep</a></span><span class="op">(</span><span class="va">pa_sub</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, chains <span class="op">=</span> <span class="st">"AB"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/TCRrep.html">TCRrep</a></span><span class="op">(</span><span class="va">pa_sub</span>, organism <span class="op">=</span> <span class="st">"mouse"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; deduplicate: 50 -&gt; 49 clones</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">pa_sub</span><span class="op">)</span>        <span class="co"># before dedup</span></span>
+<span><span class="co">#&gt; [1] 50</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">rep</span><span class="op">@</span><span class="va">clone_df</span><span class="op">)</span>  <span class="co"># after dedup (within-subject duplicates merged)</span></span>
+<span><span class="co">#&gt; [1] 49</span></span>
 <span><span class="va">rep</span></span>
-<span><span class="co">#&gt; TCRrep object: 50 clonotypes</span></span>
+<span><span class="co">#&gt; TCRrep object: 49 clonotypes</span></span>
 <span><span class="co">#&gt;   organism: mouse</span></span>
 <span><span class="co">#&gt;   chains: AB</span></span>
 <span><span class="co">#&gt;   metric: tcrdist</span></span>
 <span><span class="co">#&gt;   distances: not computed</span></span></code></pre></div>
+<p>You can control deduplication with the <code>deduplicate</code>
+argument:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Custom grouping: collapse across subjects too</span></span>
+<span><span class="va">rep_strict</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/TCRrep.html">TCRrep</a></span><span class="op">(</span><span class="va">pa_sub</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>,</span>
+<span>                     deduplicate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"va"</span>, <span class="st">"cdr3a"</span>, <span class="st">"vb"</span>, <span class="st">"cdr3b"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co">#&gt; deduplicate: 50 -&gt; 47 clones</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">rep_strict</span><span class="op">@</span><span class="va">clone_df</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 47</span></span>
+<span></span>
+<span><span class="co"># No deduplication</span></span>
+<span><span class="va">rep_raw</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/TCRrep.html">TCRrep</a></span><span class="op">(</span><span class="va">pa_sub</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, deduplicate <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">rep_raw</span><span class="op">@</span><span class="va">clone_df</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 50</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="next-steps">Next Steps<a class="anchor" aria-label="anchor" href="#next-steps"></a>
