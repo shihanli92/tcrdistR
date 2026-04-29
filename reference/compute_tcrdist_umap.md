@@ -1,9 +1,6 @@
-# Compute UMAP embedding from TCRdist kernel PCA
+# Compute UMAP embedding from TCRdist data
 
-Reduces kernel PCA embeddings (or raw TCR data) to a low-dimensional
-UMAP representation suitable for visualization with
-[`plot_tcr_scatter`](https://shihanli92.github.io/tcrdistR/reference/plot_tcr_scatter.md).
-Uses the uwot package for the UMAP computation.
+Two input modes are supported:
 
 ## Usage
 
@@ -12,13 +9,16 @@ compute_tcrdist_umap(
   tcr_df = NULL,
   organism = NULL,
   pca_embeddings = NULL,
-  n_components_pca = 50L,
   n_components = 2L,
   n_neighbors = 15L,
   min_dist = 0.1,
+  spread = 1,
   metric = "euclidean",
   n_threads = 1L,
   seed = NULL,
+  cluster = FALSE,
+  clustering_resolution = 1,
+  clustering_method = NULL,
   ...
 )
 ```
@@ -27,8 +27,8 @@ compute_tcrdist_umap(
 
 - tcr_df:
 
-  Data.frame with TCR columns (`va`, `cdr3a`, `vb`, `cdr3b`). Used only
-  if `pca_embeddings` is `NULL`.
+  Data.frame with TCR columns (`va`, `cdr3a`, `vb`, `cdr3b`; plus `ja`,
+  `jb` for group masking).
 
 - organism:
 
@@ -38,12 +38,7 @@ compute_tcrdist_umap(
 - pca_embeddings:
 
   Numeric matrix (N x D). Pre-computed kernel PCA embeddings. If
-  provided, `tcr_df` and `organism` are ignored.
-
-- n_components_pca:
-
-  Integer. Number of kernel PCA components to compute when using the
-  `tcr_df` input path. Default `50L`.
+  provided, the PCA path is used.
 
 - n_components:
 
@@ -51,63 +46,130 @@ compute_tcrdist_umap(
 
 - n_neighbors:
 
-  Integer. Size of local neighborhood for UMAP manifold approximation.
-  Default `15L`.
+  Integer. Number of nearest neighbors. Default `15L`.
 
 - min_dist:
 
-  Numeric. Minimum distance between embedded points. Controls how
-  tightly UMAP packs points together. Default `0.1`.
+  Numeric. UMAP min_dist. Default `0.1`.
+
+- spread:
+
+  Numeric. UMAP spread parameter. Default `1.0`.
 
 - metric:
 
-  Character string. Distance metric for UMAP neighbor search. Default
-  `"euclidean"`.
+  Character. Distance metric for UMAP neighbor search (PCA path only).
+  Default `"euclidean"`.
 
 - n_threads:
 
-  Integer. Number of threads for neighbor search and optimization.
-  Default `1L`.
+  Integer. Threads for UMAP optimization. Default `1L`.
 
 - seed:
 
-  Integer or `NULL`. Random seed for reproducibility. If non-`NULL`,
-  [`set.seed()`](https://rdrr.io/r/base/Random.html) is called before
-  UMAP computation. Default `NULL`.
+  Integer or `NULL`. Random seed. Default `NULL`.
+
+- cluster:
+
+  Logical. If `TRUE`, run graph-based clustering on the KNN graph (KNN
+  path only; requires igraph). Default `FALSE`.
+
+- clustering_resolution:
+
+  Numeric. Resolution for community detection. Default `1.0`.
+
+- clustering_method:
+
+  Character or `NULL`. `"leiden"`, `"louvain"`, or `NULL` (try Leiden
+  first). Default `NULL`.
 
 - ...:
 
   Additional arguments passed to
-  [`uwot::umap()`](https://jlmelville.github.io/uwot/reference/umap.html).
+  [`umap`](https://jlmelville.github.io/uwot/reference/umap.html) (PCA
+  path only).
 
 ## Value
 
-A named list:
+A named list. Elements depend on the input path:
+
+**KNN path** (`tcr_df` + `organism`):
 
 - `embeddings`:
 
-  Numeric matrix (N x `n_components`). UMAP coordinates.
+  Numeric matrix (N x `n_components`).
 
-- `pca_embeddings`:
+- `knn_indices`:
 
-  Numeric matrix. The PCA input used.
+  Integer matrix (N x K). 1-based.
+
+- `knn_distances`:
+
+  Numeric matrix (N x K).
+
+- `knn_graph`:
+
+  Sparse `dgCMatrix` (N x N). Fuzzy simplicial set.
+
+- `clusters`:
+
+  Integer vector (0-based) or `NULL`.
+
+- `nndists`:
+
+  Numeric vector. Weighted NN distances.
+
+- `n_neighbors`:
+
+  Final K (may have been increased for connectivity).
 
 - `n_components`:
 
-  Integer. Number of UMAP dimensions.
+  Integer.
+
+- `method`:
+
+  `"knn"`.
+
+**PCA path** (`pca_embeddings`):
+
+- `embeddings`:
+
+  Numeric matrix (N x `n_components`).
+
+- `pca_embeddings`:
+
+  The PCA input matrix.
+
+- `n_components`:
+
+  Integer.
+
+- `method`:
+
+  `"pca"`.
 
 ## Details
 
-Two input modes are supported:
+1.  **KNN path** (recommended): supply `tcr_df` and `organism`. Computes
+    TCRdist K-nearest-neighbors with group masking (clones sharing an
+    identical alpha or beta chain are excluded from each other's
+    neighborhoods), builds a fuzzy simplicial set graph, and runs UMAP
+    from the precomputed KNN via
+    [`umap`](https://jlmelville.github.io/uwot/reference/umap.html).
+    This preserves the TCRdist metric faithfully.
 
-1.  **From pre-computed PCA**: supply `pca_embeddings` (an N x D matrix,
-    e.g. from `compute_tcrdist_kernel_pca()$embeddings`).
+2.  **PCA path**: supply `pca_embeddings` (an N x D matrix, e.g. from
+    `compute_tcrdist_kernel_pca()$embeddings`). Runs standard UMAP in
+    Euclidean space on the PCA coordinates.
 
-2.  **From raw TCR data**: supply `tcr_df` and `organism`. Kernel PCA is
-    computed internally with `n_components_pca` components before UMAP.
+When `cluster = TRUE`, Leiden (or Louvain) community detection is
+performed on the fuzzy KNN graph (KNN path only; requires igraph).
 
 ## See also
 
+[`tcrdist_knn`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_knn.md),
+[`setup_tcr_groups`](https://shihanli92.github.io/tcrdistR/reference/setup_tcr_groups.md),
 [`compute_tcrdist_kernel_pca`](https://shihanli92.github.io/tcrdistR/reference/compute_tcrdist_kernel_pca.md),
 [`plot_tcr_scatter`](https://shihanli92.github.io/tcrdistR/reference/plot_tcr_scatter.md)
 
@@ -116,13 +178,22 @@ Two input modes are supported:
 ``` r
 # \donttest{
 data(dash)
-# From raw data (computes kernel PCA internally)
-umap <- compute_tcrdist_umap(dash[1:100, ], "mouse", seed = 42)
-dim(umap$embeddings)  # 100 x 2
-#> [1] 100   2
+sub <- dash[1:200, ]
 
-# From pre-computed PCA
-pca <- compute_tcrdist_kernel_pca(dash[1:100, ], "mouse", n_components = 20L)
+# KNN path (recommended): uses TCRdist directly
+umap <- compute_tcrdist_umap(sub, "mouse", seed = 42)
+dim(umap$embeddings)  # 200 x 2
+#> [1] 200   2
+
+# With clustering
+umap <- compute_tcrdist_umap(sub, "mouse", seed = 42, cluster = TRUE)
+table(umap$clusters)
+#> 
+#>  0  1  2  3  4  5  6  7  8  9 10 
+#> 27  9 22 35 11  9 21 28 14 16  8 
+
+# PCA path: from pre-computed kernel PCA
+pca <- compute_tcrdist_kernel_pca(sub, "mouse", n_components = 20L)
 umap <- compute_tcrdist_umap(pca_embeddings = pca$embeddings, seed = 42)
 # }
 ```

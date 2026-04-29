@@ -79,7 +79,7 @@ Kernel PCA and UMAP for TCRdist distance matrices
 - [`compute_tcrdist_kernel_pca()`](https://shihanli92.github.io/tcrdistR/reference/compute_tcrdist_kernel_pca.md)
   : Kernel PCA on TCRdist distances
 - [`compute_tcrdist_umap()`](https://shihanli92.github.io/tcrdistR/reference/compute_tcrdist_umap.md)
-  : Compute UMAP embedding from TCRdist kernel PCA
+  : Compute UMAP embedding from TCRdist data
 
 ## CD8 Scoring
 

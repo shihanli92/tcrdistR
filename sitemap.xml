@@ -33,6 +33,8 @@
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dash.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-analyze_junction.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-auto_detect_columns.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-build_knn_graph.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-calc_nndists.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-center_kernel_matrix.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-convert_adaptive_gene.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-empty_clumping_results.html</loc></url>
@@ -48,7 +50,10 @@
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-normalize_tcr_db_columns.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-parse_tcr_junctions.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-resample_shuffled_tcr_chains.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-run_clustering.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-run_umap_from_knn.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-single_linkage_clumping.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-smooth_knn_dist.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-standardize_columns.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-validate_tcr_df.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/find_clumping.html</loc></url>
