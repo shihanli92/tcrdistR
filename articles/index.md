@@ -7,6 +7,8 @@
 
 ### Guides
 
+- [TCRrep
+  Workflow](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-tcrrep-workflow.md):
 - [Advanced TCR Repertoire
   Analysis](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-advanced.md):
 - [Visualization
