@@ -55,6 +55,7 @@ Collate:
     'io_generic.R'
     'kernel_pca.R'
     'meta_clonotypes.R'
+    'network.R'
     'plot_distances.R'
     'plot_logo.R'
     'plot_scatter.R'

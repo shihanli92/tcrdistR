@@ -90,6 +90,8 @@ reference:
       - plot_junction_bars
       - plot_gene_usage
       - plot_tcr_scatter
+      - compute_tcr_network
+      - plot_tcr_network
 
   - title: "I/O"
     desc: "Read and standardize TCR data from various formats"
