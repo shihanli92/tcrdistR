@@ -118,6 +118,7 @@ articles:
       - tcrdistR-getting-started
   - title: "Guides"
     contents:
+      - tcrdistR-tcrrep-workflow
       - tcrdistR-advanced
       - tcrdistR-visualization
 
