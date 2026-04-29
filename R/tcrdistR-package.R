@@ -3,6 +3,8 @@
 
 #' @useDynLib tcrdistR, .registration = TRUE
 #' @importFrom Rcpp sourceCpp
+#' @import methods
+#' @importFrom Matrix sparseMatrix
 NULL
 
 # Package-private environment for caching

@@ -41,6 +41,71 @@ rcpp_blosum62_lookup <- function(aa1, aa2) {
     .Call(`_tcrdistR_rcpp_blosum62_lookup`, aa1, aa2)
 }
 
+#' K-nearest-neighbors from a precomputed distance matrix (C++ implementation)
+#'
+#' For each row of a square distance matrix \code{D}, finds the K nearest
+#' neighbors while masking out entries that share the same alpha-chain or
+#' beta-chain group assignment.  Same-group pairs are assigned the sentinel
+#' distance 1e3 before selection.
+#'
+#' Uses \code{std::nth_element} for O(N) partial sorting per row, optionally
+#' followed by \code{std::sort} of the K selected neighbors.
+#'
+#' @param D Numeric matrix (N x N). Precomputed pairwise distance matrix.
+#'   Must be square.
+#' @param K Integer. Number of nearest neighbors to extract per row.
+#' @param agroups Integer vector of length N. Alpha-chain group assignments.
+#'   Rows sharing the same agroups value are masked from each other.
+#' @param bgroups Integer vector of length N. Beta-chain group assignments.
+#'   Rows sharing the same bgroups value are masked from each other.
+#' @param sort_nbrs Logical. If \code{TRUE}, sort the K neighbors by ascending
+#'   distance.  Default \code{TRUE}.
+#' @return A \code{List} with two elements:
+#'   \describe{
+#'     \item{\code{knn_indices}}{Integer matrix (N x K). 1-based neighbor indices.}
+#'     \item{\code{knn_distances}}{Numeric matrix (N x K). Corresponding distances.}
+#'   }
+#' @examples
+#' \dontrun{
+#'   D <- matrix(c(0,1,2,1,0,3,2,3,0), nrow=3)
+#'   result <- rcpp_knn_from_distance_matrix(D, K=1L, agroups=1:3, bgroups=1:3)
+#' }
+#' @export
+rcpp_knn_from_distance_matrix <- function(D, K, agroups, bgroups, sort_nbrs = TRUE) {
+    .Call(`_tcrdistR_rcpp_knn_from_distance_matrix`, D, K, agroups, bgroups, sort_nbrs)
+}
+
+#' K-nearest-neighbors from a PCA embedding matrix (C++ implementation)
+#'
+#' Computes K nearest neighbors directly from PCA embeddings (N x D matrix)
+#' without materializing the full N x N Euclidean distance matrix.  For each
+#' row, computes Euclidean distances to all N points on the fly, applies
+#' group masking, and extracts the K nearest via \code{std::nth_element}.
+#'
+#' Memory: O(N*D + N*K) instead of O(N^2).
+#'
+#' @param pca_matrix Numeric matrix (N x D). PCA or other embedding coordinates.
+#'   Rows are samples, columns are dimensions.
+#' @param K Integer. Number of nearest neighbors to extract per point.
+#' @param agroups Integer vector of length N. Alpha-chain group assignments.
+#' @param bgroups Integer vector of length N. Beta-chain group assignments.
+#' @param sort_nbrs Logical. If \code{TRUE}, sort the K neighbors by ascending
+#'   Euclidean distance.  Default \code{TRUE}.
+#' @return A \code{List} with two elements:
+#'   \describe{
+#'     \item{\code{knn_indices}}{Integer matrix (N x K). 1-based neighbor indices.}
+#'     \item{\code{knn_distances}}{Numeric matrix (N x K). Euclidean distances.}
+#'   }
+#' @examples
+#' \dontrun{
+#'   pca <- matrix(rnorm(30), nrow=10, ncol=3)
+#'   result <- rcpp_knn_from_pca_matrix(pca, K=3L, agroups=1:10, bgroups=1:10)
+#' }
+#' @export
+rcpp_knn_from_pca_matrix <- function(pca_matrix, K, agroups, bgroups, sort_nbrs = TRUE) {
+    .Call(`_tcrdistR_rcpp_knn_from_pca_matrix`, pca_matrix, K, agroups, bgroups, sort_nbrs)
+}
+
 #' Weighted CDR3 distance (C++ implementation)
 #'
 #' Direct C++ port of the CDR3 distance algorithm from
@@ -101,6 +166,58 @@ rcpp_blosum_sequence_distance <- function(seq1, seq2, gap_penalty = 4.0) {
     .Call(`_tcrdistR_rcpp_blosum_sequence_distance`, seq1, seq2, gap_penalty)
 }
 
+#' K-nearest-neighbors by TCRdist with group masking (C++ implementation)
+#'
+#' For each of the N input TCRs, finds the K nearest neighbors by TCRdist
+#' while masking out TCRs that share the same alpha-group or beta-group
+#' assignment (same-group exclusion).  Same-group pairs and self-pairs are
+#' assigned the sentinel distance 1e3 before selection.
+#'
+#' Uses \code{std::nth_element} for O(N) partial sorting per row, optionally
+#' followed by O(K log K) full sorting of the K selected neighbors.
+#' \code{Rcpp::checkUserInterrupt()} is called every 100 rows.
+#'
+#' @param va_genes   Character vector of length N. Alpha V-gene allele names.
+#' @param cdr3a_seqs Character vector of length N. Alpha CDR3 sequences.
+#' @param vb_genes   Character vector of length N. Beta V-gene allele names.
+#' @param cdr3b_seqs Character vector of length N. Beta CDR3 sequences.
+#' @param v_dist_a   Named square \code{NumericMatrix}. Pre-computed pairwise
+#'   V-region distances for alpha genes.
+#' @param v_dist_b   Named square \code{NumericMatrix}. Pre-computed pairwise
+#'   V-region distances for beta genes.
+#' @param K Integer. Number of nearest neighbors to return per TCR.
+#' @param agroups Integer vector of length N. Alpha-chain group assignments.
+#'   TCRs sharing the same agroups value are masked from each other.
+#' @param bgroups Integer vector of length N. Beta-chain group assignments.
+#'   TCRs sharing the same bgroups value are masked from each other.
+#' @param sort_nbrs Logical. If \code{TRUE}, sort the K neighbors by ascending
+#'   distance. Default \code{TRUE}.
+#' @param weight_cdr3_region Integer. CDR3 alignment distance multiplier.
+#'   Default 3 matches \code{WEIGHT_CDR3_REGION}.
+#' @param gap_penalty_cdr3_region Integer. Per-residue length-difference
+#'   penalty. Default 12 matches \code{GAP_PENALTY_CDR3_REGION}.
+#' @return A \code{List} with two elements:
+#'   \describe{
+#'     \item{\code{knn_indices}}{Integer matrix (N x K). 1-based neighbor indices.}
+#'     \item{\code{knn_distances}}{Numeric matrix (N x K). Corresponding distances.}
+#'   }
+#' @examples
+#' \dontrun{
+#'   result <- rcpp_tcrdist_knn(
+#'     va_genes = c("TRAV1-1*01", "TRAV1-2*01"),
+#'     cdr3a_seqs = c("CAVSANSGTYF", "CAVSANSGTYF"),
+#'     vb_genes = c("TRBV20-1*01", "TRBV20-1*01"),
+#'     cdr3b_seqs = c("CASSIRSSYEQYF", "CASSIRSYEQYF"),
+#'     v_dist_a = v_alpha_mat, v_dist_b = v_beta_mat,
+#'     K = 1L,
+#'     agroups = 1:2, bgroups = 1:2
+#'   )
+#' }
+#' @export
+rcpp_tcrdist_knn <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, K, agroups, bgroups, sort_nbrs = TRUE, weight_cdr3_region = 3L, gap_penalty_cdr3_region = 12L) {
+    .Call(`_tcrdistR_rcpp_tcrdist_knn`, va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, K, agroups, bgroups, sort_nbrs, weight_cdr3_region, gap_penalty_cdr3_region)
+}
+
 #' Pairwise TCRdist matrix (C++ implementation)
 #'
 #' Computes the full N x N symmetric matrix of paired-chain TCRdist distances.
@@ -145,6 +262,163 @@ rcpp_blosum_sequence_distance <- function(seq1, seq2, gap_penalty = 4.0) {
 #' @export
 rcpp_tcrdist_matrix <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, weight_cdr3_region = 3L, gap_penalty_cdr3_region = 12L) {
     .Call(`_tcrdistR_rcpp_tcrdist_matrix`, va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, weight_cdr3_region, gap_penalty_cdr3_region)
+}
+
+#' Radius-based TCRdist neighbor search with group masking (C++ implementation)
+#'
+#' For each of the N input TCRs, finds all other TCRs within \code{radius}
+#' TCRdist distance, excluding TCRs that share the same alpha or beta group
+#' (same-group exclusion) and self-pairs.
+#'
+#' Three-stage early termination is applied per pair:
+#' \enumerate{
+#'   \item If V-region distance alone exceeds \code{radius}, skip.
+#'   \item If V-region + CDR3-alpha distance exceeds \code{radius}, skip.
+#'   \item If full distance exceeds \code{radius}, skip.
+#' }
+#'
+#' \code{Rcpp::checkUserInterrupt()} is called every 100 rows.
+#'
+#' @param va_genes   Character vector of length N. Alpha V-gene allele names.
+#' @param cdr3a_seqs Character vector of length N. Alpha CDR3 sequences.
+#' @param vb_genes   Character vector of length N. Beta V-gene allele names.
+#' @param cdr3b_seqs Character vector of length N. Beta CDR3 sequences.
+#' @param v_dist_a   Named square \code{NumericMatrix}. Pre-computed pairwise
+#'   V-region distances for alpha genes.
+#' @param v_dist_b   Named square \code{NumericMatrix}. Pre-computed pairwise
+#'   V-region distances for beta genes.
+#' @param radius     Numeric. Search radius. Only neighbors within this
+#'   distance (inclusive) are returned.
+#' @param agroups Integer vector of length N. Alpha-chain group assignments.
+#' @param bgroups Integer vector of length N. Beta-chain group assignments.
+#' @param weight_cdr3_region Integer. CDR3 alignment distance multiplier.
+#'   Default 3 matches \code{WEIGHT_CDR3_REGION}.
+#' @param gap_penalty_cdr3_region Integer. Per-residue length-difference
+#'   penalty. Default 12 matches \code{GAP_PENALTY_CDR3_REGION}.
+#' @return A \code{List} of length N. Each element is a \code{List} with:
+#'   \describe{
+#'     \item{\code{indices}}{Integer vector of 1-based neighbor indices.}
+#'     \item{\code{distances}}{Numeric vector of corresponding distances.}
+#'   }
+#' @examples
+#' \dontrun{
+#'   result <- rcpp_tcrdist_radius_neighbors(
+#'     va_genes = c("TRAV1-1*01", "TRAV1-2*01"),
+#'     cdr3a_seqs = c("CAVSANSGTYF", "CAVSANSGTYF"),
+#'     vb_genes = c("TRBV20-1*01", "TRBV20-1*01"),
+#'     cdr3b_seqs = c("CASSIRSSYEQYF", "CASSIRSYEQYF"),
+#'     v_dist_a = v_alpha_mat, v_dist_b = v_beta_mat,
+#'     radius = 50, agroups = 1:2, bgroups = 1:2
+#'   )
+#' }
+#' @export
+rcpp_tcrdist_radius_neighbors <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, radius, agroups, bgroups, weight_cdr3_region = 3L, gap_penalty_cdr3_region = 12L) {
+    .Call(`_tcrdistR_rcpp_tcrdist_radius_neighbors`, va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, radius, agroups, bgroups, weight_cdr3_region, gap_penalty_cdr3_region)
+}
+
+#' Rectangular TCRdist query-vs-reference distance matrix (C++ implementation)
+#'
+#' Computes an nq x nr matrix of paired-chain TCRdist distances between a
+#' query set of \code{nq} TCRs and a reference set of \code{nr} TCRs.
+#' For each query-reference pair \code{(i, j)}:
+#' \deqn{
+#'   d(i,j) = v\_dist\_a[va\_query_i, va\_ref_j]
+#'           + cdr3\_dist(cdr3a\_query_i, cdr3a\_ref_j)
+#'           + v\_dist\_b[vb\_query_i, vb\_ref_j]
+#'           + cdr3\_dist(cdr3b\_query_i, cdr3b\_ref_j)
+#' }
+#'
+#' No symmetry is exploited; all nq * nr distances are computed.
+#' \code{Rcpp::checkUserInterrupt()} is called every 100 outer-loop rows.
+#'
+#' @param query_va   Character vector of length nq. Query alpha V-gene alleles.
+#' @param query_cdr3a Character vector of length nq. Query alpha CDR3 sequences.
+#' @param query_vb   Character vector of length nq. Query beta V-gene alleles.
+#' @param query_cdr3b Character vector of length nq. Query beta CDR3 sequences.
+#' @param ref_va     Character vector of length nr. Reference alpha V-gene alleles.
+#' @param ref_cdr3a  Character vector of length nr. Reference alpha CDR3 sequences.
+#' @param ref_vb     Character vector of length nr. Reference beta V-gene alleles.
+#' @param ref_cdr3b  Character vector of length nr. Reference beta CDR3 sequences.
+#' @param v_dist_a   Named square \code{NumericMatrix}. Pre-computed pairwise
+#'   V-region distances for alpha genes.
+#' @param v_dist_b   Named square \code{NumericMatrix}. Pre-computed pairwise
+#'   V-region distances for beta genes.
+#' @param weight_cdr3_region Integer. CDR3 alignment distance multiplier.
+#'   Default 3 matches \code{WEIGHT_CDR3_REGION}.
+#' @param gap_penalty_cdr3_region Integer. Per-residue length-difference
+#'   penalty. Default 12 matches \code{GAP_PENALTY_CDR3_REGION}.
+#' @return An nq x nr \code{NumericMatrix} of TCRdist distances.
+#' @examples
+#' \dontrun{
+#'   mat <- rcpp_tcrdist_rect(
+#'     query_va = c("TRAV1-1*01"),
+#'     query_cdr3a = c("CAVSANSGTYF"),
+#'     query_vb = c("TRBV20-1*01"),
+#'     query_cdr3b = c("CASSIRSSYEQYF"),
+#'     ref_va = c("TRAV1-1*01", "TRAV1-2*01"),
+#'     ref_cdr3a = c("CAVSANSGTYF", "CAVSANSGTYF"),
+#'     ref_vb = c("TRBV20-1*01", "TRBV20-1*01"),
+#'     ref_cdr3b = c("CASSIRSSYEQYF", "CASSIRSYEQYF"),
+#'     v_dist_a = v_alpha_mat,
+#'     v_dist_b = v_beta_mat
+#'   )
+#' }
+#' @export
+rcpp_tcrdist_rect <- function(query_va, query_cdr3a, query_vb, query_cdr3b, ref_va, ref_cdr3a, ref_vb, ref_cdr3b, v_dist_a, v_dist_b, weight_cdr3_region = 3L, gap_penalty_cdr3_region = 12L) {
+    .Call(`_tcrdistR_rcpp_tcrdist_rect`, query_va, query_cdr3a, query_vb, query_cdr3b, ref_va, ref_cdr3a, ref_vb, ref_cdr3b, v_dist_a, v_dist_b, weight_cdr3_region, gap_penalty_cdr3_region)
+}
+
+#' Sparse TCRdist matrix as COO triplets (C++ implementation)
+#'
+#' Computes pairwise TCRdist distances for all (i, j) pairs with i < j and
+#' distance <= \code{threshold}, returning a sparse representation in
+#' coordinate (COO) format.
+#'
+#' Three-stage early termination is used to skip pairs that cannot satisfy
+#' the threshold:
+#' \enumerate{
+#'   \item If V-region distance alone exceeds threshold, skip.
+#'   \item If V-region + CDR3-alpha distance exceeds threshold, skip.
+#'   \item If full distance exceeds threshold, skip.
+#' }
+#'
+#' \code{Rcpp::checkUserInterrupt()} is called every 100 outer-loop rows.
+#'
+#' @param va_genes   Character vector of length N. Alpha V-gene allele names.
+#' @param cdr3a_seqs Character vector of length N. Alpha CDR3 sequences.
+#' @param vb_genes   Character vector of length N. Beta V-gene allele names.
+#' @param cdr3b_seqs Character vector of length N. Beta CDR3 sequences.
+#' @param v_dist_a   Named square \code{NumericMatrix}. Pre-computed pairwise
+#'   V-region distances for alpha genes.
+#' @param v_dist_b   Named square \code{NumericMatrix}. Pre-computed pairwise
+#'   V-region distances for beta genes.
+#' @param threshold  Numeric. Maximum distance to include in the result.
+#'   Pairs with distance > threshold are omitted.
+#' @param weight_cdr3_region Integer. CDR3 alignment distance multiplier.
+#'   Default 3 matches \code{WEIGHT_CDR3_REGION}.
+#' @param gap_penalty_cdr3_region Integer. Per-residue length-difference
+#'   penalty. Default 12 matches \code{GAP_PENALTY_CDR3_REGION}.
+#' @return A \code{List} with four elements:
+#'   \describe{
+#'     \item{\code{i}}{Integer vector of 1-based row indices.}
+#'     \item{\code{j}}{Integer vector of 1-based column indices.}
+#'     \item{\code{x}}{Numeric vector of distance values.}
+#'     \item{\code{n}}{Integer scalar: matrix dimension (N).}
+#'   }
+#' @examples
+#' \dontrun{
+#'   triplets <- rcpp_tcrdist_sparse(
+#'     va_genes = c("TRAV1-1*01", "TRAV1-2*01"),
+#'     cdr3a_seqs = c("CAVSANSGTYF", "CAVSANSGTYF"),
+#'     vb_genes = c("TRBV20-1*01", "TRBV20-1*01"),
+#'     cdr3b_seqs = c("CASSIRSSYEQYF", "CASSIRSYEQYF"),
+#'     v_dist_a = v_alpha_mat, v_dist_b = v_beta_mat,
+#'     threshold = 50
+#'   )
+#' }
+#' @export
+rcpp_tcrdist_sparse <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, threshold, weight_cdr3_region = 3L, gap_penalty_cdr3_region = 12L) {
+    .Call(`_tcrdistR_rcpp_tcrdist_sparse`, va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, threshold, weight_cdr3_region, gap_penalty_cdr3_region)
 }
 
 #' Compute pairwise V-region distances (C++ implementation)

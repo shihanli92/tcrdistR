@@ -32,6 +32,36 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rcpp_knn_from_distance_matrix
+Rcpp::List rcpp_knn_from_distance_matrix(const NumericMatrix& D, int K, const IntegerVector& agroups, const IntegerVector& bgroups, bool sort_nbrs);
+RcppExport SEXP _tcrdistR_rcpp_knn_from_distance_matrix(SEXP DSEXP, SEXP KSEXP, SEXP agroupsSEXP, SEXP bgroupsSEXP, SEXP sort_nbrsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type D(DSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type agroups(agroupsSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type bgroups(bgroupsSEXP);
+    Rcpp::traits::input_parameter< bool >::type sort_nbrs(sort_nbrsSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_knn_from_distance_matrix(D, K, agroups, bgroups, sort_nbrs));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rcpp_knn_from_pca_matrix
+Rcpp::List rcpp_knn_from_pca_matrix(const NumericMatrix& pca_matrix, int K, const IntegerVector& agroups, const IntegerVector& bgroups, bool sort_nbrs);
+RcppExport SEXP _tcrdistR_rcpp_knn_from_pca_matrix(SEXP pca_matrixSEXP, SEXP KSEXP, SEXP agroupsSEXP, SEXP bgroupsSEXP, SEXP sort_nbrsSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type pca_matrix(pca_matrixSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type agroups(agroupsSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type bgroups(bgroupsSEXP);
+    Rcpp::traits::input_parameter< bool >::type sort_nbrs(sort_nbrsSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_knn_from_pca_matrix(pca_matrix, K, agroups, bgroups, sort_nbrs));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rcpp_weighted_cdr3_distance
 double rcpp_weighted_cdr3_distance(const std::string& seq1, const std::string& seq2, int weight_cdr3_region, int gap_penalty_cdr3_region);
 RcppExport SEXP _tcrdistR_rcpp_weighted_cdr3_distance(SEXP seq1SEXP, SEXP seq2SEXP, SEXP weight_cdr3_regionSEXP, SEXP gap_penalty_cdr3_regionSEXP) {
@@ -59,6 +89,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// rcpp_tcrdist_knn
+Rcpp::List rcpp_tcrdist_knn(const CharacterVector& va_genes, const CharacterVector& cdr3a_seqs, const CharacterVector& vb_genes, const CharacterVector& cdr3b_seqs, const NumericMatrix& v_dist_a, const NumericMatrix& v_dist_b, int K, const IntegerVector& agroups, const IntegerVector& bgroups, bool sort_nbrs, int weight_cdr3_region, int gap_penalty_cdr3_region);
+RcppExport SEXP _tcrdistR_rcpp_tcrdist_knn(SEXP va_genesSEXP, SEXP cdr3a_seqsSEXP, SEXP vb_genesSEXP, SEXP cdr3b_seqsSEXP, SEXP v_dist_aSEXP, SEXP v_dist_bSEXP, SEXP KSEXP, SEXP agroupsSEXP, SEXP bgroupsSEXP, SEXP sort_nbrsSEXP, SEXP weight_cdr3_regionSEXP, SEXP gap_penalty_cdr3_regionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const CharacterVector& >::type va_genes(va_genesSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type cdr3a_seqs(cdr3a_seqsSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type vb_genes(vb_genesSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type cdr3b_seqs(cdr3b_seqsSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type v_dist_a(v_dist_aSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type v_dist_b(v_dist_bSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type agroups(agroupsSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type bgroups(bgroupsSEXP);
+    Rcpp::traits::input_parameter< bool >::type sort_nbrs(sort_nbrsSEXP);
+    Rcpp::traits::input_parameter< int >::type weight_cdr3_region(weight_cdr3_regionSEXP);
+    Rcpp::traits::input_parameter< int >::type gap_penalty_cdr3_region(gap_penalty_cdr3_regionSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_tcrdist_knn(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, K, agroups, bgroups, sort_nbrs, weight_cdr3_region, gap_penalty_cdr3_region));
+    return rcpp_result_gen;
+END_RCPP
+}
 // rcpp_tcrdist_matrix
 NumericMatrix rcpp_tcrdist_matrix(const CharacterVector& va_genes, const CharacterVector& cdr3a_seqs, const CharacterVector& vb_genes, const CharacterVector& cdr3b_seqs, const NumericMatrix& v_dist_a, const NumericMatrix& v_dist_b, int weight_cdr3_region, int gap_penalty_cdr3_region);
 RcppExport SEXP _tcrdistR_rcpp_tcrdist_matrix(SEXP va_genesSEXP, SEXP cdr3a_seqsSEXP, SEXP vb_genesSEXP, SEXP cdr3b_seqsSEXP, SEXP v_dist_aSEXP, SEXP v_dist_bSEXP, SEXP weight_cdr3_regionSEXP, SEXP gap_penalty_cdr3_regionSEXP) {
@@ -74,6 +126,68 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type weight_cdr3_region(weight_cdr3_regionSEXP);
     Rcpp::traits::input_parameter< int >::type gap_penalty_cdr3_region(gap_penalty_cdr3_regionSEXP);
     rcpp_result_gen = Rcpp::wrap(rcpp_tcrdist_matrix(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, weight_cdr3_region, gap_penalty_cdr3_region));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rcpp_tcrdist_radius_neighbors
+Rcpp::List rcpp_tcrdist_radius_neighbors(const CharacterVector& va_genes, const CharacterVector& cdr3a_seqs, const CharacterVector& vb_genes, const CharacterVector& cdr3b_seqs, const NumericMatrix& v_dist_a, const NumericMatrix& v_dist_b, double radius, const IntegerVector& agroups, const IntegerVector& bgroups, int weight_cdr3_region, int gap_penalty_cdr3_region);
+RcppExport SEXP _tcrdistR_rcpp_tcrdist_radius_neighbors(SEXP va_genesSEXP, SEXP cdr3a_seqsSEXP, SEXP vb_genesSEXP, SEXP cdr3b_seqsSEXP, SEXP v_dist_aSEXP, SEXP v_dist_bSEXP, SEXP radiusSEXP, SEXP agroupsSEXP, SEXP bgroupsSEXP, SEXP weight_cdr3_regionSEXP, SEXP gap_penalty_cdr3_regionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const CharacterVector& >::type va_genes(va_genesSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type cdr3a_seqs(cdr3a_seqsSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type vb_genes(vb_genesSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type cdr3b_seqs(cdr3b_seqsSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type v_dist_a(v_dist_aSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type v_dist_b(v_dist_bSEXP);
+    Rcpp::traits::input_parameter< double >::type radius(radiusSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type agroups(agroupsSEXP);
+    Rcpp::traits::input_parameter< const IntegerVector& >::type bgroups(bgroupsSEXP);
+    Rcpp::traits::input_parameter< int >::type weight_cdr3_region(weight_cdr3_regionSEXP);
+    Rcpp::traits::input_parameter< int >::type gap_penalty_cdr3_region(gap_penalty_cdr3_regionSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_tcrdist_radius_neighbors(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, radius, agroups, bgroups, weight_cdr3_region, gap_penalty_cdr3_region));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rcpp_tcrdist_rect
+NumericMatrix rcpp_tcrdist_rect(const CharacterVector& query_va, const CharacterVector& query_cdr3a, const CharacterVector& query_vb, const CharacterVector& query_cdr3b, const CharacterVector& ref_va, const CharacterVector& ref_cdr3a, const CharacterVector& ref_vb, const CharacterVector& ref_cdr3b, const NumericMatrix& v_dist_a, const NumericMatrix& v_dist_b, int weight_cdr3_region, int gap_penalty_cdr3_region);
+RcppExport SEXP _tcrdistR_rcpp_tcrdist_rect(SEXP query_vaSEXP, SEXP query_cdr3aSEXP, SEXP query_vbSEXP, SEXP query_cdr3bSEXP, SEXP ref_vaSEXP, SEXP ref_cdr3aSEXP, SEXP ref_vbSEXP, SEXP ref_cdr3bSEXP, SEXP v_dist_aSEXP, SEXP v_dist_bSEXP, SEXP weight_cdr3_regionSEXP, SEXP gap_penalty_cdr3_regionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const CharacterVector& >::type query_va(query_vaSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type query_cdr3a(query_cdr3aSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type query_vb(query_vbSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type query_cdr3b(query_cdr3bSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type ref_va(ref_vaSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type ref_cdr3a(ref_cdr3aSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type ref_vb(ref_vbSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type ref_cdr3b(ref_cdr3bSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type v_dist_a(v_dist_aSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type v_dist_b(v_dist_bSEXP);
+    Rcpp::traits::input_parameter< int >::type weight_cdr3_region(weight_cdr3_regionSEXP);
+    Rcpp::traits::input_parameter< int >::type gap_penalty_cdr3_region(gap_penalty_cdr3_regionSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_tcrdist_rect(query_va, query_cdr3a, query_vb, query_cdr3b, ref_va, ref_cdr3a, ref_vb, ref_cdr3b, v_dist_a, v_dist_b, weight_cdr3_region, gap_penalty_cdr3_region));
+    return rcpp_result_gen;
+END_RCPP
+}
+// rcpp_tcrdist_sparse
+Rcpp::List rcpp_tcrdist_sparse(const CharacterVector& va_genes, const CharacterVector& cdr3a_seqs, const CharacterVector& vb_genes, const CharacterVector& cdr3b_seqs, const NumericMatrix& v_dist_a, const NumericMatrix& v_dist_b, double threshold, int weight_cdr3_region, int gap_penalty_cdr3_region);
+RcppExport SEXP _tcrdistR_rcpp_tcrdist_sparse(SEXP va_genesSEXP, SEXP cdr3a_seqsSEXP, SEXP vb_genesSEXP, SEXP cdr3b_seqsSEXP, SEXP v_dist_aSEXP, SEXP v_dist_bSEXP, SEXP thresholdSEXP, SEXP weight_cdr3_regionSEXP, SEXP gap_penalty_cdr3_regionSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< const CharacterVector& >::type va_genes(va_genesSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type cdr3a_seqs(cdr3a_seqsSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type vb_genes(vb_genesSEXP);
+    Rcpp::traits::input_parameter< const CharacterVector& >::type cdr3b_seqs(cdr3b_seqsSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type v_dist_a(v_dist_aSEXP);
+    Rcpp::traits::input_parameter< const NumericMatrix& >::type v_dist_b(v_dist_bSEXP);
+    Rcpp::traits::input_parameter< double >::type threshold(thresholdSEXP);
+    Rcpp::traits::input_parameter< int >::type weight_cdr3_region(weight_cdr3_regionSEXP);
+    Rcpp::traits::input_parameter< int >::type gap_penalty_cdr3_region(gap_penalty_cdr3_regionSEXP);
+    rcpp_result_gen = Rcpp::wrap(rcpp_tcrdist_sparse(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, threshold, weight_cdr3_region, gap_penalty_cdr3_region));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -95,9 +209,15 @@ END_RCPP
 static const R_CallMethodDef CallEntries[] = {
     {"_tcrdistR_rcpp_build_bsd4", (DL_FUNC) &_tcrdistR_rcpp_build_bsd4, 0},
     {"_tcrdistR_rcpp_blosum62_lookup", (DL_FUNC) &_tcrdistR_rcpp_blosum62_lookup, 2},
+    {"_tcrdistR_rcpp_knn_from_distance_matrix", (DL_FUNC) &_tcrdistR_rcpp_knn_from_distance_matrix, 5},
+    {"_tcrdistR_rcpp_knn_from_pca_matrix", (DL_FUNC) &_tcrdistR_rcpp_knn_from_pca_matrix, 5},
     {"_tcrdistR_rcpp_weighted_cdr3_distance", (DL_FUNC) &_tcrdistR_rcpp_weighted_cdr3_distance, 4},
     {"_tcrdistR_rcpp_blosum_sequence_distance", (DL_FUNC) &_tcrdistR_rcpp_blosum_sequence_distance, 3},
+    {"_tcrdistR_rcpp_tcrdist_knn", (DL_FUNC) &_tcrdistR_rcpp_tcrdist_knn, 12},
     {"_tcrdistR_rcpp_tcrdist_matrix", (DL_FUNC) &_tcrdistR_rcpp_tcrdist_matrix, 8},
+    {"_tcrdistR_rcpp_tcrdist_radius_neighbors", (DL_FUNC) &_tcrdistR_rcpp_tcrdist_radius_neighbors, 11},
+    {"_tcrdistR_rcpp_tcrdist_rect", (DL_FUNC) &_tcrdistR_rcpp_tcrdist_rect, 12},
+    {"_tcrdistR_rcpp_tcrdist_sparse", (DL_FUNC) &_tcrdistR_rcpp_tcrdist_sparse, 9},
     {"_tcrdistR_rcpp_compute_v_region_distances", (DL_FUNC) &_tcrdistR_rcpp_compute_v_region_distances, 4},
     {NULL, NULL, 0}
 };
