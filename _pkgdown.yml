@@ -92,8 +92,9 @@ reference:
       - plot_tcr_scatter
 
   - title: "I/O"
-    desc: "Read TCR data from various formats"
+    desc: "Read and standardize TCR data from various formats"
     contents:
+      - as_tcr_df
       - read_tcr_table
       - read_airr
       - read_adaptive

@@ -253,3 +253,263 @@ test_that("read_adaptive includes count column", {
 test_that("read_adaptive errors on missing file", {
     expect_error(read_adaptive("nonexistent.tsv"), "file not found")
 })
+
+
+# ---- as_tcr_df tests -------------------------------------------------------
+
+test_that("as_tcr_df passes through canonical columns", {
+    df <- data.frame(
+        va = "TRAV1-1", cdr3a = "CAVRD", vb = "TRBV5-1", cdr3b = "CASS",
+        extra = "keep_me", stringsAsFactors = FALSE
+    )
+    result <- suppressMessages(as_tcr_df(df, normalize_genes = FALSE))
+    expect_equal(result$va, "TRAV1-1")
+    expect_equal(result$cdr3b, "CASS")
+    expect_true("extra" %in% colnames(result))
+})
+
+test_that("as_tcr_df detects canonical format", {
+    df <- data.frame(
+        va = "TRAV1-1", cdr3a = "CAVRD", vb = "TRBV5-1", cdr3b = "CASS",
+        stringsAsFactors = FALSE
+    )
+    expect_message(as_tcr_df(df), "canonical")
+})
+
+test_that("as_tcr_df with custom col_map", {
+    df <- data.frame(
+        alpha_v = "TRAV1-1", alpha_cdr3 = "CAVRD",
+        beta_v = "TRBV5-1", beta_cdr3 = "CASS",
+        sample_id = "S1", stringsAsFactors = FALSE
+    )
+    result <- suppressMessages(
+        as_tcr_df(df, col_map = c(va = "alpha_v", cdr3a = "alpha_cdr3",
+                                   vb = "beta_v", cdr3b = "beta_cdr3"),
+                  normalize_genes = FALSE)
+    )
+    expect_equal(result$va, "TRAV1-1")
+    expect_equal(result$cdr3a, "CAVRD")
+    expect_equal(result$vb, "TRBV5-1")
+    expect_equal(result$cdr3b, "CASS")
+    expect_true("sample_id" %in% colnames(result))
+})
+
+test_that("as_tcr_df detects scirpy/dandelion format", {
+    df <- data.frame(
+        IR_VJ_1_v_call = c("TRAV1-1", "TRAV1-2"),
+        IR_VJ_1_j_call = c("TRAJ33", "TRAJ20"),
+        IR_VJ_1_junction_aa = c("CAVRD", "CAVKD"),
+        IR_VDJ_1_v_call = c("TRBV5-1", "TRBV6-1"),
+        IR_VDJ_1_j_call = c("TRBJ2-7", "TRBJ1-1"),
+        IR_VDJ_1_junction_aa = c("CASSIR", "CASSIK"),
+        stringsAsFactors = FALSE
+    )
+    result <- suppressMessages(as_tcr_df(df, normalize_genes = FALSE))
+    expect_equal(result$va, c("TRAV1-1", "TRAV1-2"))
+    expect_equal(result$ja, c("TRAJ33", "TRAJ20"))
+    expect_equal(result$cdr3a, c("CAVRD", "CAVKD"))
+    expect_equal(result$vb, c("TRBV5-1", "TRBV6-1"))
+    expect_equal(result$jb, c("TRBJ2-7", "TRBJ1-1"))
+    expect_equal(result$cdr3b, c("CASSIR", "CASSIK"))
+    expect_message(as_tcr_df(df), "scirpy")
+})
+
+test_that("as_tcr_df with format='scirpy' forced", {
+    df <- data.frame(
+        IR_VJ_1_v_call = "TRAV1-1",
+        IR_VJ_1_junction_aa = "CAVRD",
+        IR_VDJ_1_v_call = "TRBV5-1",
+        IR_VDJ_1_junction_aa = "CASS",
+        stringsAsFactors = FALSE
+    )
+    result <- suppressMessages(
+        as_tcr_df(df, format = "scirpy", normalize_genes = FALSE)
+    )
+    expect_equal(result$va, "TRAV1-1")
+    expect_equal(result$cdr3b, "CASS")
+})
+
+test_that("as_tcr_df detects tcrdist3 format", {
+    df <- data.frame(
+        v_a_gene = "TRAV1-1", cdr3_a_aa = "CAVRD",
+        v_b_gene = "TRBV5-1", cdr3_b_aa = "CASS",
+        j_a_gene = "TRAJ33", j_b_gene = "TRBJ2-7",
+        stringsAsFactors = FALSE
+    )
+    result <- suppressMessages(as_tcr_df(df, normalize_genes = FALSE))
+    expect_equal(result$va, "TRAV1-1")
+    expect_equal(result$ja, "TRAJ33")
+    expect_equal(result$cdr3b, "CASS")
+    expect_message(as_tcr_df(df), "tcrdist3")
+})
+
+test_that("as_tcr_df detects scRepertoire format", {
+    df <- data.frame(
+        CTgene = c(
+            "TRAV1-1.TRAJ33.TRAC_TRBV5-1.None.TRBJ2-7.TRBC2",
+            "TRAV1-2.TRAJ20.TRAC_TRBV6-1.TRBD1.TRBJ1-1.TRBC1"
+        ),
+        CTaa = c(
+            "CAVRDSSYKLIF_CASSIRSSYEQYF",
+            "CAVKDSSYKLIF_CASSIKSSYEQYF"
+        ),
+        sample = c("S1", "S2"),
+        stringsAsFactors = FALSE
+    )
+    result <- suppressMessages(as_tcr_df(df, normalize_genes = FALSE))
+    expect_equal(result$va, c("TRAV1-1", "TRAV1-2"))
+    expect_equal(result$ja, c("TRAJ33", "TRAJ20"))
+    expect_equal(result$cdr3a, c("CAVRDSSYKLIF", "CAVKDSSYKLIF"))
+    expect_equal(result$vb, c("TRBV5-1", "TRBV6-1"))
+    expect_equal(result$jb, c("TRBJ2-7", "TRBJ1-1"))
+    expect_equal(result$cdr3b, c("CASSIRSSYEQYF", "CASSIKSSYEQYF"))
+    expect_true("sample" %in% colnames(result))
+    expect_message(as_tcr_df(df), "screpertoire")
+})
+
+test_that("as_tcr_df handles scRepertoire with _TCR suffix", {
+    df <- data.frame(
+        CTgene_TCR = "TRAV1-1.TRAJ33.TRAC_TRBV5-1.None.TRBJ2-7.TRBC2",
+        CTaa_TCR = "CAVRDSSYKLIF_CASSIRSSYEQYF",
+        stringsAsFactors = FALSE
+    )
+    result <- suppressMessages(as_tcr_df(df, normalize_genes = FALSE))
+    expect_equal(result$va, "TRAV1-1")
+    expect_equal(result$cdr3b, "CASSIRSSYEQYF")
+})
+
+test_that("as_tcr_df handles scRepertoire with CTnt (nucleotide)", {
+    df <- data.frame(
+        CTgene = "TRAV1-1.TRAJ33.TRAC_TRBV5-1.None.TRBJ2-7.TRBC2",
+        CTaa = "CAVRD_CASSIR",
+        CTnt = "TGTGCTGTG_TGCGCTAGC",
+        stringsAsFactors = FALSE
+    )
+    result <- suppressMessages(as_tcr_df(df, normalize_genes = FALSE))
+    expect_true("cdr3a_nucseq" %in% colnames(result))
+    expect_true("cdr3b_nucseq" %in% colnames(result))
+    expect_equal(result$cdr3a_nucseq, "TGTGCTGTG")
+    expect_equal(result$cdr3b_nucseq, "TGCGCTAGC")
+})
+
+test_that("as_tcr_df handles scRepertoire multi-chain (semicolon)", {
+    df <- data.frame(
+        CTgene = "TRAV1-1.TRAJ33.TRAC;TRAV2.TRAJ10.TRAC_TRBV5-1.None.TRBJ2-7.TRBC2",
+        CTaa = "CAVRD;CAVKD_CASSIR",
+        stringsAsFactors = FALSE
+    )
+    result <- suppressMessages(as_tcr_df(df, normalize_genes = FALSE))
+    # Should use first chain
+    expect_equal(result$va, "TRAV1-1")
+    expect_equal(result$cdr3a, "CAVRD")
+})
+
+test_that("as_tcr_df normalize_genes appends *01", {
+    df <- data.frame(
+        va = "TRAV1-1", cdr3a = "CAVRD", vb = "TRBV5-1*01", cdr3b = "CASS",
+        ja = "TRAJ33", stringsAsFactors = FALSE
+    )
+    result <- suppressMessages(as_tcr_df(df, normalize_genes = TRUE))
+    expect_equal(result$va, "TRAV1-1*01")
+    expect_equal(result$vb, "TRBV5-1*01")
+    expect_equal(result$ja, "TRAJ33*01")
+})
+
+test_that("as_tcr_df drop_incomplete removes NA rows", {
+    df <- data.frame(
+        va = c("TRAV1-1", NA), cdr3a = c("CAVRD", "CAVKD"),
+        vb = c("TRBV5-1", "TRBV6-1"), cdr3b = c("CASS", "CASK"),
+        stringsAsFactors = FALSE
+    )
+    result <- suppressMessages(as_tcr_df(df, normalize_genes = FALSE))
+    expect_equal(nrow(result), 1L)
+})
+
+test_that("as_tcr_df drop_incomplete removes empty string rows", {
+    df <- data.frame(
+        va = c("TRAV1-1", ""), cdr3a = c("CAVRD", "CAVKD"),
+        vb = c("TRBV5-1", "TRBV6-1"), cdr3b = c("CASS", "CASK"),
+        stringsAsFactors = FALSE
+    )
+    result <- suppressMessages(as_tcr_df(df, normalize_genes = FALSE))
+    expect_equal(nrow(result), 1L)
+})
+
+test_that("as_tcr_df drop_incomplete = FALSE preserves NAs", {
+    df <- data.frame(
+        va = c("TRAV1-1", NA), cdr3a = c("CAVRD", "CAVKD"),
+        vb = c("TRBV5-1", "TRBV6-1"), cdr3b = c("CASS", "CASK"),
+        stringsAsFactors = FALSE
+    )
+    result <- suppressMessages(
+        as_tcr_df(df, normalize_genes = FALSE, drop_incomplete = FALSE)
+    )
+    expect_equal(nrow(result), 2L)
+})
+
+test_that("as_tcr_df errors on non-data.frame input", {
+    expect_error(as_tcr_df("not_a_df"), "must be a data.frame")
+})
+
+test_that("as_tcr_df errors on empty data.frame", {
+    df <- data.frame(va = character(0))
+    expect_error(as_tcr_df(df), "zero rows")
+})
+
+test_that("as_tcr_df errors on unrecognized columns without col_map", {
+    df <- data.frame(x = "a", y = "b", stringsAsFactors = FALSE)
+    expect_error(as_tcr_df(df), "auto-detect")
+})
+
+test_that("as_tcr_df errors on bad col_map format", {
+    df <- data.frame(x = "a", stringsAsFactors = FALSE)
+    expect_error(as_tcr_df(df, col_map = c("x", "y")), "named character")
+})
+
+test_that("as_tcr_df coerces factors to character", {
+    df <- data.frame(
+        va = factor("TRAV1-1"), cdr3a = factor("CAVRD"),
+        vb = factor("TRBV5-1"), cdr3b = factor("CASS")
+    )
+    result <- suppressMessages(as_tcr_df(df, normalize_genes = FALSE))
+    expect_true(is.character(result$va))
+    expect_true(is.character(result$cdr3a))
+})
+
+# ---- scRepertoire parser unit tests -----------------------------------------
+
+test_that(".parse_screpertoire_ctgene handles standard format", {
+    genes <- .parse_screpertoire_ctgene(
+        "TRAV1-1.TRAJ33.TRAC_TRBV5-1.TRBD1.TRBJ2-7.TRBC2"
+    )
+    expect_equal(genes$va, "TRAV1-1")
+    expect_equal(genes$ja, "TRAJ33")
+    expect_equal(genes$vb, "TRBV5-1")
+    expect_equal(genes$jb, "TRBJ2-7")
+})
+
+test_that(".parse_screpertoire_ctgene handles beta V.J.C (no D)", {
+    genes <- .parse_screpertoire_ctgene(
+        "TRAV1-1.TRAJ33.TRAC_TRBV5-1.TRBJ2-7.TRBC2"
+    )
+    expect_equal(genes$vb, "TRBV5-1")
+    expect_equal(genes$jb, "TRBJ2-7")
+})
+
+test_that(".parse_screpertoire_ctgene handles NA and empty", {
+    genes <- .parse_screpertoire_ctgene(c(NA, "", "NA"))
+    expect_true(all(is.na(genes$va)))
+    expect_true(all(is.na(genes$vb)))
+})
+
+test_that(".parse_screpertoire_cdr3 handles standard format", {
+    cdr3 <- .parse_screpertoire_cdr3("CAVRDSSYKLIF_CASSIRSSYEQYF")
+    expect_equal(cdr3$alpha, "CAVRDSSYKLIF")
+    expect_equal(cdr3$beta, "CASSIRSSYEQYF")
+})
+
+test_that(".parse_screpertoire_cdr3 handles NA", {
+    cdr3 <- .parse_screpertoire_cdr3(c(NA, ""))
+    expect_true(all(is.na(cdr3$alpha)))
+    expect_true(all(is.na(cdr3$beta)))
+})

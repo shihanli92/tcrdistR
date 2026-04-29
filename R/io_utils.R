@@ -112,3 +112,91 @@
     colnames(df) <- current_names
     df
 }
+
+
+# ---------------------------------------------------------------------------
+# scRepertoire parsing helpers (ported from rconga/R/preprocess.R)
+# ---------------------------------------------------------------------------
+
+#' Parse scRepertoire CTgene column into V/J gene columns
+#'
+#' Parses scRepertoire's concatenated gene format:
+#' \code{TRAV.TRAJ.TRAC_TRBV.TRBD.TRBJ.TRBC} (alpha V.J.C underscore
+#' beta V.D.J.C).  Multi-chain cells (semicolon-separated) use the first
+#' chain per locus.
+#'
+#' @param ctgene_col Character vector.  The \code{CTgene} column values.
+#' @return A \code{data.frame} with columns \code{va}, \code{ja}, \code{vb},
+#'   \code{jb}.
+#' @keywords internal
+.parse_screpertoire_ctgene <- function(ctgene_col) {
+    n  <- length(ctgene_col)
+    va <- rep(NA_character_, n)
+    ja <- rep(NA_character_, n)
+    vb <- rep(NA_character_, n)
+    jb <- rep(NA_character_, n)
+
+    for (i in seq_len(n)) {
+        ct <- ctgene_col[i]
+        if (is.na(ct) || ct == "" || ct == "NA") next
+
+        # Split alpha_beta on underscore
+        chains <- strsplit(ct, "_", fixed = TRUE)[[1L]]
+        if (length(chains) < 2L) next
+
+        # Alpha chain: take first if multi-chain (semicolon-separated)
+        alpha_str   <- strsplit(chains[1L], ";", fixed = TRUE)[[1L]][1L]
+        alpha_parts <- strsplit(alpha_str, ".", fixed = TRUE)[[1L]]
+        # Alpha format: V.J.C (3 parts)
+        if (length(alpha_parts) >= 2L) {
+            va[i] <- alpha_parts[1L]
+            ja[i] <- alpha_parts[2L]
+        }
+
+        # Beta chain: take first if multi-chain
+        beta_str   <- strsplit(chains[2L], ";", fixed = TRUE)[[1L]][1L]
+        beta_parts <- strsplit(beta_str, ".", fixed = TRUE)[[1L]]
+        # Beta format: V.D.J.C (4 parts) or V.J.C (3 parts)
+        if (length(beta_parts) >= 4L) {
+            vb[i] <- beta_parts[1L]
+            jb[i] <- beta_parts[3L]
+        } else if (length(beta_parts) >= 2L) {
+            vb[i] <- beta_parts[1L]
+            jb[i] <- beta_parts[2L]
+        }
+    }
+
+    data.frame(va = va, ja = ja, vb = vb, jb = jb,
+               stringsAsFactors = FALSE)
+}
+
+
+#' Parse scRepertoire CTaa/CTnt column into alpha/beta CDR3 columns
+#'
+#' Parses scRepertoire's concatenated CDR3 format:
+#' \code{cdr3a_cdr3b} (underscore-separated).  Multi-chain cells
+#' (semicolon-separated) use the first chain per locus.
+#'
+#' @param cdr3_col Character vector.  The \code{CTaa} or \code{CTnt} column.
+#' @return A \code{data.frame} with columns \code{alpha} and \code{beta}.
+#' @keywords internal
+.parse_screpertoire_cdr3 <- function(cdr3_col) {
+    n     <- length(cdr3_col)
+    alpha <- rep(NA_character_, n)
+    beta  <- rep(NA_character_, n)
+
+    for (i in seq_len(n)) {
+        val <- cdr3_col[i]
+        if (is.na(val) || val == "" || val == "NA") next
+
+        parts <- strsplit(val, "_", fixed = TRUE)[[1L]]
+        if (length(parts) >= 1L) {
+            alpha[i] <- strsplit(parts[1L], ";", fixed = TRUE)[[1L]][1L]
+        }
+        if (length(parts) >= 2L) {
+            beta[i] <- strsplit(parts[2L], ";", fixed = TRUE)[[1L]][1L]
+        }
+    }
+
+    data.frame(alpha = alpha, beta = beta, stringsAsFactors = FALSE)
+}
