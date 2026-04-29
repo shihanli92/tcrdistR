@@ -6,8 +6,7 @@
 src/*.o
 src/*.so
 src/*.dll
-src/RcppExports.cpp
-R/RcppExports.R
+# Note: RcppExports.R and RcppExports.cpp ARE tracked (needed for package install)
 
 # Progress / planning documents
 PROGRESS.md

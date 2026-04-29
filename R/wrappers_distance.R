@@ -1,0 +1,208 @@
+# Thin R wrappers that validate inputs and dispatch to C++ rcpp_* functions.
+
+# ---------------------------------------------------------------------------
+# weighted_cdr3_distance
+# ---------------------------------------------------------------------------
+
+#' Weighted CDR3 distance between two CDR3 sequences
+#'
+#' Computes the TCRdist CDR3 component distance between two amino acid CDR3
+#' sequences. Accounts for length differences via gap penalties and uses BSD4
+#' substitution scores on the aligned positions. Dispatches to a C++
+#' implementation for performance.
+#'
+#' @param seq1 Character string of length 1. First CDR3 amino acid sequence.
+#'   Must be non-empty.
+#' @param seq2 Character string of length 1. Second CDR3 amino acid sequence.
+#'   Must be non-empty.
+#' @param weight Integer. Weight applied to the alignment score component.
+#'   Defaults to \code{WEIGHT_CDR3_REGION} (3L).
+#' @param gap_penalty Integer. Penalty per gap character in length differences.
+#'   Defaults to \code{GAP_PENALTY_CDR3_REGION} (12L).
+#' @return A numeric scalar: the weighted CDR3 distance.
+#' @examples
+#' \donttest{
+#' weighted_cdr3_distance("CASSIRSSYEQYF", "CASSIRSYEQYF")
+#' weighted_cdr3_distance("CASSIRSSYEQYF", "CASSIRSSYEQYF")  # 0
+#' }
+#' @export
+weighted_cdr3_distance <- function(seq1, seq2,
+                                   weight      = WEIGHT_CDR3_REGION,
+                                   gap_penalty = GAP_PENALTY_CDR3_REGION) {
+    if (!is.character(seq1) || length(seq1) != 1L || is.na(seq1) || !nzchar(seq1)) {
+        stop("weighted_cdr3_distance: 'seq1' must be a non-empty, non-NA character string")
+    }
+    if (!is.character(seq2) || length(seq2) != 1L || is.na(seq2) || !nzchar(seq2)) {
+        stop("weighted_cdr3_distance: 'seq2' must be a non-empty, non-NA character string")
+    }
+
+    rcpp_weighted_cdr3_distance(seq1, seq2,
+                                as.integer(weight),
+                                as.integer(gap_penalty))
+}
+
+
+# ---------------------------------------------------------------------------
+# tcrdist_matrix
+# ---------------------------------------------------------------------------
+
+#' Compute pairwise TCRdist distance matrix
+#'
+#' Computes the full N x N symmetric matrix of paired-chain TCRdist distances
+#' for a collection of TCRs. Each off-diagonal entry \code{[i, j]} equals the
+#' sum of V-alpha, CDR3-alpha, V-beta, and CDR3-beta component distances
+#' between TCR \code{i} and TCR \code{j}. Computation is dispatched to a C++
+#' implementation for performance.
+#'
+#' The diagonal is zero (distance of a TCR to itself). The matrix is symmetric
+#' by construction.
+#'
+#' @param tcrs A \code{data.frame} with at least the following columns:
+#'   \describe{
+#'     \item{\code{va}}{Character. Alpha-chain V-gene allele,
+#'       e.g. \code{"TRAV1-1*01"}.}
+#'     \item{\code{cdr3a}}{Character. Alpha-chain CDR3 amino acid sequence.}
+#'     \item{\code{vb}}{Character. Beta-chain V-gene allele,
+#'       e.g. \code{"TRBV19*01"}.}
+#'     \item{\code{cdr3b}}{Character. Beta-chain CDR3 amino acid sequence.}
+#'   }
+#' @param organism Character string. Organism key understood by
+#'   \code{load_gene_database}, e.g. \code{"human"} or \code{"mouse"}.
+#' @param weight_cdr3 Integer. Weight applied to CDR3 distances. Defaults to
+#'   \code{WEIGHT_CDR3_REGION} (3L).
+#' @param gap_penalty_cdr3 Integer. Gap penalty for CDR3 alignments. Defaults
+#'   to \code{GAP_PENALTY_CDR3_REGION} (12L).
+#' @return A symmetric numeric matrix of dimensions N x N where N is
+#'   \code{nrow(tcrs)}. Row and column names are the row indices of \code{tcrs}
+#'   as character strings.
+#' @examples
+#' \donttest{
+#' tcrs <- data.frame(
+#'   va    = c("TRAV1-1*01", "TRAV1-1*01"),
+#'   cdr3a = c("CAVRDSSYKLIF", "CAVRDSSYKLIF"),
+#'   vb    = c("TRBV19*01", "TRBV19*01"),
+#'   cdr3b = c("CASSIRSSYEQYF", "CASSIRSYEQYF"),
+#'   stringsAsFactors = FALSE
+#' )
+#' mat <- tcrdist_matrix(tcrs, "human")
+#' }
+#' @export
+tcrdist_matrix <- function(tcrs, organism,
+                           weight_cdr3      = WEIGHT_CDR3_REGION,
+                           gap_penalty_cdr3 = GAP_PENALTY_CDR3_REGION) {
+    # ---- Input validation ---------------------------------------------------
+    if (!is.data.frame(tcrs)) {
+        stop("tcrdist_matrix: 'tcrs' must be a data.frame")
+    }
+
+    required_cols <- c("va", "cdr3a", "vb", "cdr3b")
+    missing_cols  <- setdiff(required_cols, colnames(tcrs))
+    if (length(missing_cols) > 0L) {
+        stop(sprintf(
+            "tcrdist_matrix: missing required columns: %s",
+            paste(missing_cols, collapse = ", ")
+        ))
+    }
+
+    n <- nrow(tcrs)
+    if (n == 0L) {
+        return(matrix(numeric(0L), nrow = 0L, ncol = 0L))
+    }
+
+    # Ensure character columns (not factors)
+    for (col in required_cols) {
+        if (is.factor(tcrs[[col]])) {
+            tcrs[[col]] <- as.character(tcrs[[col]])
+        }
+        if (!is.character(tcrs[[col]])) {
+            stop(sprintf(
+                "tcrdist_matrix: column '%s' must be character (or factor coercible to character)",
+                col
+            ))
+        }
+    }
+
+    # Check for NAs
+    for (col in required_cols) {
+        if (anyNA(tcrs[[col]])) {
+            stop(sprintf(
+                "tcrdist_matrix: column '%s' contains NA values",
+                col
+            ))
+        }
+    }
+
+    if (!is.character(organism) || length(organism) != 1L || !nzchar(organism)) {
+        stop("tcrdist_matrix: 'organism' must be a non-empty character string of length 1")
+    }
+
+    # ---- Build V-region distance matrices via C++ --------------------------
+    v_dist_a <- .compute_v_region_distance_matrix(organism, "A")
+    v_dist_b <- .compute_v_region_distance_matrix(organism, "B")
+
+    # ---- Validate that all V genes exist in the distance matrices ----------
+    va_rownames <- rownames(v_dist_a)
+    vb_rownames <- rownames(v_dist_b)
+
+    unknown_va <- setdiff(unique(tcrs$va), va_rownames)
+    if (length(unknown_va) > 0L) {
+        stop(sprintf(
+            "tcrdist_matrix: the following alpha V genes were not found in the distance matrix for organism '%s': %s",
+            organism,
+            paste(unknown_va, collapse = ", ")
+        ))
+    }
+
+    unknown_vb <- setdiff(unique(tcrs$vb), vb_rownames)
+    if (length(unknown_vb) > 0L) {
+        stop(sprintf(
+            "tcrdist_matrix: the following beta V genes were not found in the distance matrix for organism '%s': %s",
+            organism,
+            paste(unknown_vb, collapse = ", ")
+        ))
+    }
+
+    # ---- Dispatch to C++ ---------------------------------------------------
+    dist_mat <- rcpp_tcrdist_matrix(
+        tcrs$va,
+        tcrs$cdr3a,
+        tcrs$vb,
+        tcrs$cdr3b,
+        v_dist_a,
+        v_dist_b,
+        as.integer(weight_cdr3),
+        as.integer(gap_penalty_cdr3)
+    )
+
+    # ---- Set row/column names ----------------------------------------------
+    idx_names           <- as.character(seq_len(n))
+    rownames(dist_mat)  <- idx_names
+    colnames(dist_mat)  <- idx_names
+
+    dist_mat
+}
+
+
+# ---------------------------------------------------------------------------
+# bsd4_matrix
+# ---------------------------------------------------------------------------
+
+#' Retrieve the BSD4 substitution matrix
+#'
+#' Returns the BSD4 (BLOSUM-derived substitution distance 4) matrix used
+#' internally for amino acid distance scoring in TCRdist calculations. The
+#' matrix is built in C++ and returned as a named numeric matrix in R.
+#'
+#' @return A named numeric matrix of amino acid substitution distances. Row
+#'   and column names are the 20 standard single-letter amino acid codes in
+#'   \code{AMINO_ACIDS} order.
+#' @examples
+#' \donttest{
+#' bsd4 <- bsd4_matrix()
+#' bsd4["A", "A"]  # 0
+#' bsd4["A", "G"]  # small positive value
+#' }
+#' @export
+bsd4_matrix <- function() {
+    rcpp_build_bsd4()
+}
