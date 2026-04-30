@@ -46,6 +46,59 @@
 }
 
 
+#' Fill missing chain columns for single-chain input
+#'
+#' Detects whether both chains are present and, if not, fills the missing
+#' chain with dummy values so that downstream code can proceed unchanged.
+#' The dummy V-gene is the first V-gene for that chain in the gene database;
+#' the dummy CDR3 is a minimal valid sequence.  When combined with the
+#' \code{components} parameter (auto-set to \code{"alpha"} or \code{"beta"}),
+#' the dummy chain contributes exactly zero to the distance.
+#'
+#' @param tcrs A \code{data.frame}.
+#' @param organism Character string passed to \code{load_gene_database}.
+#' @return A list with elements \code{tcrs} (possibly augmented) and
+#'   \code{chain} (\code{"AB"}, \code{"A"}, or \code{"B"}).
+#' @keywords internal
+.fill_missing_chain <- function(tcrs, organism) {
+    has_alpha <- all(c("va", "cdr3a") %in% colnames(tcrs))
+    has_beta  <- all(c("vb", "cdr3b") %in% colnames(tcrs))
+
+    if (has_alpha && has_beta) {
+        return(list(tcrs = tcrs, chain = "AB"))
+    }
+    if (!has_alpha && !has_beta) {
+        stop(
+            "tcrs must contain at least alpha (va, cdr3a) or beta (vb, cdr3b) columns",
+            call. = FALSE
+        )
+    }
+
+    all_genes_org <- load_gene_database(organism)
+    ids <- names(all_genes_org)
+
+    if (!has_alpha) {
+        # Beta-only: fill alpha with dummies
+        dummy_va <- ids[vapply(ids, function(id) {
+            g <- all_genes_org[[id]]
+            g$chain == "A" && g$region == "V"
+        }, logical(1L))][1L]
+        tcrs$va    <- dummy_va
+        tcrs$cdr3a <- "CAAAAF"
+        return(list(tcrs = tcrs, chain = "B"))
+    }
+
+    # Alpha-only: fill beta with dummies
+    dummy_vb <- ids[vapply(ids, function(id) {
+        g <- all_genes_org[[id]]
+        g$chain == "B" && g$region == "V"
+    }, logical(1L))][1L]
+    tcrs$vb    <- dummy_vb
+    tcrs$cdr3b <- "CASSF"
+    list(tcrs = tcrs, chain = "A")
+}
+
+
 #' Create a zero V-region distance matrix with matching gene names
 #'
 #' @param v_dist A named square \code{NumericMatrix} from
@@ -119,15 +172,12 @@ weighted_cdr3_distance <- function(seq1, seq2,
 #' The diagonal is zero (distance of a TCR to itself). The matrix is symmetric
 #' by construction.
 #'
-#' @param tcrs A \code{data.frame} with at least the following columns:
-#'   \describe{
-#'     \item{\code{va}}{Character. Alpha-chain V-gene allele,
-#'       e.g. \code{"TRAV1-1*01"}.}
-#'     \item{\code{cdr3a}}{Character. Alpha-chain CDR3 amino acid sequence.}
-#'     \item{\code{vb}}{Character. Beta-chain V-gene allele,
-#'       e.g. \code{"TRBV19*01"}.}
-#'     \item{\code{cdr3b}}{Character. Beta-chain CDR3 amino acid sequence.}
-#'   }
+#' @param tcrs A \code{data.frame} with columns for one or both TCR chains.
+#'   For paired alpha-beta input, requires \code{va}, \code{cdr3a}, \code{vb},
+#'   \code{cdr3b}.  For single-chain input, only the columns for one chain are
+#'   needed (e.g., \code{vb} and \code{cdr3b} for beta-only).  The missing
+#'   chain is filled with dummy values internally, and \code{components} is
+#'   automatically set to \code{"alpha"} or \code{"beta"}.
 #' @param organism Character string. Organism key understood by
 #'   \code{load_gene_database}, e.g. \code{"human"} or \code{"mouse"}.
 #' @param components Character.  Which distance components to include.
@@ -135,6 +185,7 @@ weighted_cdr3_distance <- function(seq1, seq2,
 #'   \code{"v_region"} (CDR1+CDR2+CDR2.5 only), \code{"alpha"} (alpha chain),
 #'   \code{"beta"} (beta chain).  Or a character vector of individual terms:
 #'   \code{"va"}, \code{"cdr3a"}, \code{"vb"}, \code{"cdr3b"}.
+#'   For single-chain input, defaults to the present chain.
 #' @param weight_cdr3 Integer. Weight applied to CDR3 distances. Defaults to
 #'   \code{WEIGHT_CDR3_REGION} (3L).
 #' @param gap_penalty_cdr3 Integer. Gap penalty for CDR3 alignments. Defaults
@@ -156,8 +207,9 @@ weighted_cdr3_distance <- function(seq1, seq2,
 #' # CDR3-only distance
 #' mat_cdr3 <- tcrdist_matrix(tcrs, "human", components = "cdr3")
 #'
-#' # Alpha chain only
-#' mat_alpha <- tcrdist_matrix(tcrs, "human", components = "alpha")
+#' # Beta-only (single-chain) input
+#' beta_only <- tcrs[, c("vb", "cdr3b")]
+#' mat_beta <- tcrdist_matrix(beta_only, "human")
 #' }
 #' @seealso \code{\link{tcrdist_sparse}}, \code{\link{tcrdist_rect}}, \code{\link{tcrdist_knn}}, \code{\link{TCRrep}}
 #' @export
@@ -170,14 +222,14 @@ tcrdist_matrix <- function(tcrs, organism,
         stop("tcrdist_matrix: 'tcrs' must be a data.frame")
     }
 
-    required_cols <- c("va", "cdr3a", "vb", "cdr3b")
-    missing_cols  <- setdiff(required_cols, colnames(tcrs))
-    if (length(missing_cols) > 0L) {
-        stop(sprintf(
-            "tcrdist_matrix: missing required columns: %s",
-            paste(missing_cols, collapse = ", ")
-        ))
+    # ---- Single-chain detection -----------------------------------------------
+    filled <- .fill_missing_chain(tcrs, organism)
+    tcrs <- filled$tcrs
+    if (filled$chain != "AB" && identical(components, "all")) {
+        components <- if (filled$chain == "A") "alpha" else "beta"
     }
+
+    required_cols <- c("va", "cdr3a", "vb", "cdr3b")
 
     n <- nrow(tcrs)
     if (n == 0L) {

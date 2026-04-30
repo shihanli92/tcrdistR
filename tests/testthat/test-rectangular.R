@@ -56,15 +56,25 @@ test_that("tcrdist_rect produces known reference values", {
     expect_equal(rect[2, 3], mat[2, 3])
 })
 
-test_that("tcrdist_rect rejects missing columns", {
-    bad_query <- data.frame(va = "TRAV1-1*01", cdr3a = "CAVRDSSYKLIF",
-                            stringsAsFactors = FALSE)
+test_that("tcrdist_rect rejects mismatched chain types", {
+    alpha_only <- data.frame(va = "TRAV1-1*01", cdr3a = "CAVRDSSYKLIF",
+                             stringsAsFactors = FALSE)
+    paired <- data.frame(
+        va = "TRAV1-1*01", cdr3a = "CAVRDSSYKLIF",
+        vb = "TRBV19*01",  cdr3b = "CASSIRSSYEQYF",
+        stringsAsFactors = FALSE
+    )
+    expect_error(tcrdist_rect(alpha_only, paired, "human"), "same chain columns")
+})
+
+test_that("tcrdist_rect rejects incomplete chain columns", {
+    bad_query <- data.frame(va = "TRAV1-1*01", stringsAsFactors = FALSE)
     ref <- data.frame(
         va = "TRAV1-1*01", cdr3a = "CAVRDSSYKLIF",
         vb = "TRBV19*01",  cdr3b = "CASSIRSSYEQYF",
         stringsAsFactors = FALSE
     )
-    expect_error(tcrdist_rect(bad_query, ref, "human"), "missing required columns")
+    expect_error(tcrdist_rect(bad_query, ref, "human"), "at least alpha.*or beta")
 })
 
 test_that("tcrdist_rect rejects NA values", {

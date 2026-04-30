@@ -76,14 +76,14 @@ tcrdist_knn <- function(tcrs, organism, K,
         stop("tcrdist_knn: 'tcrs' must be a data.frame")
     }
 
-    required_cols <- c("va", "cdr3a", "vb", "cdr3b")
-    missing_cols  <- setdiff(required_cols, colnames(tcrs))
-    if (length(missing_cols) > 0L) {
-        stop(sprintf(
-            "tcrdist_knn: missing required columns: %s",
-            paste(missing_cols, collapse = ", ")
-        ))
+    # ---- Single-chain detection -----------------------------------------------
+    filled <- .fill_missing_chain(tcrs, organism)
+    tcrs <- filled$tcrs
+    if (filled$chain != "AB" && identical(components, "all")) {
+        components <- if (filled$chain == "A") "alpha" else "beta"
     }
+
+    required_cols <- c("va", "cdr3a", "vb", "cdr3b")
 
     n <- nrow(tcrs)
     if (n == 0L) {
@@ -252,14 +252,14 @@ tcrdist_radius_neighbors <- function(tcrs, organism, radius,
         stop("tcrdist_radius_neighbors: 'tcrs' must be a data.frame")
     }
 
-    required_cols <- c("va", "cdr3a", "vb", "cdr3b")
-    missing_cols  <- setdiff(required_cols, colnames(tcrs))
-    if (length(missing_cols) > 0L) {
-        stop(sprintf(
-            "tcrdist_radius_neighbors: missing required columns: %s",
-            paste(missing_cols, collapse = ", ")
-        ))
+    # ---- Single-chain detection -----------------------------------------------
+    filled <- .fill_missing_chain(tcrs, organism)
+    tcrs <- filled$tcrs
+    if (filled$chain != "AB" && identical(components, "all")) {
+        components <- if (filled$chain == "A") "alpha" else "beta"
     }
+
+    required_cols <- c("va", "cdr3a", "vb", "cdr3b")
 
     if (!is.numeric(radius) || length(radius) != 1L || is.na(radius) || radius < 0) {
         stop("tcrdist_radius_neighbors: 'radius' must be a non-negative numeric scalar")

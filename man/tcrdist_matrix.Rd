@@ -13,15 +13,12 @@ tcrdist_matrix(
 )
 }
 \arguments{
-\item{tcrs}{A \code{data.frame} with at least the following columns:
-\describe{
-\item{\code{va}}{Character. Alpha-chain V-gene allele,
-e.g. \code{"TRAV1-1*01"}.}
-\item{\code{cdr3a}}{Character. Alpha-chain CDR3 amino acid sequence.}
-\item{\code{vb}}{Character. Beta-chain V-gene allele,
-e.g. \code{"TRBV19*01"}.}
-\item{\code{cdr3b}}{Character. Beta-chain CDR3 amino acid sequence.}
-}}
+\item{tcrs}{A \code{data.frame} with columns for one or both TCR chains.
+For paired alpha-beta input, requires \code{va}, \code{cdr3a}, \code{vb},
+\code{cdr3b}.  For single-chain input, only the columns for one chain are
+needed (e.g., \code{vb} and \code{cdr3b} for beta-only).  The missing
+chain is filled with dummy values internally, and \code{components} is
+automatically set to \code{"alpha"} or \code{"beta"}.}
 
 \item{organism}{Character string. Organism key understood by
 \code{load_gene_database}, e.g. \code{"human"} or \code{"mouse"}.}
@@ -30,7 +27,8 @@ e.g. \code{"TRBV19*01"}.}
 Presets: \code{"all"} (default), \code{"cdr3"} (CDR3 only),
 \code{"v_region"} (CDR1+CDR2+CDR2.5 only), \code{"alpha"} (alpha chain),
 \code{"beta"} (beta chain).  Or a character vector of individual terms:
-\code{"va"}, \code{"cdr3a"}, \code{"vb"}, \code{"cdr3b"}.}
+\code{"va"}, \code{"cdr3a"}, \code{"vb"}, \code{"cdr3b"}.
+For single-chain input, defaults to the present chain.}
 
 \item{weight_cdr3}{Integer. Weight applied to CDR3 distances. Defaults to
 \code{WEIGHT_CDR3_REGION} (3L).}
@@ -68,8 +66,9 @@ mat <- tcrdist_matrix(tcrs, "human")
 # CDR3-only distance
 mat_cdr3 <- tcrdist_matrix(tcrs, "human", components = "cdr3")
 
-# Alpha chain only
-mat_alpha <- tcrdist_matrix(tcrs, "human", components = "alpha")
+# Beta-only (single-chain) input
+beta_only <- tcrs[, c("vb", "cdr3b")]
+mat_beta <- tcrdist_matrix(beta_only, "human")
 }
 }
 \seealso{

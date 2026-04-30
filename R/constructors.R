@@ -226,9 +226,13 @@ TCRrep <- function(clone_df,
 
     # ---- Optionally compute distances ---------------------------------------
     if (isTRUE(compute_distances) && nrow(clone_df) > 0L) {
+        comp <- switch(chains,
+            "AB" = "all", "A" = "alpha", "B" = "beta", "GD" = "all"
+        )
         obj@paired_dist <- tcrdist_matrix(
             clone_df,
             organism,
+            components       = comp,
             weight_cdr3      = weight_cdr3,
             gap_penalty_cdr3 = gap_penalty_cdr3
         )

@@ -63,10 +63,10 @@ test_that("tcrdist_matrix handles empty input", {
     expect_equal(ncol(mat), 0L)
 })
 
-test_that("tcrdist_matrix rejects missing columns", {
-    tcrs <- data.frame(va = "TRAV1-1*01", cdr3a = "CAVRDSSYKLIF",
-                       stringsAsFactors = FALSE)
-    expect_error(tcrdist_matrix(tcrs, "human"), "missing required columns")
+test_that("tcrdist_matrix rejects incomplete chain columns", {
+    # Neither full alpha nor full beta
+    tcrs <- data.frame(va = "TRAV1-1*01", stringsAsFactors = FALSE)
+    expect_error(tcrdist_matrix(tcrs, "human"), "at least alpha.*or beta")
 })
 
 test_that("tcrdist_matrix rejects NA values", {

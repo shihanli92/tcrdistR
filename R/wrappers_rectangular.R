@@ -68,27 +68,27 @@ tcrdist_rect <- function(query, ref, organism,
         stop("tcrdist_rect: 'query' must be a data.frame")
     }
 
-    required_cols <- c("va", "cdr3a", "vb", "cdr3b")
-    missing_query <- setdiff(required_cols, colnames(query))
-    if (length(missing_query) > 0L) {
-        stop(sprintf(
-            "tcrdist_rect: 'query' is missing required columns: %s",
-            paste(missing_query, collapse = ", ")
-        ))
-    }
-
     # ---- Input validation: ref ----------------------------------------------
     if (!is.data.frame(ref)) {
         stop("tcrdist_rect: 'ref' must be a data.frame")
     }
 
-    missing_ref <- setdiff(required_cols, colnames(ref))
-    if (length(missing_ref) > 0L) {
-        stop(sprintf(
-            "tcrdist_rect: 'ref' is missing required columns: %s",
-            paste(missing_ref, collapse = ", ")
-        ))
+    # ---- Single-chain detection -----------------------------------------------
+    filled_q <- .fill_missing_chain(query, organism)
+    filled_r <- .fill_missing_chain(ref, organism)
+    query <- filled_q$tcrs
+    ref   <- filled_r$tcrs
+
+    # Both must agree on chain type
+    if (filled_q$chain != filled_r$chain) {
+        stop("tcrdist_rect: query and ref must have the same chain columns",
+             call. = FALSE)
     }
+    if (filled_q$chain != "AB" && identical(components, "all")) {
+        components <- if (filled_q$chain == "A") "alpha" else "beta"
+    }
+
+    required_cols <- c("va", "cdr3a", "vb", "cdr3b")
 
     nq <- nrow(query)
     nr <- nrow(ref)

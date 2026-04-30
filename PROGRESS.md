@@ -18,7 +18,7 @@ All computation in C++ via Rcpp. R layer is thin wrappers (input validation, S4 
 
 ## Current State
 
-**691 tests, R CMD check: 0 errors, 0 warnings, 2 NOTEs** (C++14, extdata size)
+**992 tests, R CMD check: 0 errors, 0 warnings, 6 NOTEs** (C++14, extdata size, etc.)
 
 ### Completed Phases
 
@@ -64,16 +64,16 @@ All computation in C++ via Rcpp. R layer is thin wrappers (input validation, S4 
 
 ```
 tcrdistR/
-├── R/                            # 25 R files (~8,600 lines)
+├── R/                            # 36 R files (~9,900 lines)
 │   ├── tcrdistR-package.R        # Package doc, .onLoad, .tcrdistR_env
 │   ├── classes.R                 # S4 class: TCRrep
-│   ├── constructors.R            # TCRrep() constructor
+│   ├── constructors.R            # TCRrep() constructor (with clone deduplication)
 │   ├── show-methods.R            # print/show/summary
 │   ├── constants.R               # AMINO_ACIDS, weights, gap penalties, BLOSUM62
 │   ├── all_genes.R               # Gene database loading, V-distance matrices
 │   ├── genetic_code.R            # Genetic code constants
 │   ├── translation.R             # Nucleotide translation
-│   ├── wrappers_distance.R       # tcrdist_matrix(), hamming_distance/matrix()
+│   ├── wrappers_distance.R       # tcrdist_matrix(), hamming_distance/matrix(), .resolve_components()
 │   ├── wrappers_neighbors.R      # tcrdist_knn(), tcrdist_radius_neighbors(), knn_from_matrix/pca
 │   ├── wrappers_sparse.R         # tcrdist_sparse()
 │   ├── wrappers_rectangular.R    # tcrdist_rect()
@@ -86,6 +86,10 @@ tcrdistR/
 │   ├── tcr_db_matching.R         # DB matching with background-corrected p-values
 │   ├── kernel_pca.R              # Kernel PCA (scipy-validated)
 │   ├── cd8_scoring.R             # CD8 logistic regression scoring
+│   ├── umap.R                    # compute_tcrdist_umap() via rconga KNN
+│   ├── network.R                 # compute_tcr_network(), plot_tcr_network() (igraph)
+│   ├── as_tcr_df.R               # as_tcr_df() data standardization
+│   ├── data.R                    # Data object documentation
 │   ├── io_airr.R                 # AIRR format reader
 │   ├── io_adaptive.R             # Adaptive ImmunoSeq reader
 │   ├── io_10x.R                  # 10x Genomics reader
@@ -119,7 +123,7 @@ tcrdistR/
 │   ├── mouse_tcr_db_for_matching.tsv       # Single-chain DB, mouse (882 KB)
 │   ├── cd8_logreg_params_A.txt             # CD8 model, alpha chain (10 KB)
 │   └── cd8_logreg_params_B.txt             # CD8 model, beta chain (9.4 KB)
-├── tests/testthat/               # 18 test files, 691 tests
+├── tests/testthat/               # 24 test files, 941 tests
 │   ├── test-blosum.R
 │   ├── test-cdr3-distance.R
 │   ├── test-tcrdist.R
@@ -139,28 +143,33 @@ tcrdistR/
 │   ├── test-hierarchical.R       # Clustering + neighborhood tests
 │   ├── test-join.R               # Distance-based join tests
 │   ├── test-meta-clonotypes.R    # Meta-clonotype detection tests
+│   ├── test-components.R         # Per-component distance tests (54 tests)
+│   ├── test-network.R            # Network visualization tests
+│   ├── test-umap.R               # UMAP tests
+│   ├── test-dedup.R              # Clone deduplication tests
 │   └── fixtures/                 # dash.csv, kernel_pca_ref.json, I/O fixtures
 └── tests/generate_kernel_pca_fixture.py  # Regenerates scipy reference
 ```
 
 ---
 
-## Exported Functions (65)
+## Exported Functions (~70)
 
 **Distance computation:** `tcrdist_matrix`, `tcrdist_rect`, `tcrdist_sparse`, `weighted_cdr3_distance`, `bsd4_matrix`, `hamming_distance`, `hamming_matrix`
 **Neighbor search:** `tcrdist_knn`, `tcrdist_radius_neighbors`, `knn_from_matrix`, `knn_from_pca`
 **Clumping:** `find_clumping`, `setup_tcr_groups`
 **DB matching:** `find_significant_tcrdist_matches`, `match_tcrs_to_db`, `strict_single_chain_match_tcrs_to_db`
 **Kernel PCA:** `compute_tcrdist_kernel_pca`
+**UMAP:** `compute_tcrdist_umap`
 **CD8 scoring:** `make_cd8_score_table_column`
 **Diversity:** `tcr_diversity`, `tcr_fuzzy_diversity`, `tcr_richness`, `tcr_clonality`
 **Clustering:** `tcrdist_hclust`, `cluster_tcrs`, `neighborhood_test`
 **Meta-clonotypes:** `find_meta_clonotypes`, `summarize_meta_clonotype`
 **Joins:** `tcrdist_join`
+**Network:** `compute_tcr_network`, `plot_tcr_network`
 **Visualization:** `plot_cdr3_logo`, `plot_junction_bars`, `plot_gene_usage`, `plot_tcrdist_heatmap`, `plot_tcrdist_dendrogram`, `plot_distance_distribution`, `plot_tcr_scatter`
-**I/O:** `read_airr`, `read_adaptive`, `read_10x`, `read_tcr_table`
+**I/O:** `read_airr`, `read_adaptive`, `read_10x`, `read_tcr_table`, `as_tcr_df`
 **Utilities:** `load_gene_database`, `get_translation`, `reverse_complement`, `trim_allele_to_gene`, `AMINO_ACIDS`, `TCRrep`
-**Rcpp (advanced):** 16 `rcpp_*` functions for direct C++ access
 
 #### Phase 6: Visualization ✅
 - `R/plot_utils.R` — `.tcrdistR_palette()`, `.check_ggplot2()` shared helpers
@@ -188,6 +197,32 @@ tcrdistR/
 - `@examples` added to 5 previously-missing functions
 - Package-level documentation (`tcrdistR-package.R`) rewritten with full narrative overview
 - `benchmarks/` — R + Python benchmark scripts for tcrdistR vs tcrdist3 comparison
+
+#### Phase 9: Post-Release Enhancements ✅
+- `R/constructors.R` — Clone deduplication in TCRrep constructor (matching tcrdist3 behavior)
+- `vignettes/tcrdistR-tcrrep-workflow.Rmd` — End-to-end TCRrep workflow vignette
+- `R/umap.R` — `compute_tcrdist_umap()` using rconga KNN pipeline
+- `R/as_tcr_df.R` — `as_tcr_df()` for standardizing TCR data.frames from common tools (10x, Adaptive, AIRR, etc.)
+- `R/network.R` — `compute_tcr_network()`, `plot_tcr_network()` (igraph-based TCR networks with auto-threshold detection via bimodal KDE, node jittering, min_edges pruning)
+- Per-component TCRdist distances — `components` parameter added to all 5 distance wrappers (`tcrdist_matrix`, `tcrdist_sparse`, `tcrdist_rect`, `tcrdist_knn`, `tcrdist_radius_neighbors`); presets: `"all"`, `"cdr3"`, `"v_region"`, `"alpha"`, `"beta"`, plus custom combos. Per-chain CDR3 weight/gap params in all C++ entry points. Cross-validated against tcrdist3 on human (influenza) and mouse (DASH) datasets.
+- `tests/testthat/test-components.R` — 54 component selection tests (additivity, consistency across wrappers)
+- `tests/testthat/test-network.R` — 364-line network visualization test suite
+- `tests/testthat/test-umap.R` — 190-line UMAP test suite
+- `tests/testthat/test-dedup.R` — 200-line clone deduplication tests
+
+#### Phase 10: Single-Chain Mode ✅
+- `.fill_missing_chain()` helper detects alpha-only or beta-only input, fills dummy chain values
+- All 5 distance wrappers (`tcrdist_matrix`, `tcrdist_sparse`, `tcrdist_rect`, `tcrdist_knn`, `tcrdist_radius_neighbors`) auto-detect single-chain input and set `components` accordingly
+- `tcrdist_rect()` validates that query and ref have matching chain types
+- TCRrep constructor passes `components` based on `chains` slot when `compute_distances = TRUE`
+- `tests/testthat/test-single-chain.R` — 50 tests covering all wrappers, TCRrep, error cases, component overrides, mouse organism
+
+#### Phase 11: Documentation Polish ✅
+- `vignettes/tcrdistR-getting-started.Rmd` — added sections: Per-Component Distances, Single-Chain Mode, Standardizing TCR Data (`as_tcr_df`)
+- `vignettes/tcrdistR-advanced.Rmd` — added sections: UMAP Visualization, TCR Network Visualization
+- `vignettes/tcrdistR-visualization.Rmd` — added section: TCR Network Plot
+- `vignettes/tcrdistR-tcrrep-workflow.Rmd` — added section: Single-Chain TCRrep
+- `README.Rmd` — added per-component and single-chain examples to quick start, updated description
 
 ---
 

@@ -134,6 +134,71 @@ neighbors[[1]]$indices
 neighbors[[1]]$distances
 ```
 
+## Per-Component Distances
+
+All distance functions accept a `components` parameter to compute distances
+from specific TCR regions. This is useful for comparing CDR3-only distances,
+V-region-only contributions, or single-chain distances.
+
+```{r components}
+# CDR3 only (both chains, no V-region)
+d_cdr3 <- tcrdist_matrix(pa_sub, "mouse", components = "cdr3")
+
+# V-region only (CDR1 + CDR2 + CDR2.5)
+d_v <- tcrdist_matrix(pa_sub, "mouse", components = "v_region")
+
+# Components are additive: v_region + cdr3 = all
+d_all <- tcrdist_matrix(pa_sub, "mouse")
+stopifnot(all(abs((d_v + d_cdr3) - d_all) < 1e-10))
+
+# Single chain
+d_alpha <- tcrdist_matrix(pa_sub, "mouse", components = "alpha")
+d_beta  <- tcrdist_matrix(pa_sub, "mouse", components = "beta")
+stopifnot(all(abs((d_alpha + d_beta) - d_all) < 1e-10))
+
+# Custom combination
+d_custom <- tcrdist_matrix(pa_sub, "mouse", components = c("cdr3a", "vb"))
+```
+
+Available presets: `"all"` (default), `"cdr3"`, `"v_region"`, `"alpha"`,
+`"beta"`. Individual terms: `"va"`, `"cdr3a"`, `"vb"`, `"cdr3b"`.
+
+## Single-Chain Mode
+
+Many datasets contain only beta-chain data (e.g., from bulk sequencing). All
+distance functions automatically detect single-chain input and compute
+distances for the available chain only:
+```{r single-chain}
+# Beta-only data (no alpha columns)
+beta_only <- pa_sub[, c("vb", "cdr3b")]
+d_beta_only <- tcrdist_matrix(beta_only, "mouse")
+dim(d_beta_only)
+
+# Result matches components="beta" on paired data
+d_beta_paired <- tcrdist_matrix(pa_sub, "mouse", components = "beta")
+stopifnot(all(abs(d_beta_only - d_beta_paired) < 1e-10))
+
+# Works with all wrappers: sparse, rect, knn, radius_neighbors
+knn_beta <- tcrdist_knn(beta_only, "mouse", K = 3L)
+```
+
+## Standardizing TCR Data
+
+Use `as_tcr_df()` to convert data.frames from common tools (scRepertoire,
+scirpy, dandelion, tcrdist3) to tcrdistR's canonical column names:
+
+```{r as-tcr-df, eval=FALSE}
+# Auto-detect format
+tcrs <- as_tcr_df(my_data)
+
+# Explicit format
+tcrs <- as_tcr_df(my_data, format = "screpertoire")
+
+# Custom column mapping
+tcrs <- as_tcr_df(my_data, col_map = c(va = "V_alpha", cdr3a = "CDR3_alpha",
+                                        vb = "V_beta",  cdr3b = "CDR3_beta"))
+```
+
 ## Single-Pair Distances
 
 For comparing individual CDR3 sequences:

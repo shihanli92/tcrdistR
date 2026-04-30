@@ -65,14 +65,14 @@ tcrdist_sparse <- function(tcrs, organism, threshold,
         stop("tcrdist_sparse: 'tcrs' must be a data.frame")
     }
 
-    required_cols <- c("va", "cdr3a", "vb", "cdr3b")
-    missing_cols  <- setdiff(required_cols, colnames(tcrs))
-    if (length(missing_cols) > 0L) {
-        stop(sprintf(
-            "tcrdist_sparse: missing required columns: %s",
-            paste(missing_cols, collapse = ", ")
-        ))
+    # ---- Single-chain detection -----------------------------------------------
+    filled <- .fill_missing_chain(tcrs, organism)
+    tcrs <- filled$tcrs
+    if (filled$chain != "AB" && identical(components, "all")) {
+        components <- if (filled$chain == "A") "alpha" else "beta"
     }
+
+    required_cols <- c("va", "cdr3a", "vb", "cdr3b")
 
     if (!is.numeric(threshold) || length(threshold) != 1L || is.na(threshold) ||
         threshold < 0) {

@@ -17,8 +17,9 @@ knitr::opts_chunk$set(
 
 C++-accelerated TCR distance calculations for T-cell receptor repertoire
 analysis. Computes pairwise TCRdist distances incorporating V-region and CDR3
-sequence comparisons using BLOSUM62-derived substitution matrices. Targets
-feature parity with Python
+sequence comparisons using BLOSUM62-derived substitution matrices. Supports
+paired alpha-beta and single-chain (beta-only or alpha-only) input, per-component
+distance decomposition, and targets feature parity with Python
 [tcrdist3](https://github.com/kmayerb/tcrdist3).
 
 ## Installation
@@ -44,6 +45,14 @@ rep
 
 # Pairwise distance heatmap
 plot_tcrdist_heatmap(rep@paired_dist[1:40, 1:40])
+
+# Per-component distances (CDR3-only, V-region-only, etc.)
+d_cdr3 <- tcrdist_matrix(rep@clone_df, "mouse", components = "cdr3")
+d_v    <- tcrdist_matrix(rep@clone_df, "mouse", components = "v_region")
+
+# Single-chain mode (beta-only input, no alpha columns needed)
+beta_only <- rep@clone_df[, c("vb", "cdr3b")]
+d_beta <- tcrdist_matrix(beta_only, "mouse")
 
 # Kernel PCA
 pca <- compute_tcrdist_kernel_pca(

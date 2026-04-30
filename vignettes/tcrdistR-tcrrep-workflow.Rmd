@@ -163,6 +163,24 @@ plot_tcr_scatter(
 )
 ```
 
+## Single-Chain TCRrep
+
+When working with beta-only data (e.g., from bulk sequencing), create a
+TCRrep with `chains = "B"`:
+
+```{r single-chain}
+# Simulate beta-only data
+beta_only <- rep@clone_df[1:50, c("vb", "cdr3b", "epitope", "subject", "count")]
+
+rep_beta <- TCRrep(beta_only, organism = "mouse", chains = "B",
+                   compute_distances = TRUE)
+rep_beta
+dim(rep_beta@paired_dist)
+
+# All distance functions work with single-chain data
+knn_beta <- tcrdist_knn(beta_only, "mouse", K = 3L)
+```
+
 ## Clustering
 
 Cluster TCRs and add cluster assignments to the clone table:
