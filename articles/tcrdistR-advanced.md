@@ -261,6 +261,41 @@ head(joined[, c("cdr3a_x", "cdr3b_x", "cdr3a_y", "cdr3b_y", "tcrdist")])
 #> 6   CALGKNYNQGKLIF   CASDRAGEQYF    CALGEGSNYKLTF  CASSLGGEQYF      93
 ```
 
+## UMAP Visualization
+
+Embed TCRs in 2D using UMAP computed directly from TCRdist KNN
+neighbors:
+
+``` r
+umap <- compute_tcrdist_umap(pa, organism = "mouse", K = 15L, seed = 42)
+
+# umap$embeddings is an N x 2 matrix
+plot_tcr_scatter(
+  umap$embeddings,
+  color_by = pa$subject,
+  axis_label_prefix = "UMAP",
+  point_size = 2
+)
+```
+
+## TCR Network Visualization
+
+Build an igraph-based TCR similarity network. TCRs become nodes, edges
+connect TCRs within a distance threshold. The threshold can be set
+manually or auto-detected from the bimodal distance distribution:
+
+``` r
+# Auto-detect threshold from distance distribution
+net <- compute_tcr_network(pa, organism = "mouse")
+
+# Color by vertex attribute name (metadata stored in the graph)
+plot_tcr_network(net, color_by = "epitope", vertex_size = 3)
+
+# Manual threshold with minimum edge pruning
+net2 <- compute_tcr_network(pa, organism = "mouse", threshold = 48,
+                            min_edges = 2)
+```
+
 ## CD8 Scoring
 
 Score TCRs for CD8 phenotype using a logistic regression model trained

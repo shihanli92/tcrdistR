@@ -204,10 +204,77 @@ matrix:</p>
 <span><span class="co">#&gt; numeric(0)</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="per-component-distances">Per-Component Distances<a class="anchor" aria-label="anchor" href="#per-component-distances"></a>
+</h2>
+<p>All distance functions accept a <code>components</code> parameter to
+compute distances from specific TCR regions. This is useful for
+comparing CDR3-only distances, V-region-only contributions, or
+single-chain distances.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># CDR3 only (both chains, no V-region)</span></span>
+<span><span class="va">d_cdr3</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_matrix.html">tcrdist_matrix</a></span><span class="op">(</span><span class="va">pa_sub</span>, <span class="st">"mouse"</span>, components <span class="op">=</span> <span class="st">"cdr3"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># V-region only (CDR1 + CDR2 + CDR2.5)</span></span>
+<span><span class="va">d_v</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_matrix.html">tcrdist_matrix</a></span><span class="op">(</span><span class="va">pa_sub</span>, <span class="st">"mouse"</span>, components <span class="op">=</span> <span class="st">"v_region"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Components are additive: v_region + cdr3 = all</span></span>
+<span><span class="va">d_all</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_matrix.html">tcrdist_matrix</a></span><span class="op">(</span><span class="va">pa_sub</span>, <span class="st">"mouse"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="op">(</span><span class="va">d_v</span> <span class="op">+</span> <span class="va">d_cdr3</span><span class="op">)</span> <span class="op">-</span> <span class="va">d_all</span><span class="op">)</span> <span class="op">&lt;</span> <span class="fl">1e-10</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Single chain</span></span>
+<span><span class="va">d_alpha</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_matrix.html">tcrdist_matrix</a></span><span class="op">(</span><span class="va">pa_sub</span>, <span class="st">"mouse"</span>, components <span class="op">=</span> <span class="st">"alpha"</span><span class="op">)</span></span>
+<span><span class="va">d_beta</span>  <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_matrix.html">tcrdist_matrix</a></span><span class="op">(</span><span class="va">pa_sub</span>, <span class="st">"mouse"</span>, components <span class="op">=</span> <span class="st">"beta"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="op">(</span><span class="va">d_alpha</span> <span class="op">+</span> <span class="va">d_beta</span><span class="op">)</span> <span class="op">-</span> <span class="va">d_all</span><span class="op">)</span> <span class="op">&lt;</span> <span class="fl">1e-10</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Custom combination</span></span>
+<span><span class="va">d_custom</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_matrix.html">tcrdist_matrix</a></span><span class="op">(</span><span class="va">pa_sub</span>, <span class="st">"mouse"</span>, components <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cdr3a"</span>, <span class="st">"vb"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Available presets: <code>"all"</code> (default), <code>"cdr3"</code>,
+<code>"v_region"</code>, <code>"alpha"</code>, <code>"beta"</code>.
+Individual terms: <code>"va"</code>, <code>"cdr3a"</code>,
+<code>"vb"</code>, <code>"cdr3b"</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="single-chain-mode">Single-Chain Mode<a class="anchor" aria-label="anchor" href="#single-chain-mode"></a>
+</h2>
+<p>Many datasets contain only beta-chain data (e.g., from bulk
+sequencing). All distance functions automatically detect single-chain
+input and compute distances for the available chain only:</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Beta-only data (no alpha columns)</span></span>
+<span><span class="va">beta_only</span> <span class="op">&lt;-</span> <span class="va">pa_sub</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"vb"</span>, <span class="st">"cdr3b"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">d_beta_only</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_matrix.html">tcrdist_matrix</a></span><span class="op">(</span><span class="va">beta_only</span>, <span class="st">"mouse"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">d_beta_only</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 50 50</span></span>
+<span></span>
+<span><span class="co"># Result matches components="beta" on paired data</span></span>
+<span><span class="va">d_beta_paired</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_matrix.html">tcrdist_matrix</a></span><span class="op">(</span><span class="va">pa_sub</span>, <span class="st">"mouse"</span>, components <span class="op">=</span> <span class="st">"beta"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/all.html" class="external-link">all</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">abs</a></span><span class="op">(</span><span class="va">d_beta_only</span> <span class="op">-</span> <span class="va">d_beta_paired</span><span class="op">)</span> <span class="op">&lt;</span> <span class="fl">1e-10</span><span class="op">)</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Works with all wrappers: sparse, rect, knn, radius_neighbors</span></span>
+<span><span class="va">knn_beta</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcrdist_knn.html">tcrdist_knn</a></span><span class="op">(</span><span class="va">beta_only</span>, <span class="st">"mouse"</span>, K <span class="op">=</span> <span class="fl">3L</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="standardizing-tcr-data">Standardizing TCR Data<a class="anchor" aria-label="anchor" href="#standardizing-tcr-data"></a>
+</h2>
+<p>Use <code><a href="../reference/as_tcr_df.html">as_tcr_df()</a></code> to convert data.frames from common tools
+(scRepertoire, scirpy, dandelion, tcrdist3) to tcrdistR’s canonical
+column names:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Auto-detect format</span></span>
+<span><span class="va">tcrs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_tcr_df.html">as_tcr_df</a></span><span class="op">(</span><span class="va">my_data</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Explicit format</span></span>
+<span><span class="va">tcrs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_tcr_df.html">as_tcr_df</a></span><span class="op">(</span><span class="va">my_data</span>, format <span class="op">=</span> <span class="st">"screpertoire"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Custom column mapping</span></span>
+<span><span class="va">tcrs</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/as_tcr_df.html">as_tcr_df</a></span><span class="op">(</span><span class="va">my_data</span>, col_map <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>va <span class="op">=</span> <span class="st">"V_alpha"</span>, cdr3a <span class="op">=</span> <span class="st">"CDR3_alpha"</span>,</span>
+<span>                                        vb <span class="op">=</span> <span class="st">"V_beta"</span>,  cdr3b <span class="op">=</span> <span class="st">"CDR3_beta"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="single-pair-distances">Single-Pair Distances<a class="anchor" aria-label="anchor" href="#single-pair-distances"></a>
 </h2>
 <p>For comparing individual CDR3 sequences:</p>
-<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Weighted CDR3 distance (uses BLOSUM62-derived BSD4 matrix)</span></span>
 <span><span class="fu"><a href="../reference/weighted_cdr3_distance.html">weighted_cdr3_distance</a></span><span class="op">(</span><span class="st">"CAVSLDSNYQLIW"</span>, <span class="st">"CALGDRATGGNNKLTF"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 102</span></span>
@@ -220,7 +287,7 @@ matrix:</p>
 <h2 id="diversity-metrics">Diversity Metrics<a class="anchor" aria-label="anchor" href="#diversity-metrics"></a>
 </h2>
 <p>Repertoire diversity functions work on clone count vectors:</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Clone counts for PA-specific TCRs</span></span>
 <span><span class="va">pa_counts</span> <span class="op">&lt;-</span> <span class="va">pa</span><span class="op">$</span><span class="va">count</span></span>
 <span></span>
@@ -247,7 +314,7 @@ matrix:</p>
 deduplicates identical clones (matching tcrdist3 behavior), grouping by
 chain columns plus <code>subject</code> if present, and summing clone
 counts:</p>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rep</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/TCRrep.html">TCRrep</a></span><span class="op">(</span><span class="va">pa_sub</span>, organism <span class="op">=</span> <span class="st">"mouse"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; deduplicate: 50 -&gt; 49 clones</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">pa_sub</span><span class="op">)</span>        <span class="co"># before dedup</span></span>
@@ -262,7 +329,7 @@ counts:</p>
 <span><span class="co">#&gt;   distances: not computed</span></span></code></pre></div>
 <p>You can control deduplication with the <code>deduplicate</code>
 argument:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Chain columns only (collapse across subjects)</span></span>
 <span><span class="va">rep_strict</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/TCRrep.html">TCRrep</a></span><span class="op">(</span><span class="va">pa_sub</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, deduplicate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/character.html" class="external-link">character</a></span><span class="op">(</span><span class="fl">0</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; deduplicate: 50 -&gt; 47 clones</span></span>

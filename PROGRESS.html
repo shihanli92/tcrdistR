@@ -45,7 +45,7 @@
 <hr></div>
 <div class="section level2">
 <h2 id="current-state">Current State<a class="anchor" aria-label="anchor" href="#current-state"></a></h2>
-<p><strong>691 tests, R CMD check: 0 errors, 0 warnings, 2 NOTEs</strong> (C++14, extdata size)</p>
+<p><strong>992 tests, R CMD check: 0 errors, 0 warnings, 6 NOTEs</strong> (C++14, extdata size, etc.)</p>
 <div class="section level3">
 <h3 id="completed-phases">Completed Phases<a class="anchor" aria-label="anchor" href="#completed-phases"></a></h3>
 <div class="section level4">
@@ -126,16 +126,16 @@
 <div class="section level2">
 <h2 id="package-structure">Package Structure<a class="anchor" aria-label="anchor" href="#package-structure"></a></h2>
 <pre><code>tcrdistR/
-├── R/                            # 25 R files (~8,600 lines)
+├── R/                            # 36 R files (~9,900 lines)
 │   ├── tcrdistR-package.R        # Package doc, .onLoad, .tcrdistR_env
 │   ├── classes.R                 # S4 class: TCRrep
-│   ├── constructors.R            # TCRrep() constructor
+│   ├── constructors.R            # TCRrep() constructor (with clone deduplication)
 │   ├── show-methods.R            # print/show/summary
 │   ├── constants.R               # AMINO_ACIDS, weights, gap penalties, BLOSUM62
 │   ├── all_genes.R               # Gene database loading, V-distance matrices
 │   ├── genetic_code.R            # Genetic code constants
 │   ├── translation.R             # Nucleotide translation
-│   ├── wrappers_distance.R       # tcrdist_matrix(), hamming_distance/matrix()
+│   ├── wrappers_distance.R       # tcrdist_matrix(), hamming_distance/matrix(), .resolve_components()
 │   ├── wrappers_neighbors.R      # tcrdist_knn(), tcrdist_radius_neighbors(), knn_from_matrix/pca
 │   ├── wrappers_sparse.R         # tcrdist_sparse()
 │   ├── wrappers_rectangular.R    # tcrdist_rect()
@@ -148,6 +148,10 @@
 │   ├── tcr_db_matching.R         # DB matching with background-corrected p-values
 │   ├── kernel_pca.R              # Kernel PCA (scipy-validated)
 │   ├── cd8_scoring.R             # CD8 logistic regression scoring
+│   ├── umap.R                    # compute_tcrdist_umap() via rconga KNN
+│   ├── network.R                 # compute_tcr_network(), plot_tcr_network() (igraph)
+│   ├── as_tcr_df.R               # as_tcr_df() data standardization
+│   ├── data.R                    # Data object documentation
 │   ├── io_airr.R                 # AIRR format reader
 │   ├── io_adaptive.R             # Adaptive ImmunoSeq reader
 │   ├── io_10x.R                  # 10x Genomics reader
@@ -181,7 +185,7 @@
 │   ├── mouse_tcr_db_for_matching.tsv       # Single-chain DB, mouse (882 KB)
 │   ├── cd8_logreg_params_A.txt             # CD8 model, alpha chain (10 KB)
 │   └── cd8_logreg_params_B.txt             # CD8 model, beta chain (9.4 KB)
-├── tests/testthat/               # 18 test files, 691 tests
+├── tests/testthat/               # 24 test files, 941 tests
 │   ├── test-blosum.R
 │   ├── test-cdr3-distance.R
 │   ├── test-tcrdist.R
@@ -201,12 +205,16 @@
 │   ├── test-hierarchical.R       # Clustering + neighborhood tests
 │   ├── test-join.R               # Distance-based join tests
 │   ├── test-meta-clonotypes.R    # Meta-clonotype detection tests
+│   ├── test-components.R         # Per-component distance tests (54 tests)
+│   ├── test-network.R            # Network visualization tests
+│   ├── test-umap.R               # UMAP tests
+│   ├── test-dedup.R              # Clone deduplication tests
 │   └── fixtures/                 # dash.csv, kernel_pca_ref.json, I/O fixtures
 └── tests/generate_kernel_pca_fixture.py  # Regenerates scipy reference</code></pre>
 <hr></div>
 <div class="section level2">
-<h2 id="exported-functions-65">Exported Functions (65)<a class="anchor" aria-label="anchor" href="#exported-functions-65"></a></h2>
-<p><strong>Distance computation:</strong> <code>tcrdist_matrix</code>, <code>tcrdist_rect</code>, <code>tcrdist_sparse</code>, <code>weighted_cdr3_distance</code>, <code>bsd4_matrix</code>, <code>hamming_distance</code>, <code>hamming_matrix</code> <strong>Neighbor search:</strong> <code>tcrdist_knn</code>, <code>tcrdist_radius_neighbors</code>, <code>knn_from_matrix</code>, <code>knn_from_pca</code> <strong>Clumping:</strong> <code>find_clumping</code>, <code>setup_tcr_groups</code> <strong>DB matching:</strong> <code>find_significant_tcrdist_matches</code>, <code>match_tcrs_to_db</code>, <code>strict_single_chain_match_tcrs_to_db</code> <strong>Kernel PCA:</strong> <code>compute_tcrdist_kernel_pca</code> <strong>CD8 scoring:</strong> <code>make_cd8_score_table_column</code> <strong>Diversity:</strong> <code>tcr_diversity</code>, <code>tcr_fuzzy_diversity</code>, <code>tcr_richness</code>, <code>tcr_clonality</code> <strong>Clustering:</strong> <code>tcrdist_hclust</code>, <code>cluster_tcrs</code>, <code>neighborhood_test</code> <strong>Meta-clonotypes:</strong> <code>find_meta_clonotypes</code>, <code>summarize_meta_clonotype</code> <strong>Joins:</strong> <code>tcrdist_join</code> <strong>Visualization:</strong> <code>plot_cdr3_logo</code>, <code>plot_junction_bars</code>, <code>plot_gene_usage</code>, <code>plot_tcrdist_heatmap</code>, <code>plot_tcrdist_dendrogram</code>, <code>plot_distance_distribution</code>, <code>plot_tcr_scatter</code> <strong>I/O:</strong> <code>read_airr</code>, <code>read_adaptive</code>, <code>read_10x</code>, <code>read_tcr_table</code> <strong>Utilities:</strong> <code>load_gene_database</code>, <code>get_translation</code>, <code>reverse_complement</code>, <code>trim_allele_to_gene</code>, <code>AMINO_ACIDS</code>, <code>TCRrep</code> <strong>Rcpp (advanced):</strong> 16 <code>rcpp_*</code> functions for direct C++ access</p>
+<h2 id="exported-functions-70">Exported Functions (~70)<a class="anchor" aria-label="anchor" href="#exported-functions-70"></a></h2>
+<p><strong>Distance computation:</strong> <code>tcrdist_matrix</code>, <code>tcrdist_rect</code>, <code>tcrdist_sparse</code>, <code>weighted_cdr3_distance</code>, <code>bsd4_matrix</code>, <code>hamming_distance</code>, <code>hamming_matrix</code> <strong>Neighbor search:</strong> <code>tcrdist_knn</code>, <code>tcrdist_radius_neighbors</code>, <code>knn_from_matrix</code>, <code>knn_from_pca</code> <strong>Clumping:</strong> <code>find_clumping</code>, <code>setup_tcr_groups</code> <strong>DB matching:</strong> <code>find_significant_tcrdist_matches</code>, <code>match_tcrs_to_db</code>, <code>strict_single_chain_match_tcrs_to_db</code> <strong>Kernel PCA:</strong> <code>compute_tcrdist_kernel_pca</code> <strong>UMAP:</strong> <code>compute_tcrdist_umap</code> <strong>CD8 scoring:</strong> <code>make_cd8_score_table_column</code> <strong>Diversity:</strong> <code>tcr_diversity</code>, <code>tcr_fuzzy_diversity</code>, <code>tcr_richness</code>, <code>tcr_clonality</code> <strong>Clustering:</strong> <code>tcrdist_hclust</code>, <code>cluster_tcrs</code>, <code>neighborhood_test</code> <strong>Meta-clonotypes:</strong> <code>find_meta_clonotypes</code>, <code>summarize_meta_clonotype</code> <strong>Joins:</strong> <code>tcrdist_join</code> <strong>Network:</strong> <code>compute_tcr_network</code>, <code>plot_tcr_network</code> <strong>Visualization:</strong> <code>plot_cdr3_logo</code>, <code>plot_junction_bars</code>, <code>plot_gene_usage</code>, <code>plot_tcrdist_heatmap</code>, <code>plot_tcrdist_dendrogram</code>, <code>plot_distance_distribution</code>, <code>plot_tcr_scatter</code> <strong>I/O:</strong> <code>read_airr</code>, <code>read_adaptive</code>, <code>read_10x</code>, <code>read_tcr_table</code>, <code>as_tcr_df</code> <strong>Utilities:</strong> <code>load_gene_database</code>, <code>get_translation</code>, <code>reverse_complement</code>, <code>trim_allele_to_gene</code>, <code>AMINO_ACIDS</code>, <code>TCRrep</code></p>
 <div class="section level4">
 <h4 id="phase-6-visualization-">Phase 6: Visualization ✅<a class="anchor" aria-label="anchor" href="#phase-6-visualization-"></a></h4>
 <ul><li>
@@ -259,6 +267,53 @@
 <li>Package-level documentation (<code>tcrdistR-package.R</code>) rewritten with full narrative overview</li>
 <li>
 <code>benchmarks/</code> — R + Python benchmark scripts for tcrdistR vs tcrdist3 comparison</li>
+</ul></div>
+<div class="section level4">
+<h4 id="phase-9-post-release-enhancements-">Phase 9: Post-Release Enhancements ✅<a class="anchor" aria-label="anchor" href="#phase-9-post-release-enhancements-"></a></h4>
+<ul><li>
+<code>R/constructors.R</code> — Clone deduplication in TCRrep constructor (matching tcrdist3 behavior)</li>
+<li>
+<code>vignettes/tcrdistR-tcrrep-workflow.Rmd</code> — End-to-end TCRrep workflow vignette</li>
+<li>
+<code>R/umap.R</code> — <code><a href="reference/compute_tcrdist_umap.html">compute_tcrdist_umap()</a></code> using rconga KNN pipeline</li>
+<li>
+<code>R/as_tcr_df.R</code> — <code><a href="reference/as_tcr_df.html">as_tcr_df()</a></code> for standardizing TCR data.frames from common tools (10x, Adaptive, AIRR, etc.)</li>
+<li>
+<code>R/network.R</code> — <code><a href="reference/compute_tcr_network.html">compute_tcr_network()</a></code>, <code><a href="reference/plot_tcr_network.html">plot_tcr_network()</a></code> (igraph-based TCR networks with auto-threshold detection via bimodal KDE, node jittering, min_edges pruning)</li>
+<li>Per-component TCRdist distances — <code>components</code> parameter added to all 5 distance wrappers (<code>tcrdist_matrix</code>, <code>tcrdist_sparse</code>, <code>tcrdist_rect</code>, <code>tcrdist_knn</code>, <code>tcrdist_radius_neighbors</code>); presets: <code>"all"</code>, <code>"cdr3"</code>, <code>"v_region"</code>, <code>"alpha"</code>, <code>"beta"</code>, plus custom combos. Per-chain CDR3 weight/gap params in all C++ entry points. Cross-validated against tcrdist3 on human (influenza) and mouse (DASH) datasets.</li>
+<li>
+<code>tests/testthat/test-components.R</code> — 54 component selection tests (additivity, consistency across wrappers)</li>
+<li>
+<code>tests/testthat/test-network.R</code> — 364-line network visualization test suite</li>
+<li>
+<code>tests/testthat/test-umap.R</code> — 190-line UMAP test suite</li>
+<li>
+<code>tests/testthat/test-dedup.R</code> — 200-line clone deduplication tests</li>
+</ul></div>
+<div class="section level4">
+<h4 id="phase-10-single-chain-mode-">Phase 10: Single-Chain Mode ✅<a class="anchor" aria-label="anchor" href="#phase-10-single-chain-mode-"></a></h4>
+<ul><li>
+<code><a href="reference/dot-fill_missing_chain.html">.fill_missing_chain()</a></code> helper detects alpha-only or beta-only input, fills dummy chain values</li>
+<li>All 5 distance wrappers (<code>tcrdist_matrix</code>, <code>tcrdist_sparse</code>, <code>tcrdist_rect</code>, <code>tcrdist_knn</code>, <code>tcrdist_radius_neighbors</code>) auto-detect single-chain input and set <code>components</code> accordingly</li>
+<li>
+<code><a href="reference/tcrdist_rect.html">tcrdist_rect()</a></code> validates that query and ref have matching chain types</li>
+<li>TCRrep constructor passes <code>components</code> based on <code>chains</code> slot when <code>compute_distances = TRUE</code>
+</li>
+<li>
+<code>tests/testthat/test-single-chain.R</code> — 50 tests covering all wrappers, TCRrep, error cases, component overrides, mouse organism</li>
+</ul></div>
+<div class="section level4">
+<h4 id="phase-11-documentation-polish-">Phase 11: Documentation Polish ✅<a class="anchor" aria-label="anchor" href="#phase-11-documentation-polish-"></a></h4>
+<ul><li>
+<code>vignettes/tcrdistR-getting-started.Rmd</code> — added sections: Per-Component Distances, Single-Chain Mode, Standardizing TCR Data (<code>as_tcr_df</code>)</li>
+<li>
+<code>vignettes/tcrdistR-advanced.Rmd</code> — added sections: UMAP Visualization, TCR Network Visualization</li>
+<li>
+<code>vignettes/tcrdistR-visualization.Rmd</code> — added section: TCR Network Plot</li>
+<li>
+<code>vignettes/tcrdistR-tcrrep-workflow.Rmd</code> — added section: Single-Chain TCRrep</li>
+<li>
+<code>README.Rmd</code> — added per-component and single-chain examples to quick start, updated description</li>
 </ul><hr></div>
 </div>
 <div class="section level2">

@@ -22,23 +22,12 @@ tcrdist_matrix(
 
 - tcrs:
 
-  A `data.frame` with at least the following columns:
-
-  `va`
-
-  :   Character. Alpha-chain V-gene allele, e.g. `"TRAV1-1*01"`.
-
-  `cdr3a`
-
-  :   Character. Alpha-chain CDR3 amino acid sequence.
-
-  `vb`
-
-  :   Character. Beta-chain V-gene allele, e.g. `"TRBV19*01"`.
-
-  `cdr3b`
-
-  :   Character. Beta-chain CDR3 amino acid sequence.
+  A `data.frame` with columns for one or both TCR chains. For paired
+  alpha-beta input, requires `va`, `cdr3a`, `vb`, `cdr3b`. For
+  single-chain input, only the columns for one chain are needed (e.g.,
+  `vb` and `cdr3b` for beta-only). The missing chain is filled with
+  dummy values internally, and `components` is automatically set to
+  `"alpha"` or `"beta"`.
 
 - organism:
 
@@ -50,7 +39,8 @@ tcrdist_matrix(
   Character. Which distance components to include. Presets: `"all"`
   (default), `"cdr3"` (CDR3 only), `"v_region"` (CDR1+CDR2+CDR2.5 only),
   `"alpha"` (alpha chain), `"beta"` (beta chain). Or a character vector
-  of individual terms: `"va"`, `"cdr3a"`, `"vb"`, `"cdr3b"`.
+  of individual terms: `"va"`, `"cdr3a"`, `"vb"`, `"cdr3b"`. For
+  single-chain input, defaults to the present chain.
 
 - weight_cdr3:
 
@@ -95,7 +85,8 @@ mat <- tcrdist_matrix(tcrs, "human")
 # CDR3-only distance
 mat_cdr3 <- tcrdist_matrix(tcrs, "human", components = "cdr3")
 
-# Alpha chain only
-mat_alpha <- tcrdist_matrix(tcrs, "human", components = "alpha")
+# Beta-only (single-chain) input
+beta_only <- tcrs[, c("vb", "cdr3b")]
+mat_beta <- tcrdist_matrix(beta_only, "human")
 # }
 ```

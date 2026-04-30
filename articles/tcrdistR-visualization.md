@@ -174,6 +174,44 @@ plot_cdr3_logo(pa_sub$cdr3a, chain = "alpha", method = "prob",
 
 ![](tcrdistR-visualization_files/figure-html/logo-prob-1.png)
 
+## TCR Network Plot
+
+Visualize TCR similarity as a network graph. Nodes are TCRs, edges
+connect TCRs within a distance threshold. Requires the igraph package.
+
+``` r
+# Build network with auto-detected threshold
+net <- compute_tcr_network(pa_sub, organism = "mouse")
+#> Auto-detected distance threshold: 216.7
+```
+
+![](tcrdistR-visualization_files/figure-html/network-1.png)
+
+``` r
+
+# Color by a vertex attribute (stored from the input data.frame)
+plot_tcr_network(net, color_by = "subject",
+                 vertex_size = 3, title = "PA TCR Network")
+```
+
+![](tcrdistR-visualization_files/figure-html/network-2.png)
+
+Control the threshold and prune isolated nodes:
+
+``` r
+net2 <- compute_tcr_network(pa_sub, organism = "mouse",
+                            threshold = 48, min_edges = 2)
+```
+
+![](tcrdistR-visualization_files/figure-html/network-custom-1.png)
+
+``` r
+plot_tcr_network(net2, vertex_size = 3,
+                 title = "Threshold=48, min_edges=2")
+```
+
+![](tcrdistR-visualization_files/figure-html/network-custom-2.png)
+
 ## Combining Plots
 
 Use the patchwork package to arrange multiple plots:

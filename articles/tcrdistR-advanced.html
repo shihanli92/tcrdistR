@@ -297,12 +297,45 @@ pairs of TCRs (one from each dataset) within a specified radius:</p>
 <span><span class="co">#&gt; 6   CALGKNYNQGKLIF   CASDRAGEQYF    CALGEGSNYKLTF  CASSLGGEQYF      93</span></span></code></pre></div>
 </div>
 <div class="section level2">
+<h2 id="umap-visualization">UMAP Visualization<a class="anchor" aria-label="anchor" href="#umap-visualization"></a>
+</h2>
+<p>Embed TCRs in 2D using UMAP computed directly from TCRdist KNN
+neighbors:</p>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">umap</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_tcrdist_umap.html">compute_tcrdist_umap</a></span><span class="op">(</span><span class="va">pa</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, K <span class="op">=</span> <span class="fl">15L</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># umap$embeddings is an N x 2 matrix</span></span>
+<span><span class="fu"><a href="../reference/plot_tcr_scatter.html">plot_tcr_scatter</a></span><span class="op">(</span></span>
+<span>  <span class="va">umap</span><span class="op">$</span><span class="va">embeddings</span>,</span>
+<span>  color_by <span class="op">=</span> <span class="va">pa</span><span class="op">$</span><span class="va">subject</span>,</span>
+<span>  axis_label_prefix <span class="op">=</span> <span class="st">"UMAP"</span>,</span>
+<span>  point_size <span class="op">=</span> <span class="fl">2</span></span>
+<span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="tcr-network-visualization">TCR Network Visualization<a class="anchor" aria-label="anchor" href="#tcr-network-visualization"></a>
+</h2>
+<p>Build an igraph-based TCR similarity network. TCRs become nodes,
+edges connect TCRs within a distance threshold. The threshold can be set
+manually or auto-detected from the bimodal distance distribution:</p>
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Auto-detect threshold from distance distribution</span></span>
+<span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_tcr_network.html">compute_tcr_network</a></span><span class="op">(</span><span class="va">pa</span>, organism <span class="op">=</span> <span class="st">"mouse"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Color by vertex attribute name (metadata stored in the graph)</span></span>
+<span><span class="fu"><a href="../reference/plot_tcr_network.html">plot_tcr_network</a></span><span class="op">(</span><span class="va">net</span>, color_by <span class="op">=</span> <span class="st">"epitope"</span>, vertex_size <span class="op">=</span> <span class="fl">3</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Manual threshold with minimum edge pruning</span></span>
+<span><span class="va">net2</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_tcr_network.html">compute_tcr_network</a></span><span class="op">(</span><span class="va">pa</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, threshold <span class="op">=</span> <span class="fl">48</span>,</span>
+<span>                            min_edges <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
 <h2 id="cd8-scoring">CD8 Scoring<a class="anchor" aria-label="anchor" href="#cd8-scoring"></a>
 </h2>
 <p>Score TCRs for CD8 phenotype using a logistic regression model
 trained on known CD4/CD8 repertoires. This is only available for human
 TCRs:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_cd8_score_table_column.html">make_cd8_score_table_column</a></span><span class="op">(</span><span class="va">human_tcrs</span><span class="op">)</span></span>
 <span><span class="co"># Returns a numeric vector of CD8 probability scores</span></span></code></pre></div>
 </div>
