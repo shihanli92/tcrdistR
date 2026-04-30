@@ -11,6 +11,7 @@ tcrdist_sparse(
   tcrs,
   organism,
   threshold,
+  components = "all",
   weight_cdr3 = WEIGHT_CDR3_REGION,
   gap_penalty_cdr3 = GAP_PENALTY_CDR3_REGION
 )
@@ -46,6 +47,12 @@ tcrdist_sparse(
 
   Numeric. Maximum distance to include. Pairs with distance strictly
   greater than `threshold` are omitted. Must be \>= 0.
+
+- components:
+
+  Character. Which distance components to include. See
+  [`tcrdist_matrix`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_matrix.md)
+  for details. Default `"all"`.
 
 - weight_cdr3:
 

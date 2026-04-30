@@ -13,6 +13,7 @@ tcrdist_radius_neighbors(
   radius,
   agroups = NULL,
   bgroups = NULL,
+  components = "all",
   weight_cdr3 = WEIGHT_CDR3_REGION,
   gap_penalty_cdr3 = GAP_PENALTY_CDR3_REGION
 )
@@ -57,6 +58,12 @@ tcrdist_radius_neighbors(
 - bgroups:
 
   Integer vector of length N, or `NULL`. Beta-chain group assignments.
+
+- components:
+
+  Character. Which distance components to include. See
+  [`tcrdist_matrix`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_matrix.md)
+  for details. Default `"all"`.
 
 - weight_cdr3:
 

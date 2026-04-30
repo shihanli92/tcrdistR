@@ -58,6 +58,7 @@
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-parse_screpertoire_ctgene.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-parse_tcr_junctions.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-resample_shuffled_tcr_chains.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-resolve_components.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-run_clustering.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-run_umap_from_knn.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-single_linkage_clumping.html</loc></url>
@@ -65,6 +66,7 @@
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-sparse_to_edgelist.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-standardize_columns.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-validate_tcr_df.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-zero_v_dist_matrix.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/find_clumping.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/find_meta_clonotypes.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/find_significant_tcrdist_matches.html</loc></url>

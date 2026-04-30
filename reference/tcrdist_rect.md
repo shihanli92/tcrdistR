@@ -13,6 +13,7 @@ tcrdist_rect(
   query,
   ref,
   organism,
+  components = "all",
   weight_cdr3 = WEIGHT_CDR3_REGION,
   gap_penalty_cdr3 = GAP_PENALTY_CDR3_REGION
 )
@@ -48,6 +49,12 @@ tcrdist_rect(
 
   Character string. Organism key understood by `load_gene_database`,
   e.g. `"human"` or `"mouse"`.
+
+- components:
+
+  Character. Which distance components to include. See
+  [`tcrdist_matrix`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_matrix.md)
+  for details. Default `"all"`.
 
 - weight_cdr3:
 

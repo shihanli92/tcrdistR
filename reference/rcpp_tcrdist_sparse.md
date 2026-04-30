@@ -15,8 +15,10 @@ rcpp_tcrdist_sparse(
   v_dist_a,
   v_dist_b,
   threshold,
-  weight_cdr3_region = 3L,
-  gap_penalty_cdr3_region = 12L
+  weight_cdr3_a = 3L,
+  gap_penalty_cdr3_a = 12L,
+  weight_cdr3_b = 3L,
+  gap_penalty_cdr3_b = 12L
 )
 ```
 

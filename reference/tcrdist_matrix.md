@@ -12,6 +12,7 @@ C++ implementation for performance.
 tcrdist_matrix(
   tcrs,
   organism,
+  components = "all",
   weight_cdr3 = WEIGHT_CDR3_REGION,
   gap_penalty_cdr3 = GAP_PENALTY_CDR3_REGION
 )
@@ -43,6 +44,13 @@ tcrdist_matrix(
 
   Character string. Organism key understood by `load_gene_database`,
   e.g. `"human"` or `"mouse"`.
+
+- components:
+
+  Character. Which distance components to include. Presets: `"all"`
+  (default), `"cdr3"` (CDR3 only), `"v_region"` (CDR1+CDR2+CDR2.5 only),
+  `"alpha"` (alpha chain), `"beta"` (beta chain). Or a character vector
+  of individual terms: `"va"`, `"cdr3a"`, `"vb"`, `"cdr3b"`.
 
 - weight_cdr3:
 
@@ -83,5 +91,11 @@ tcrs <- data.frame(
   stringsAsFactors = FALSE
 )
 mat <- tcrdist_matrix(tcrs, "human")
+
+# CDR3-only distance
+mat_cdr3 <- tcrdist_matrix(tcrs, "human", components = "cdr3")
+
+# Alpha chain only
+mat_alpha <- tcrdist_matrix(tcrs, "human", components = "alpha")
 # }
 ```

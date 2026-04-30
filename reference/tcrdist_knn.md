@@ -16,6 +16,7 @@ tcrdist_knn(
   agroups = NULL,
   bgroups = NULL,
   sort_nbrs = TRUE,
+  components = "all",
   weight_cdr3 = WEIGHT_CDR3_REGION,
   gap_penalty_cdr3 = GAP_PENALTY_CDR3_REGION
 )
@@ -67,6 +68,12 @@ tcrdist_knn(
 
   Logical. If `TRUE` (default), sort each row's K neighbors by ascending
   distance.
+
+- components:
+
+  Character. Which distance components to include. See
+  [`tcrdist_matrix`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_matrix.md)
+  for details. Default `"all"`.
 
 - weight_cdr3:
 
