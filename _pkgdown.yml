@@ -11,6 +11,7 @@ reference:
       - TCRrep
       - show,TCRrep-method
       - subset,TCRrep-method
+      - subset-TCRrep
 
   - title: "Distance Computation"
     desc: "Pairwise TCRdist distance calculations"
