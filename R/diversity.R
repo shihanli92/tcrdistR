@@ -14,8 +14,29 @@
 #' clonotype counts. For \code{order=2}, this is the classical Simpson's
 #' diversity index. Higher orders give more weight to dominant clonotypes.
 #'
-#' The effective number of species (Hill number) is also returned:
-#' \code{D = 1 / (1 - Z^(1/r))}.
+#' @details
+#' The diversity index \eqn{Z_r} is the probability that \eqn{r} randomly
+#' drawn individuals (without replacement) all belong to the same species:
+#'
+#' \deqn{Z_r = \sum_i \frac{c_i}{n} \prod_{k=1}^{r-1} \frac{c_i - k}{n - k}}
+#'
+#' where \eqn{c_i} is the count of clonotype \eqn{i} and \eqn{n = \sum c_i}.
+#' The returned entropy is \eqn{1 - Z_r} (probability of drawing \eqn{r}
+#' different species). For \eqn{r=2} this is the classical Simpson's diversity.
+#'
+#' The effective number of species (Hill number) is:
+#' \eqn{D = 1 / Z_r^{1/(r-1)}}.
+#'
+#' Confidence intervals use the delta method with the multinomial variance
+#' of \eqn{Z_r}. For \eqn{r=2}, the exact gradient
+#' \eqn{\partial Z / \partial p_i = 2 p_i} is used; for higher orders,
+#' an approximation \eqn{r \cdot p_i^{r-1}} is applied.
+#'
+#' @references
+#' Hill, M. O. (1973). Diversity and evenness: a unifying notation and its
+#' consequences. \emph{Ecology}, 54(2), 427--432.
+#'
+#' Jost, L. (2006). Entropy and diversity. \emph{Oikos}, 113(2), 363--375.
 #'
 #' @param counts Integer vector. Clonotype counts (positive integers).
 #' @param order Integer. Order of the diversity index. Default \code{2L}
@@ -137,6 +158,19 @@ tcr_diversity <- function(counts, order = 2L, ci = TRUE, alpha = 0.05) {
 #' Computes diversity accounting for sequence similarity: two clonotypes
 #' are considered "the same" if their TCRdist is within \code{threshold}.
 #' This gives lower diversity for repertoires with many similar sequences.
+#'
+#' @details
+#' For \code{order=2}, the fuzzy Simpson's index is computed analytically:
+#'
+#' \deqn{Z_{fuzzy} = \frac{\sum_{i,j} c_i \cdot c_j \cdot
+#'   I(d(i,j) \le threshold)}{(\sum_i c_i)^2}}
+#'
+#' where \eqn{I(\cdot)} is the indicator function and \eqn{d(i,j)} is the
+#' TCRdist between clonotypes \eqn{i} and \eqn{j}. The fuzzy diversity is
+#' \eqn{1 - Z_{fuzzy}}. This is always \eqn{\le} the standard Simpson's
+#' diversity because merging similar clonotypes increases the concentration.
+#'
+#' For higher orders, a sampling-based approximation is used (10,000 draws).
 #'
 #' @param tcr_df Data.frame with TCR columns (\code{va}, \code{vb},
 #'   \code{cdr3a}, \code{cdr3b}).

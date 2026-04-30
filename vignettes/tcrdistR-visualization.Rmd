@@ -230,3 +230,38 @@ p4 <- plot_gene_usage(pa, "vb", title = "V-beta")
 (p1 | p2) / (p3 | p4) +
   plot_annotation(title = "PA Repertoire Overview")
 ```
+
+## Saving Publication-Quality Figures
+
+All tcrdistR plot functions return ggplot objects, so you can use
+`ggplot2::ggsave()` to export high-resolution figures:
+
+```{r save-figures, eval=FALSE}
+library(ggplot2)
+
+p <- plot_tcr_scatter(
+  pca$embeddings[, 1:2],
+  color_by = mixed_sub$epitope,
+  title = "Kernel PCA",
+  point_size = 2
+)
+
+# PDF (vector format, best for journals)
+ggsave("figure1.pdf", p, width = 6, height = 5)
+
+# PNG (raster, good for presentations)
+ggsave("figure1.png", p, width = 6, height = 5, dpi = 300)
+
+# Customize theme for publication
+p + theme(
+  text = element_text(size = 14),
+  plot.title = element_text(size = 16, face = "bold"),
+  legend.position = "bottom"
+)
+```
+
+## Session Info
+
+```{r session-info}
+sessionInfo()
+```

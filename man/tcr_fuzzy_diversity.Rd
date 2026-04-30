@@ -39,6 +39,19 @@ Computes diversity accounting for sequence similarity: two clonotypes
 are considered "the same" if their TCRdist is within \code{threshold}.
 This gives lower diversity for repertoires with many similar sequences.
 }
+\details{
+For \code{order=2}, the fuzzy Simpson's index is computed analytically:
+
+\deqn{Z_{fuzzy} = \frac{\sum_{i,j} c_i \cdot c_j \cdot
+  I(d(i,j) \le threshold)}{(\sum_i c_i)^2}}
+
+where \eqn{I(\cdot)} is the indicator function and \eqn{d(i,j)} is the
+TCRdist between clonotypes \eqn{i} and \eqn{j}. The fuzzy diversity is
+\eqn{1 - Z_{fuzzy}}. This is always \eqn{\le} the standard Simpson's
+diversity because merging similar clonotypes increases the concentration.
+
+For higher orders, a sampling-based approximation is used (10,000 draws).
+}
 \examples{
 \dontrun{
 tcr_fuzzy_diversity(tcr_df, "human", threshold = 50)

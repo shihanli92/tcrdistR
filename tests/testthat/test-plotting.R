@@ -349,6 +349,75 @@ test_that("plot_tcr_scatter custom palette", {
     expect_s3_class(p, "gg")
 })
 
+test_that("plot_tcr_scatter facet_by with vector", {
+    skip_if_not_installed("ggplot2")
+
+    coords <- matrix(rnorm(20), ncol = 2)
+    p <- plot_tcr_scatter(coords, facet_by = rep(c("A", "B"), 5))
+    expect_s3_class(p, "gg")
+})
+
+test_that("plot_tcr_scatter facet_by with 2-column data.frame", {
+    skip_if_not_installed("ggplot2")
+
+    coords <- matrix(rnorm(20), ncol = 2)
+    facets <- data.frame(row = rep(c("R1", "R2"), 5),
+                          col = rep(c("C1", "C2"), each = 5))
+    p <- plot_tcr_scatter(coords, color_by = rep(c("X", "Y"), 5),
+                           facet_by = facets)
+    expect_s3_class(p, "gg")
+})
+
+test_that("plot_tcr_scatter highlight with logical vector", {
+    skip_if_not_installed("ggplot2")
+
+    coords <- matrix(rnorm(20), ncol = 2)
+    hl <- c(TRUE, TRUE, TRUE, rep(FALSE, 7))
+    p <- plot_tcr_scatter(coords, highlight = hl)
+    expect_s3_class(p, "gg")
+})
+
+test_that("plot_tcr_scatter highlight with integer indices", {
+    skip_if_not_installed("ggplot2")
+
+    coords <- matrix(rnorm(20), ncol = 2)
+    p <- plot_tcr_scatter(coords, highlight = c(1L, 5L, 10L))
+    expect_s3_class(p, "gg")
+})
+
+test_that("plot_tcr_scatter highlight with color_by", {
+    skip_if_not_installed("ggplot2")
+
+    coords <- matrix(rnorm(20), ncol = 2)
+    hl <- c(TRUE, TRUE, TRUE, rep(FALSE, 7))
+    p <- plot_tcr_scatter(coords, color_by = rep(c("A", "B"), 5),
+                           highlight = hl)
+    expect_s3_class(p, "gg")
+})
+
+test_that("plot_tcr_scatter metadata column-name lookup", {
+    skip_if_not_installed("ggplot2")
+
+    coords <- matrix(rnorm(20), ncol = 2)
+    meta <- data.frame(group = rep(c("A", "B"), 5),
+                        stringsAsFactors = FALSE)
+    p <- plot_tcr_scatter(coords, color_by = "group", facet_by = "group",
+                           metadata = meta)
+    expect_s3_class(p, "gg")
+})
+
+test_that("plot_tcr_scatter metadata named-list highlight", {
+    skip_if_not_installed("ggplot2")
+
+    coords <- matrix(rnorm(20), ncol = 2)
+    meta <- data.frame(group = rep(c("A", "B"), 5),
+                        site = rep(c("X", "Y", "X", "Y", "X"), 2),
+                        stringsAsFactors = FALSE)
+    p <- plot_tcr_scatter(coords, highlight = list(group = "A", site = "X"),
+                           metadata = meta)
+    expect_s3_class(p, "gg")
+})
+
 
 # ===========================================================================
 # CDR3 logo tests (require ggseqlogo)

@@ -129,9 +129,11 @@ articles:
   - title: "Getting Started"
     contents:
       - tcrdistR-getting-started
+      - tcrdistR-glossary
   - title: "Guides"
     contents:
       - tcrdistR-tcrrep-workflow
+      - tcrdistR-comparing-repertoires
       - tcrdistR-advanced
       - tcrdistR-visualization
 

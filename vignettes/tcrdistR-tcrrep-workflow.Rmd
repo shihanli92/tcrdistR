@@ -95,6 +95,12 @@ plot_tcrdist_dendrogram(
 
 ## Kernel PCA and Scatter Plots
 
+Kernel PCA projects the high-dimensional distance matrix into a few key
+axes (principal components) that capture the most variation. TCRs that
+cluster together in this 2D view share similar sequences --- if they also
+share the same epitope label, that confirms that TCR sequence similarity
+predicts antigen specificity.
+
 Compute a kernel PCA embedding from the TCRrep:
 
 ```{r kpca}
@@ -228,6 +234,11 @@ plot_cdr3_logo(
 
 ## Neighborhood Test
 
+The neighborhood test asks: for each TCR, are the nearby TCRs (within a
+distance radius) enriched for a particular label compared to the overall
+dataset? A significant result means that antigen specificity is encoded in
+the TCR sequence --- nearby TCRs tend to recognize the same epitope.
+
 Test whether epitope labels are enriched in TCR neighborhoods:
 
 ```{r nhood}
@@ -240,6 +251,11 @@ head(nhood[order(nhood$p_adjusted), c("index", "n_neighbors", "p_value", "p_adju
 ```
 
 ## Meta-Clonotypes
+
+Meta-clonotypes are groups of similar TCRs found in multiple individuals.
+They represent convergent immune responses --- different people independently
+generate similar TCRs against the same antigen. These shared motifs can
+serve as biomarkers of antigen exposure or vaccine response.
 
 Find TCR motifs shared across subjects:
 
@@ -261,13 +277,15 @@ rep@meta_clonotypes <- meta
 
 ## Diversity
 
-Compute repertoire diversity using the clone counts stored in the TCRrep:
+Diversity metrics summarize how "spread out" a repertoire is. High clonality
+(close to 1) suggests antigen-driven clonal expansion; low clonality (close
+to 0) suggests a broad, polyclonal sample.
 
 ```{r diversity}
 div <- tcr_diversity(rep@clone_df$count, order = 2)
-div$effective_number
+div$effective_number  # "equivalent number of equally-abundant clonotypes"
 
-tcr_clonality(rep@clone_df$count)
+tcr_clonality(rep@clone_df$count)  # 0 = diverse, 1 = dominated
 ```
 
 ## Combined Panel
@@ -286,4 +304,33 @@ p4 <- plot_gene_usage(rep@clone_df, "vb", title = "V-beta usage")
 
 (p1 | p2) / (p3 | p4) +
   plot_annotation(title = "DASH Repertoire Overview")
+```
+
+## Integration with Other Tools
+
+tcrdistR works with standard R data.frames, making it easy to integrate
+with other single-cell and repertoire analysis tools:
+
+- **Seurat / scRepertoire**: Extract TCR data from Seurat metadata using
+  `as_tcr_df()`, run tcrdistR analyses, then add results (clusters,
+  diversity scores) back to the Seurat object's metadata.
+- **immunarch**: Use tcrdistR for distance-based analyses (neighborhood
+  tests, meta-clonotypes) and immunarch for its gene usage statistics and
+  tracking plots.
+- **Downstream**: All tcrdistR results are standard R objects (data.frames,
+  matrices, ggplot2 plots) that work with any R pipeline.
+
+```{r seurat-example, eval=FALSE}
+# Example: Seurat integration (pseudocode)
+# tcr_meta <- seurat_obj@meta.data[, c("TRAV", "CDR3a", "TRBV", "CDR3b")]
+# tcrs <- as_tcr_df(tcr_meta, col_map = c(va="TRAV", cdr3a="CDR3a",
+#                                          vb="TRBV", cdr3b="CDR3b"))
+# clusters <- cluster_tcrs(tcrs, "human", k = 10)
+# seurat_obj$tcr_cluster <- clusters
+```
+
+## Session Info
+
+```{r session-info}
+sessionInfo()
 ```

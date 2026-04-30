@@ -52,6 +52,20 @@ distributed among its TCRdist neighbors compared to the full repertoire.
 Supports Fisher's exact test (binary variables) and chi-squared test
 (multi-category variables).
 }
+\details{
+For each TCR \eqn{i}, the test constructs a 2x2 (Fisher) or 2xK
+(chi-squared) contingency table comparing category frequencies inside
+the neighborhood (TCRs within \code{radius}) versus outside. The null
+hypothesis is that the neighborhood is a random sample of the full
+repertoire with respect to the variable.
+
+P-values are adjusted across all N tests using the method specified by
+\code{p_adjust_method} (default: Benjamini-Hochberg, which controls
+the false discovery rate). Note that TCR neighborhoods are spatially
+correlated (nearby TCRs share neighbors), so the effective number of
+independent tests is smaller than N. BH remains a reasonable choice
+but may be conservative.
+}
 \examples{
 \dontrun{
 result <- neighborhood_test(tcr_df, "human",
@@ -59,6 +73,10 @@ result <- neighborhood_test(tcr_df, "human",
 significant <- result[result$p_adjusted < 0.05, ]
 }
 
+}
+\references{
+Dash, P. et al. (2017). Quantifiable predictive features define
+epitope-specific T cell receptor repertoires. \emph{Nature}, 547, 89--93.
 }
 \seealso{
 \code{\link{tcrdist_hclust}}, \code{\link{cluster_tcrs}}, \code{\link{find_clumping}}

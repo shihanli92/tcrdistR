@@ -1,0 +1,267 @@
+---
+title: "Comparing TCR Repertoires"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Comparing TCR Repertoires}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 6,
+  fig.height = 4,
+  dpi = 96
+)
+has_viz <- requireNamespace("ggplot2", quietly = TRUE)
+has_patch <- has_viz && requireNamespace("patchwork", quietly = TRUE)
+```
+
+## Introduction
+
+Comparing TCR repertoires between conditions is one of the most common
+analysis tasks in immunology. Typical questions include:
+
+- Do responders and non-responders share different TCR signatures?
+- How does the repertoire change before and after treatment?
+- Which epitope-specific responses are more clonally expanded?
+- Are there public clonotypes shared across patients?
+
+This vignette demonstrates comparison workflows using the DASH dataset,
+where we treat different epitope-specific responses as different
+"conditions" to compare.
+
+## Setup
+
+```{r setup}
+library(tcrdistR)
+data(dash)
+
+# Split into two "conditions" for comparison
+pa <- dash[dash$epitope == "PA", ]
+np <- dash[dash$epitope == "NP", ]
+
+cat("PA-specific TCRs:", nrow(pa), "\n")
+cat("NP-specific TCRs:", nrow(np), "\n")
+```
+
+## Repertoire Overlap
+
+**Biological question:** Do two samples share the same clonotypes?
+
+`tcr_repertoire_overlap()` compares clone sharing between two samples
+using three complementary metrics:
+
+- **Jaccard index**: What fraction of unique clonotypes are shared?
+  (presence/absence only)
+- **Morisita-Horn**: Do the two samples share the same *dominant*
+  clonotypes? (abundance-weighted)
+- **Overlap coefficient**: What fraction of the *smaller* sample's
+  clonotypes are found in the larger sample?
+
+```{r overlap}
+# Create named count vectors (names = clonotype identifiers)
+pa_counts <- table(pa$cdr3b)
+np_counts <- table(np$cdr3b)
+
+ov <- tcr_repertoire_overlap(pa_counts, np_counts)
+ov
+```
+
+A Jaccard of 0 means no shared CDR3-beta sequences between PA and NP
+responses --- these epitopes drive completely distinct TCR populations.
+This is expected for well-separated viral epitopes.
+
+### Pairwise overlap across all epitopes
+
+```{r overlap-matrix}
+epitopes <- sort(unique(dash$epitope))
+n_ep <- length(epitopes)
+jaccard_mat <- matrix(0, n_ep, n_ep, dimnames = list(epitopes, epitopes))
+
+for (i in seq_len(n_ep)) {
+    counts_i <- table(dash$cdr3b[dash$epitope == epitopes[i]])
+    for (j in seq_len(i)) {
+        counts_j <- table(dash$cdr3b[dash$epitope == epitopes[j]])
+        ov <- tcr_repertoire_overlap(counts_i, counts_j, metrics = "jaccard")
+        jaccard_mat[i, j] <- ov$jaccard
+        jaccard_mat[j, i] <- ov$jaccard
+    }
+}
+
+round(jaccard_mat, 3)
+```
+
+Epitopes with higher overlap share more CDR3 sequences, which could
+indicate cross-reactive TCRs or convergent V-gene usage.
+
+## Comparative Diversity
+
+**Biological question:** Which immune responses are dominated by a few
+expanded clones, and which are broadly polyclonal?
+
+A highly clonal response (clonality near 1) suggests strong
+antigen-driven expansion of specific T cell clones. A diverse response
+(clonality near 0) suggests either a polyclonal response or insufficient
+stimulation.
+
+```{r diversity-comparison}
+diversity_table <- do.call(rbind, lapply(epitopes, function(ep) {
+    counts <- dash$count[dash$epitope == ep]
+    div <- tcr_diversity(counts, order = 2, ci = FALSE)
+    data.frame(
+        epitope = ep,
+        n_clones = tcr_richness(counts),
+        clonality = round(tcr_clonality(counts), 3),
+        shannon = round(tcr_shannon_entropy(counts), 3),
+        simpson = round(div$entropy, 3),
+        effective_n = round(div$effective_number, 1),
+        gini = round(tcr_gini(counts), 3),
+        stringsAsFactors = FALSE
+    )
+}))
+
+diversity_table
+```
+
+**Interpreting the results:**
+
+- **n_clones** (richness): How many distinct clonotypes were detected.
+- **clonality**: 0 = maximally diverse, 1 = single dominant clone.
+  Epitopes with high clonality have strong clonal expansions.
+- **effective_n**: "How many equally-abundant clonotypes would give this
+  diversity?" Lower effective_n relative to n_clones means the repertoire
+  is dominated by a few clones.
+- **gini**: Inequality in clone sizes. High Gini means a few clones
+  dominate; low Gini means clones are evenly distributed.
+
+## Visualizing Repertoire Differences
+
+### Gene usage comparison
+
+**Biological question:** Do different epitope responses use different
+V-genes?
+
+```{r gene-usage-compare, eval=has_patch, fig.width=10, fig.height=4}
+library(ggplot2)
+library(patchwork)
+
+p1 <- plot_gene_usage(pa, "vb", title = "V-beta usage (PA)")
+p2 <- plot_gene_usage(np, "vb", title = "V-beta usage (NP)")
+p1 | p2
+```
+
+Differences in V-gene usage between conditions can indicate germline-encoded
+contributions to antigen recognition. A V-gene enriched in one condition
+may encode CDR1/CDR2 loops that contact the target MHC-peptide complex.
+
+### CDR3 length distributions
+
+```{r cdr3-length, eval=has_patch, fig.width=10, fig.height=4}
+p1 <- plot_cdr3_length(pa, chain = "beta", title = "CDR3-beta length (PA)")
+p2 <- plot_cdr3_length(np, chain = "beta", title = "CDR3-beta length (NP)")
+p1 | p2
+```
+
+CDR3 length differences can reflect constraints on peptide binding ---
+some epitopes require longer or shorter CDR3 loops for optimal contact.
+
+### Scatter plots with faceting and highlighting
+
+Visualize the combined repertoire in 2D, colored and faceted by epitope:
+
+```{r scatter-facet, eval=has_viz, fig.height=5, fig.width=8}
+# Combine PA and NP for joint embedding
+combined <- rbind(pa[1:100, ], np[1:100, ])
+pca <- compute_tcrdist_kernel_pca(combined, "mouse", n_components = 5L)
+
+plot_tcr_scatter(
+    pca$embeddings[, 1:2],
+    color_by = combined$epitope,
+    title = "PA vs NP in PCA space",
+    point_size = 1.5
+)
+```
+
+Highlight one epitope against the background of the full repertoire:
+
+```{r scatter-highlight, eval=has_viz, fig.height=5}
+plot_tcr_scatter(
+    pca$embeddings[, 1:2],
+    metadata = combined,
+    color_by = "epitope",
+    highlight = list(epitope = "PA"),
+    title = "PA clones highlighted",
+    point_size = 1.5
+)
+```
+
+## Shared Clonotype Identification
+
+**Biological question:** Are there public TCR sequences shared across
+multiple individuals?
+
+Public clonotypes --- identical or near-identical TCR sequences found in
+different people --- suggest convergent immune responses driven by common
+antigens. These can serve as biomarkers of infection or vaccination.
+
+```{r public-clonotypes}
+# For PA-specific TCRs, count how many subjects share each CDR3-beta
+pa_by_subject <- split(pa$cdr3b, pa$subject)
+all_cdr3b <- unique(pa$cdr3b)
+
+# Count subjects per clonotype
+subject_counts <- sapply(all_cdr3b, function(seq) {
+    sum(sapply(pa_by_subject, function(seqs) seq %in% seqs))
+})
+
+# Most public clonotypes
+public <- sort(subject_counts, decreasing = TRUE)
+head(public, 10)
+
+cat("\nClonotypes found in >= 3 subjects:",
+    sum(public >= 3), "of", length(public), "\n")
+```
+
+For distance-based public motifs (allowing near-matches across
+individuals), use `find_meta_clonotypes()`:
+
+```{r meta-public}
+meta <- find_meta_clonotypes(
+    pa, organism = "mouse",
+    radius = 48, min_nsubject = 3L,
+    subject_col = "subject"
+)
+cat("Meta-clonotypes shared across >= 3 subjects:", nrow(meta), "\n")
+if (nrow(meta) > 0) {
+    head(meta[, c("cdr3a", "cdr3b", "K_neighbors", "nsubject")])
+}
+```
+
+## Distance-Based Comparison
+
+**Biological question:** How structurally different are two repertoires
+in TCR sequence space?
+
+Use `tcrdist_join()` to find TCRs in one sample that are similar to TCRs
+in another:
+
+```{r distance-join}
+# Find PA TCRs within distance 100 of NP TCRs
+pa_sub <- pa[1:50, ]
+np_sub <- np[1:50, ]
+cross_matches <- tcrdist_join(pa_sub, np_sub, organism = "mouse",
+                              radius = 100, max_n = 3)
+cat("Cross-epitope TCR pairs within radius 100:", nrow(cross_matches), "\n")
+```
+
+Few or no cross-matches at a tight radius confirms that the two epitope
+responses use structurally distinct TCR repertoires.
+
+## Session Info
+
+```{r session-info}
+sessionInfo()
+```

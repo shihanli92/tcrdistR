@@ -59,9 +59,17 @@ table(clusters_h)
 
 ## Neighborhood Statistical Tests
 
-Test whether epitope specificity is enriched in TCR neighborhoods. This
-computes TCRdist radius-based neighborhoods and runs a statistical test for
-each TCR.
+The neighborhood test asks a key biological question: **is antigen
+specificity encoded in TCR sequence similarity?** For each TCR, it defines
+a "neighborhood" (all TCRs within a distance radius), then tests whether
+a variable of interest (e.g., epitope label) is enriched in the neighborhood
+compared to the overall dataset.
+
+A significant result (low adjusted p-value, high odds ratio) means that
+knowing a TCR's sequence tells you something about its specificity ---
+nearby TCRs tend to recognize the same antigen. The p-values are adjusted
+for multiple testing using the Benjamini-Hochberg procedure (controls false
+discovery rate).
 
 ```{r nhood-test}
 # Use a mixed-epitope subset for a meaningful test
@@ -90,9 +98,14 @@ result_chi <- neighborhood_test(
 
 ## Meta-Clonotype Discovery
 
-Identify quasi-public TCR motifs shared across multiple subjects. A
-meta-clonotype is defined by a center TCR and a radius: all TCRs within the
-radius from multiple subjects form the meta-clonotype.
+Meta-clonotypes represent convergent immune responses: TCR motifs that
+appear in multiple individuals, suggesting a shared solution to recognizing
+the same antigen. These can serve as biomarkers of antigen exposure,
+infection, or vaccine response.
+
+A meta-clonotype is defined by a center TCR and a distance radius. All
+TCRs within this radius from at least `min_nsubject` different subjects
+form the meta-clonotype.
 
 ```{r meta-clonotypes}
 meta <- find_meta_clonotypes(
@@ -120,9 +133,13 @@ if (nrow(meta) > 0) {
 
 ## Clumping Detection
 
-Test whether TCRs form statistically significant clusters beyond what is
-expected by chance. This uses a background resampling model to compute
-expected neighbor counts.
+Clumping asks whether TCR neighborhoods are larger than expected by chance.
+Even in a random repertoire, some TCRs will be close to each other simply
+because they use the same V-gene or have similar CDR3 lengths. The clumping
+test corrects for this by building a background model through chain
+resampling (shuffling alpha and beta chains independently to break
+biologically meaningful pairing) and comparing observed neighbor counts
+against this null distribution using a Poisson model (Dash et al., 2017).
 
 The `find_clumping()` function requires nucleotide sequences and J-gene
 annotations, which the DASH dataset provides:
@@ -193,11 +210,30 @@ pca_gauss <- compute_tcrdist_kernel_pca(
 head(pca_gauss$eigenvalues)
 ```
 
+### Human TCR example with the flu dataset
+
+tcrdistR also ships with a **flu** dataset containing 2271 human TCRs from
+VDJdb. This dataset works identically with `organism = "human"`:
+
+```{r kpca-flu}
+data(flu)
+flu_sub <- flu[1:200, ]
+
+pca_flu <- compute_tcrdist_kernel_pca(
+  flu_sub, organism = "human", n_components = 10L
+)
+dim(pca_flu$embeddings)
+```
+
 ## Fuzzy Diversity
 
-Compute TCR-aware diversity that accounts for sequence similarity. Unlike
-standard diversity which treats each unique clonotype as completely distinct,
-fuzzy diversity merges clonotypes within a distance threshold:
+Standard diversity treats each unique CDR3 sequence as completely distinct,
+even if two sequences differ by a single amino acid. Fuzzy diversity
+accounts for sequence similarity: clonotypes within a TCRdist threshold
+are considered "the same" for diversity calculations. This gives a more
+biologically meaningful measure when a repertoire contains many closely
+related variants (e.g., from somatic hypermutation or convergent
+recombination):
 
 ```{r fuzzy-div}
 fd <- tcr_fuzzy_diversity(pa, organism = "mouse", threshold = 50)
@@ -263,4 +299,10 @@ known CD4/CD8 repertoires. This is only available for human TCRs:
 ```{r cd8, eval=FALSE}
 scores <- make_cd8_score_table_column(human_tcrs)
 # Returns a numeric vector of CD8 probability scores
+```
+
+## Session Info
+
+```{r session-info}
+sessionInfo()
 ```

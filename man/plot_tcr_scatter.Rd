@@ -15,7 +15,12 @@ plot_tcr_scatter(
   palette = NULL,
   show_labels = FALSE,
   label_size = 3,
-  na_color = "#DDDDDD"
+  na_color = "#DDDDDD",
+  metadata = NULL,
+  facet_by = NULL,
+  highlight = NULL,
+  highlight_color = "#E41A1C",
+  background_alpha = 0.15
 )
 }
 \arguments{
@@ -23,7 +28,8 @@ plot_tcr_scatter(
 
 \item{color_by}{Optional vector of length \code{nrow(coords)}. Numeric
 for continuous coloring (viridis), factor/character for categorical
-coloring (tab10/tab20). \code{NULL} plots all points in gray.}
+coloring (tab10/tab20). \code{NULL} plots all points in gray. When
+\code{metadata} is provided, can be a column name string.}
 
 \item{title}{Optional plot title.}
 
@@ -44,6 +50,29 @@ categorical, add centroid labels. Default \code{FALSE}.}
 \item{label_size}{Numeric. Label text size. Default \code{3}.}
 
 \item{na_color}{Character. Color for NA values. Default \code{"#DDDDDD"}.}
+
+\item{metadata}{Optional data.frame with \code{nrow(coords)} rows.
+When provided, \code{color_by} and \code{facet_by} can be column
+name strings, and \code{highlight} can be a named list of filter
+conditions applied to these columns.}
+
+\item{facet_by}{Optional faceting variable(s). Either a character/factor
+vector for single-variable faceting (\code{facet_wrap}), or a
+data.frame with 1--2 columns for grid faceting (\code{facet_grid}).
+When \code{metadata} is provided, can be a character vector of 1--2
+column names.}
+
+\item{highlight}{Optional. Which points to highlight, with
+non-highlighted points faded to a gray background. Accepts a logical
+vector, integer indices, or a named list for multi-column filtering
+(requires \code{metadata}; e.g.,
+\code{list(epitope = "PA", subject = c("S1", "S2"))}).}
+
+\item{highlight_color}{Character. Color for highlighted points when
+\code{color_by} is \code{NULL}. Default \code{"#E41A1C"}.}
+
+\item{background_alpha}{Numeric. Alpha for non-highlighted points.
+Default \code{0.15}.}
 }
 \value{
 A \code{ggplot} object.
@@ -51,15 +80,33 @@ A \code{ggplot} object.
 \description{
 Generic scatter plot for kernel PCA, UMAP, or any 2D embedding of TCR
 repertoire data. Supports continuous (viridis) and categorical
-(tab10/tab20) coloring with optional centroid labels.
+(tab10/tab20) coloring with optional centroid labels, faceting, and
+clone highlighting.
 }
 \examples{
 \dontrun{
 kpca <- compute_tcrdist_kernel_pca(tcr_df, "human")
 plot_tcr_scatter(kpca$embeddings[, 1:2], color_by = tcr_df$epitope)
+
+# Faceting by epitope
+plot_tcr_scatter(kpca$embeddings[, 1:2], color_by = tcr_df$epitope,
+                 facet_by = tcr_df$epitope)
+
+# Highlight specific clones
+plot_tcr_scatter(kpca$embeddings[, 1:2],
+                 highlight = tcr_df$epitope == "PA")
+
+# Using metadata for column-name lookups
+plot_tcr_scatter(kpca$embeddings[, 1:2],
+                 metadata = tcr_df,
+                 color_by = "epitope",
+                 facet_by = c("epitope", "subject"),
+                 highlight = list(epitope = "PA"))
 }
 
 }
 \seealso{
-\code{\link{compute_tcrdist_kernel_pca}}, \code{\link{plot_tcrdist_heatmap}}
+\code{\link{compute_tcrdist_kernel_pca}},
+\code{\link{compute_tcrdist_umap}},
+\code{\link{plot_tcrdist_heatmap}}
 }

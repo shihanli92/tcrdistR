@@ -32,8 +32,22 @@ clonotype counts. For \code{order=2}, this is the classical Simpson's
 diversity index. Higher orders give more weight to dominant clonotypes.
 }
 \details{
-The effective number of species (Hill number) is also returned:
-\code{D = 1 / (1 - Z^(1/r))}.
+The diversity index \eqn{Z_r} is the probability that \eqn{r} randomly
+drawn individuals (without replacement) all belong to the same species:
+
+\deqn{Z_r = \sum_i \frac{c_i}{n} \prod_{k=1}^{r-1} \frac{c_i - k}{n - k}}
+
+where \eqn{c_i} is the count of clonotype \eqn{i} and \eqn{n = \sum c_i}.
+The returned entropy is \eqn{1 - Z_r} (probability of drawing \eqn{r}
+different species). For \eqn{r=2} this is the classical Simpson's diversity.
+
+The effective number of species (Hill number) is:
+\eqn{D = 1 / Z_r^{1/(r-1)}}.
+
+Confidence intervals use the delta method with the multinomial variance
+of \eqn{Z_r}. For \eqn{r=2}, the exact gradient
+\eqn{\partial Z / \partial p_i = 2 p_i} is used; for higher orders,
+an approximation \eqn{r \cdot p_i^{r-1}} is applied.
 }
 \examples{
 # Uniform distribution: maximum diversity
@@ -42,6 +56,12 @@ tcr_diversity(rep(10, 5))
 # Single dominant clonotype: low diversity
 tcr_diversity(c(100, 1, 1, 1))
 
+}
+\references{
+Hill, M. O. (1973). Diversity and evenness: a unifying notation and its
+consequences. \emph{Ecology}, 54(2), 427--432.
+
+Jost, L. (2006). Entropy and diversity. \emph{Oikos}, 113(2), 363--375.
 }
 \seealso{
 \code{\link{tcr_fuzzy_diversity}}, \code{\link{tcr_richness}}, \code{\link{tcr_clonality}}
