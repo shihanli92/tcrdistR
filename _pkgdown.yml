@@ -10,6 +10,7 @@ reference:
       - TCRrep-class
       - TCRrep
       - show,TCRrep-method
+      - subset,TCRrep-method
 
   - title: "Distance Computation"
     desc: "Pairwise TCRdist distance calculations"

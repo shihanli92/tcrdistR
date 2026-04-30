@@ -414,12 +414,12 @@ tcr_clonality <- function(counts) {
 #' clonotype abundances from two samples. Available metrics:
 #'
 #' \describe{
-#'   \item{Jaccard index}{\code{|A \u2229 B| / |A \u222a B|} — proportion of
-#'     shared clonotype species (presence/absence).}
+#'   \item{Jaccard index}{\code{|A intersect B| / |A union B|} --- proportion
+#'     of shared clonotype species (presence/absence).}
 #'   \item{Morisita-Horn}{\code{2 * sum(p_a * p_b) / (sum(p_a^2) + sum(p_b^2))}
-#'     — abundance-weighted overlap.}
-#'   \item{Overlap coefficient}{\code{|A \u2229 B| / min(|A|, |B|)} — overlap
-#'     normalized by the smaller set.}
+#'     --- abundance-weighted overlap.}
+#'   \item{Overlap coefficient}{\code{|A intersect B| / min(|A|, |B|)} ---
+#'     overlap normalized by the smaller set.}
 #' }
 #'
 #' @param counts_a,counts_b Named numeric vectors of clonotype counts.
