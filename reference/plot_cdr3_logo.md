@@ -15,7 +15,8 @@ plot_cdr3_logo(
   gap_character = "-",
   title = NULL,
   nucseq_src = NULL,
-  show_junction_bars = FALSE
+  show_junction_bars = FALSE,
+  return_junction_pwm = FALSE
 )
 ```
 
@@ -58,9 +59,17 @@ plot_cdr3_logo(
   Logical. If `TRUE` and `nucseq_src` is provided, stack junction bars
   below the logo via patchwork.
 
+- return_junction_pwm:
+
+  Logical. If `TRUE`, return a list with components `plot` (the ggplot
+  logo) and `junction_pwm` (the numeric matrix, or `NULL`). Default
+  `FALSE`.
+
 ## Value
 
 A `ggplot` object (or `patchwork` object if junction bars are included).
+When `return_junction_pwm = TRUE`, a list with `plot` and
+`junction_pwm`.
 
 ## See also
 

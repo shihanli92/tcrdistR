@@ -142,6 +142,12 @@ Plotting functions for TCR repertoire data
   : Plot a CDR3 sequence logo
 - [`plot_junction_bars()`](https://shihanli92.github.io/tcrdistR/reference/plot_junction_bars.md)
   : Plot junction bars showing V/N/D/J nucleotide composition
+- [`plot_vj_gene_logo()`](https://shihanli92.github.io/tcrdistR/reference/plot_vj_gene_logo.md)
+  : Plot a V/J gene usage logo
+- [`plot_tcr_logo_panel()`](https://shihanli92.github.io/tcrdistR/reference/plot_tcr_logo_panel.md)
+  : Plot a composite TCR rearrangement logo panel
+- [`compute_nucseq_src()`](https://shihanli92.github.io/tcrdistR/reference/compute_nucseq_src.md)
+  : Compute nucleotide source annotations for CDR3 sequences
 - [`plot_gene_usage()`](https://shihanli92.github.io/tcrdistR/reference/plot_gene_usage.md)
   : Plot V-gene or J-gene usage frequencies
 - [`plot_tcr_scatter()`](https://shihanli92.github.io/tcrdistR/reference/plot_tcr_scatter.md)
@@ -172,6 +178,8 @@ Built-in datasets
 
 - [`dash`](https://shihanli92.github.io/tcrdistR/reference/dash.md) :
   DASH dataset: paired alpha-beta mouse TCRs across 7 epitopes
+- [`flu`](https://shihanli92.github.io/tcrdistR/reference/flu.md) :
+  Human influenza TCR dataset from VDJdb
 
 ## Utilities
 

@@ -145,6 +145,26 @@ plot_gene_usage(pa, "vb", title = "V-beta usage (PA)")
 
 ![](tcrdistR-visualization_files/figure-html/gene-usage-2.png)
 
+## V/J Gene Logos
+
+[`plot_vj_gene_logo()`](https://shihanli92.github.io/tcrdistR/reference/plot_vj_gene_logo.md)
+renders gene names as text glyphs whose height is proportional to
+frequency — a “sequence logo” style for gene usage:
+
+``` r
+plot_vj_gene_logo(pa$vb, organism = "mouse",
+                  gene_type = "V", chain = "beta")
+```
+
+![](tcrdistR-visualization_files/figure-html/gene-logo-1.png)
+
+``` r
+plot_vj_gene_logo(pa$ja, organism = "mouse",
+                  gene_type = "J", chain = "alpha")
+```
+
+![](tcrdistR-visualization_files/figure-html/gene-logo-2.png)
+
 ## CDR3 Sequence Logos
 
 Display amino acid frequency at each position as a sequence logo. The
@@ -173,6 +193,36 @@ plot_cdr3_logo(pa_sub$cdr3a, chain = "alpha", method = "prob",
 ```
 
 ![](tcrdistR-visualization_files/figure-html/logo-prob-1.png)
+
+## Junction Bars
+
+[`compute_nucseq_src()`](https://shihanli92.github.io/tcrdistR/reference/compute_nucseq_src.md)
+analyzes CDR3 nucleotide sequences to identify V/N/D/J segment origins.
+Pass the result to
+[`plot_cdr3_logo()`](https://shihanli92.github.io/tcrdistR/reference/plot_cdr3_logo.md)
+with `show_junction_bars = TRUE` to display the rearrangement structure:
+
+``` r
+src <- compute_nucseq_src(pa_sub, organism = "mouse", chain = "beta")
+plot_cdr3_logo(pa_sub$cdr3b, chain = "beta",
+               nucseq_src = src, show_junction_bars = TRUE,
+               title = "CDR3-beta with junction bars (PA)")
+```
+
+![](tcrdistR-visualization_files/figure-html/junction-1.png)
+
+## TCR Logo Panel
+
+[`plot_tcr_logo_panel()`](https://shihanli92.github.io/tcrdistR/reference/plot_tcr_logo_panel.md)
+combines V-gene logos, CDR3 sequence logos with junction bars, and
+J-gene logos for both chains into a single composite panel:
+
+``` r
+plot_tcr_logo_panel(pa_sub, organism = "mouse",
+                    title = "PA-specific TCR rearrangement")
+```
+
+![](tcrdistR-visualization_files/figure-html/logo-panel-1.png)
 
 ## TCR Network Plot
 
