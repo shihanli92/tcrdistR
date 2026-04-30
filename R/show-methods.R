@@ -1,6 +1,99 @@
 #' @include classes.R
 NULL
 
+# ---------------------------------------------------------------------------
+# Subsetting: [
+# ---------------------------------------------------------------------------
+
+#' Subset a TCRrep object by row indices
+#'
+#' Subsets a \code{\link{TCRrep}} by clonotype indices. Filters
+#' \code{clone_df} and all associated distance matrices simultaneously.
+#' KNN matrices and meta-clonotypes are cleared since they reference the
+#' original indexing.
+#'
+#' @param x A \code{TCRrep} object.
+#' @param i Row indices: logical, integer, or character (rownames).
+#' @param j Ignored.
+#' @param ... Ignored.
+#' @param drop Ignored.
+#' @return A new \code{TCRrep} object with the selected clonotypes.
+#'
+#' @examples
+#' \donttest{
+#' data(dash)
+#' rep <- TCRrep(dash, organism = "mouse", compute_distances = TRUE)
+#' pa <- rep[rep@@clone_df$epitope == "PA", ]
+#' pa
+#' }
+#'
+#' @name subset-TCRrep
+#' @aliases [,TCRrep,ANY,ANY,ANY-method
+#' @export
+setMethod("[", signature(x = "TCRrep"), function(x, i, j, ..., drop = TRUE) {
+    if (is.logical(i)) {
+        if (length(i) != nrow(x@clone_df)) {
+            stop(sprintf(
+                "logical index length (%d) must match number of clonotypes (%d)",
+                length(i), nrow(x@clone_df)), call. = FALSE)
+        }
+        i <- which(i)
+    }
+
+    obj <- x
+    obj@clone_df <- x@clone_df[i, , drop = FALSE]
+    if (!is.null(x@paired_dist)) obj@paired_dist <- x@paired_dist[i, i, drop = FALSE]
+    if (!is.null(x@dist_a))      obj@dist_a      <- x@dist_a[i, i, drop = FALSE]
+    if (!is.null(x@dist_b))      obj@dist_b      <- x@dist_b[i, i, drop = FALSE]
+    obj@knn_indices     <- NULL
+    obj@knn_distances   <- NULL
+    obj@meta_clonotypes <- NULL
+    obj
+})
+
+
+# ---------------------------------------------------------------------------
+# subset
+# ---------------------------------------------------------------------------
+
+#' Subset a TCRrep using non-standard evaluation
+#'
+#' Filter clonotypes using column expressions evaluated against
+#' \code{clone_df}. This is the recommended way to filter a TCRrep:
+#'
+#' \preformatted{rep |> subset(epitope == "PA")}
+#'
+#' @param x A \code{TCRrep} object.
+#' @param subset A logical expression evaluated in the context of
+#'   \code{x@@clone_df}. Column names can be used directly.
+#' @param ... Ignored.
+#' @return A new \code{TCRrep} object with only matching clonotypes.
+#'
+#' @examples
+#' \donttest{
+#' data(dash)
+#' rep <- TCRrep(dash, organism = "mouse", compute_distances = TRUE)
+#' pa <- subset(rep, epitope == "PA")
+#' pa
+#' }
+#'
+#' @export
+setMethod("subset", "TCRrep", function(x, subset, ...) {
+    expr <- substitute(subset)
+    # S4 dispatch adds frames; parent.frame(2) reaches the actual caller
+    idx <- eval(expr, x@clone_df, parent.frame(2))
+    if (!is.logical(idx)) {
+        stop("'subset' must evaluate to a logical vector", call. = FALSE)
+    }
+    idx[is.na(idx)] <- FALSE
+    x[idx, ]
+})
+
+
+# ---------------------------------------------------------------------------
+# show
+# ---------------------------------------------------------------------------
+
 #' Show method for TCRrep objects
 #'
 #' Prints a compact summary of a \code{\link{TCRrep}} object, including the

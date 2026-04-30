@@ -139,3 +139,94 @@ test_that("TCRrep default weights and gap penalties match package constants", {
     expect_equal(obj@gap_penalties$cdr3,    12L)
     expect_equal(obj@gap_penalties$v_region,  4L)
 })
+
+
+# ===========================================================================
+# Subsetting: [ and subset()
+# ===========================================================================
+
+test_that("[ subsets clone_df and paired_dist by integer indices", {
+    data(dash, envir = environment())
+    rep <- TCRrep(dash[1:20, ], "mouse", compute_distances = TRUE)
+    sub <- rep[1:5, ]
+    expect_equal(nrow(sub@clone_df), 5L)
+    expect_equal(dim(sub@paired_dist), c(5L, 5L))
+    expect_equal(sub@paired_dist, rep@paired_dist[1:5, 1:5])
+})
+
+test_that("[ subsets by logical vector", {
+    data(dash, envir = environment())
+    rep <- TCRrep(dash[1:20, ], "mouse", compute_distances = TRUE)
+    idx <- rep@clone_df$epitope == rep@clone_df$epitope[1]
+    sub <- rep[idx, ]
+    expect_equal(nrow(sub@clone_df), sum(idx))
+    expect_true(all(sub@clone_df$epitope == rep@clone_df$epitope[1]))
+    expect_equal(dim(sub@paired_dist), c(sum(idx), sum(idx)))
+})
+
+test_that("[ rejects logical vector of wrong length", {
+    data(dash, envir = environment())
+    rep <- TCRrep(dash[1:10, ], "mouse")
+    expect_error(rep[c(TRUE, FALSE), ], "logical index length")
+})
+
+test_that("[ clears knn and meta_clonotypes", {
+    data(dash, envir = environment())
+    rep <- TCRrep(dash[1:10, ], "mouse", compute_distances = TRUE)
+    rep@knn_indices <- matrix(1L, nrow = 10, ncol = 2)
+    rep@knn_distances <- matrix(0, nrow = 10, ncol = 2)
+    rep@meta_clonotypes <- data.frame(x = 1)
+    sub <- rep[1:5, ]
+    expect_null(sub@knn_indices)
+    expect_null(sub@knn_distances)
+    expect_null(sub@meta_clonotypes)
+})
+
+test_that("[ preserves organism, chains, metric, weights", {
+    data(dash, envir = environment())
+    rep <- TCRrep(dash[1:10, ], "mouse", compute_distances = TRUE)
+    sub <- rep[1:3, ]
+    expect_equal(sub@organism, "mouse")
+    expect_equal(sub@chains, "AB")
+    expect_equal(sub@metric, "tcrdist")
+    expect_equal(sub@weights, rep@weights)
+    expect_equal(sub@gap_penalties, rep@gap_penalties)
+})
+
+test_that("[ works without distances computed", {
+    data(dash, envir = environment())
+    rep <- TCRrep(dash[1:10, ], "mouse", compute_distances = FALSE)
+    sub <- rep[1:5, ]
+    expect_equal(nrow(sub@clone_df), 5L)
+    expect_null(sub@paired_dist)
+})
+
+test_that("subset() filters by expression", {
+    data(dash, envir = environment())
+    rep <- TCRrep(dash[1:50, ], "mouse", compute_distances = TRUE)
+    epi <- rep@clone_df$epitope[1]
+    sub <- subset(rep, epitope == epi)
+    expect_true(all(sub@clone_df$epitope == epi))
+    n <- sum(rep@clone_df$epitope == epi)
+    expect_equal(nrow(sub@clone_df), n)
+    expect_equal(dim(sub@paired_dist), c(n, n))
+})
+
+test_that("subset() distances match [ subsetting", {
+    data(dash, envir = environment())
+    rep <- TCRrep(dash[1:50, ], "mouse", compute_distances = TRUE)
+    epi <- rep@clone_df$epitope[1]
+    sub1 <- subset(rep, epitope == epi)
+    idx <- which(rep@clone_df$epitope == epi)
+    sub2 <- rep[idx, ]
+    expect_equal(sub1@paired_dist, sub2@paired_dist)
+})
+
+test_that("subset() handles NA in filter column", {
+    data(dash, envir = environment())
+    tcr_rep <- TCRrep(dash[1:10, ], "mouse")
+    tcr_rep@clone_df$epitope[1] <- NA
+    target_epi <- tcr_rep@clone_df$epitope[2]
+    sub <- subset(tcr_rep, epitope == target_epi)
+    expect_false(any(is.na(sub@clone_df$epitope)))
+})
