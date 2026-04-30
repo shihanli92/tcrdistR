@@ -22,6 +22,10 @@ Thumbs.db
 # Benchmarks (internal testing, not published)
 benchmarks/
 
+# Large raw data files (only compressed .rda tracked in data/)
+data-raw/*.tsv
+data-raw/*.zip
+
 # Fixture regeneration helpers
 tests/regenerate_kernel_pca_fixture.R
 tests/regenerate_kernel_pca_fixture.py

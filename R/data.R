@@ -30,3 +30,42 @@
 #' dim(dash)       # 1924 x 12
 #' table(dash$epitope)
 "dash"
+
+
+#' Human influenza TCR dataset from VDJdb
+#'
+#' A dataset of 2271 paired alpha-beta human T-cell receptors specific to
+#' 4 influenza epitopes, compiled from the VDJdb database (September 2020
+#' release). This dataset covers both MHC class I and class II restricted
+#' responses from 63 subjects and is useful for benchmarking human TCR
+#' distance calculations.
+#'
+#' @format A data.frame with 2271 rows and 13 columns:
+#' \describe{
+#'   \item{subject}{Subject identifier from the original study (may be
+#'     \code{NA} if not annotated).}
+#'   \item{epitope}{Epitope peptide sequence (e.g., \code{"GILGFVFTL"}).}
+#'   \item{epitope_gene}{Source gene of the epitope (e.g., \code{"M1"}).}
+#'   \item{mhc_a}{MHC alpha chain allele (e.g., \code{"HLA-A*02"}).}
+#'   \item{mhc_b}{MHC beta chain allele (e.g., \code{"B2M"}).}
+#'   \item{mhc_class}{MHC class: \code{"MHCI"} or \code{"MHCII"}.}
+#'   \item{count}{Clone count (set to 1 for all entries).}
+#'   \item{va}{V-alpha gene with allele (e.g., \code{"TRAV12-2*01"}).}
+#'   \item{ja}{J-alpha gene with allele (e.g., \code{"TRAJ33*01"}).}
+#'   \item{cdr3a}{CDR3-alpha amino acid sequence.}
+#'   \item{vb}{V-beta gene with allele (e.g., \code{"TRBV19*01"}).}
+#'   \item{jb}{J-beta gene with allele (e.g., \code{"TRBJ2-7*01"}).}
+#'   \item{cdr3b}{CDR3-beta amino acid sequence.}
+#' }
+#'
+#' @source VDJdb: \url{https://vdjdb.cdr3.net/}
+#'
+#'   Bagaev et al. (2020). VDJdb in 2019: database extension, new analysis
+#'   infrastructure and a T-cell receptor motif compendium. \emph{Nucleic
+#'   Acids Research}, 48(D1), D1057--D1062. \doi{10.1093/nar/gkz874}
+#'
+#' @examples
+#' data(flu)
+#' dim(flu)         # 2271 x 13
+#' table(flu$epitope)
+"flu"

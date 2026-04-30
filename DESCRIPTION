@@ -72,3 +72,5 @@ Collate:
     'wrappers_neighbors.R'
     'wrappers_rectangular.R'
     'wrappers_sparse.R'
+Depends: 
+    R (>= 3.5)

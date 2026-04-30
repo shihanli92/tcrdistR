@@ -106,6 +106,7 @@ reference:
     desc: "Built-in datasets"
     contents:
       - dash
+      - flu
 
   - title: "Utilities"
     desc: "Gene database, constants, and helper functions"
