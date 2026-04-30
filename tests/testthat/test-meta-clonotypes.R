@@ -174,3 +174,31 @@ test_that("summarize_meta_clonotype returns correct structure", {
     expect_true("vb_usage" %in% names(summary))
     expect_length(summary$cdr3a_lengths, 3L)
 })
+
+
+# ===========================================================================
+# dist_matrix bypass
+# ===========================================================================
+
+test_that("find_meta_clonotypes accepts precomputed dist_matrix", {
+    skip_on_cran()
+
+    tcr_df <- data.frame(
+        va = c("TRAV1-1*01", "TRAV1-1*01", "TRAV1-2*01",
+               "TRAV1-1*01", "TRAV1-2*01"),
+        cdr3a = c("CAVRDSSYKLIF", "CAVRDSSYKLIF", "CAVKDSSYKLIF",
+                   "CAVRDSSYKLIF", "CAVKDSYKLIF"),
+        vb = c("TRBV5-1*01", "TRBV5-1*01", "TRBV6-1*01",
+               "TRBV5-1*01", "TRBV6-1*01"),
+        cdr3b = c("CASSIRSSYEQY", "CASSIRSSYEQF", "CASSIKSSYEQY",
+                   "CASSIRSSYEQY", "CASSIKSSYEQF"),
+        subject = c("S1", "S2", "S1", "S2", "S1"),
+        stringsAsFactors = FALSE
+    )
+
+    dm <- tcrdist_matrix(tcr_df, "human")
+    r1 <- find_meta_clonotypes(tcr_df, "human", radius = 200)
+    r2 <- find_meta_clonotypes(tcr_df, "human", radius = 200,
+                                dist_matrix = dm)
+    expect_equal(r1, r2)
+})

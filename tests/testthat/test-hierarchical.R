@@ -325,3 +325,71 @@ test_that("neighborhood_test: fisher requires binary variable", {
         "exactly 2"
     )
 })
+
+
+# ===========================================================================
+# dist_matrix bypass
+# ===========================================================================
+
+test_that("tcrdist_hclust accepts precomputed dist_matrix", {
+    skip_on_cran()
+
+    tcr_df <- data.frame(
+        va = c("TRAV1-1*01", "TRAV1-2*01", "TRAV10*01",
+               "TRAV1-1*01", "TRAV1-2*01"),
+        cdr3a = c("CAVRDSSYKLIF", "CAVKDSSYKLIF", "CAVRDSYKLIF",
+                   "CAVRDSSYKLIF", "CAVKDSYKLIF"),
+        vb = c("TRBV5-1*01", "TRBV6-1*01", "TRBV7-2*01",
+               "TRBV5-1*01", "TRBV6-1*01"),
+        cdr3b = c("CASSIRSSYEQY", "CASSIKSSYEQY", "CASSIRSYEQY",
+                   "CASSIRSSYEQF", "CASSIKSSYEQF"),
+        stringsAsFactors = FALSE
+    )
+
+    dm <- tcrdist_matrix(tcr_df, "human")
+    result <- tcrdist_hclust(dist_matrix = dm)
+    expect_s3_class(result$hclust, "hclust")
+    expect_equal(nrow(result$dist_matrix), 5L)
+})
+
+test_that("tcrdist_hclust dist_matrix matches tcr_df path", {
+    skip_on_cran()
+
+    tcr_df <- data.frame(
+        va = c("TRAV1-1*01", "TRAV1-2*01", "TRAV10*01"),
+        cdr3a = c("CAVRDSSYKLIF", "CAVKDSSYKLIF", "CAVRDSYKLIF"),
+        vb = c("TRBV5-1*01", "TRBV6-1*01", "TRBV7-2*01"),
+        cdr3b = c("CASSIRSSYEQY", "CASSIKSSYEQY", "CASSIRSYEQY"),
+        stringsAsFactors = FALSE
+    )
+
+    dm <- tcrdist_matrix(tcr_df, "human")
+    r1 <- tcrdist_hclust(tcr_df, "human")
+    r2 <- tcrdist_hclust(dist_matrix = dm)
+    expect_equal(r1$dist_matrix, r2$dist_matrix)
+})
+
+test_that("neighborhood_test accepts precomputed dist_matrix", {
+    skip_on_cran()
+
+    tcr_df <- data.frame(
+        va = c("TRAV1-1*01", "TRAV1-2*01", "TRAV10*01",
+               "TRAV1-1*01", "TRAV1-2*01"),
+        cdr3a = c("CAVRDSSYKLIF", "CAVKDSSYKLIF", "CAVRDSYKLIF",
+                   "CAVRDSSYKLIF", "CAVKDSYKLIF"),
+        vb = c("TRBV5-1*01", "TRBV6-1*01", "TRBV7-2*01",
+               "TRBV5-1*01", "TRBV6-1*01"),
+        cdr3b = c("CASSIRSSYEQY", "CASSIKSSYEQY", "CASSIRSYEQY",
+                   "CASSIRSSYEQF", "CASSIKSSYEQF"),
+        stringsAsFactors = FALSE
+    )
+
+    dm <- tcrdist_matrix(tcr_df, "human")
+    variable <- c("A", "B", "A", "B", "A")
+    r1 <- neighborhood_test(tcr_df, "human", variable, radius = 100,
+                             test = "fisher")
+    r2 <- neighborhood_test(variable = variable, radius = 100,
+                             test = "fisher", dist_matrix = dm)
+    expect_equal(r1$p_value, r2$p_value)
+    expect_equal(r1$n_neighbors, r2$n_neighbors)
+})

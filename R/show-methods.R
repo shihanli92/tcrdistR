@@ -45,8 +45,16 @@ setMethod("[", signature(x = "TCRrep"), function(x, i, j, ..., drop = TRUE) {
     if (!is.null(x@paired_dist)) obj@paired_dist <- x@paired_dist[i, i, drop = FALSE]
     if (!is.null(x@dist_a))      obj@dist_a      <- x@dist_a[i, i, drop = FALSE]
     if (!is.null(x@dist_b))      obj@dist_b      <- x@dist_b[i, i, drop = FALSE]
+    if (!is.null(x@knn_indices)) {
+        message("Subsetting TCRrep: clearing cached KNN indices and distances ",
+                "(recompute with tcrdist_knn())")
+    }
     obj@knn_indices     <- NULL
     obj@knn_distances   <- NULL
+    if (!is.null(x@meta_clonotypes)) {
+        message("Subsetting TCRrep: clearing cached meta-clonotypes ",
+                "(recompute with find_meta_clonotypes())")
+    }
     obj@meta_clonotypes <- NULL
     obj
 })

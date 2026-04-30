@@ -383,3 +383,30 @@ test_that("empty data.frame returns empty result", {
     expect_equal(nrow(result$embeddings), 0L)
     expect_equal(length(result$eigenvalues), 0L)
 })
+
+
+# ---------------------------------------------------------------------------
+# Test 12: dist_matrix bypass
+# ---------------------------------------------------------------------------
+
+test_that("compute_tcrdist_kernel_pca accepts precomputed dist_matrix", {
+    skip_on_cran()
+
+    tcr_df <- data.frame(
+        va = c("TRAV1-1*01", "TRAV1-2*01", "TRAV10*01",
+               "TRAV1-1*01", "TRAV1-2*01"),
+        cdr3a = c("CAVRDSSYKLIF", "CAVKDSSYKLIF", "CAVRDSYKLIF",
+                   "CAVRDSSYKLIF", "CAVKDSYKLIF"),
+        vb = c("TRBV5-1*01", "TRBV6-1*01", "TRBV7-2*01",
+               "TRBV5-1*01", "TRBV6-1*01"),
+        cdr3b = c("CASSIRSSYEQY", "CASSIKSSYEQY", "CASSIRSYEQY",
+                   "CASSIRSSYEQF", "CASSIKSSYEQF"),
+        stringsAsFactors = FALSE
+    )
+
+    dm <- tcrdist_matrix(tcr_df, "human")
+    r1 <- compute_tcrdist_kernel_pca(tcr_df, "human", n_components = 3L)
+    r2 <- compute_tcrdist_kernel_pca(dist_matrix = dm, n_components = 3L)
+    expect_equal(r1$eigenvalues, r2$eigenvalues)
+    expect_equal(nrow(r2$embeddings), 5L)
+})

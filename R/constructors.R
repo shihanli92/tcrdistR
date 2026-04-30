@@ -83,6 +83,13 @@ NULL
 #' automatically coerced to character. The organism is validated against the
 #' bundled gene database on construction.
 #'
+#' @details
+#' \strong{Gamma-delta TCRs.}
+#' For gamma-delta TCRs, use \code{chains = "GD"} and specify the gamma-delta
+#' organism database: \code{organism = "human_gd"} or \code{organism = "mouse_gd"}.
+#' Gamma chain genes map to the \code{va}/\code{cdr3a} columns; delta chain
+#' genes map to the \code{vb}/\code{cdr3b} columns.
+#'
 #' @param clone_df A \code{data.frame} of clonotypes. Required columns depend
 #'   on the \code{chains} argument:
 #'   \describe{
@@ -95,6 +102,7 @@ NULL
 #'   }
 #' @param organism Character string. Organism key recognised by
 #'   \code{\link{load_gene_database}}, e.g. \code{"human"} or \code{"mouse"}.
+#'   For gamma-delta TCRs use \code{"human_gd"} or \code{"mouse_gd"}.
 #' @param chains Character string. One of \code{"AB"} (default), \code{"A"},
 #'   \code{"B"}, or \code{"GD"}.
 #' @param deduplicate Controls clone deduplication (matching tcrdist3 behavior).

@@ -49,11 +49,15 @@
 #' Convenience wrapper that computes the pairwise TCRdist matrix and
 #' performs hierarchical clustering via \code{stats::hclust()}.
 #'
-#' @param tcr_df Data.frame with TCR columns.
-#' @param organism Character string (\code{"human"} or \code{"mouse"}).
+#' @param tcr_df Data.frame with TCR columns (optional if \code{dist_matrix}
+#'   is provided).
+#' @param organism Character string (\code{"human"} or \code{"mouse"})
+#'   (optional if \code{dist_matrix} is provided).
 #' @param method Clustering method for \code{stats::hclust()}. Default
 #'   \code{"average"} (UPGMA).
 #' @param max_tcrs Integer. Subsample if N exceeds this. Default \code{2000L}.
+#' @param dist_matrix Optional precomputed distance matrix. If provided,
+#'   \code{tcr_df} and \code{organism} are not used for distance computation.
 #'
 #' @return A named list:
 #'   \describe{
@@ -72,18 +76,19 @@
 #'
 #' @seealso \code{\link{cluster_tcrs}}, \code{\link{neighborhood_test}}, \code{\link{plot_tcrdist_dendrogram}}
 #' @export
-tcrdist_hclust <- function(tcr_df, organism, method = "average",
-                            max_tcrs = 2000L) {
-    n <- nrow(tcr_df)
+tcrdist_hclust <- function(tcr_df = NULL, organism = NULL, method = "average",
+                            max_tcrs = 2000L, dist_matrix = NULL) {
+    n <- if (!is.null(dist_matrix)) nrow(dist_matrix) else nrow(tcr_df)
     stopifnot(n >= 2L)
 
     indices <- seq_len(n)
     if (n > max_tcrs) {
         indices <- sort(sample(n, max_tcrs))
-        tcr_df <- tcr_df[indices, , drop = FALSE]
+        if (!is.null(tcr_df)) tcr_df <- tcr_df[indices, , drop = FALSE]
+        if (!is.null(dist_matrix)) dist_matrix <- dist_matrix[indices, indices, drop = FALSE]
     }
 
-    dist_mat <- tcrdist_matrix(tcr_df, organism)
+    dist_mat <- .get_dist_matrix(tcr_df, organism, dist_matrix)
     hc <- stats::hclust(stats::as.dist(dist_mat), method = method)
 
     list(
@@ -114,8 +119,8 @@ tcrdist_hclust <- function(tcr_df, organism, method = "average",
         return(as.matrix(dist_matrix))
     }
     if (is.null(tcr_df) || is.null(organism)) {
-        stop("cluster_tcrs: either 'dist_matrix' or both 'tcr_df' and ",
-             "'organism' must be provided", call. = FALSE)
+        stop("Either 'dist_matrix' or both 'tcr_df' and 'organism' must be ",
+             "provided", call. = FALSE)
     }
     tcrdist_matrix(tcr_df, organism)
 }
@@ -324,8 +329,10 @@ cluster_tcrs <- function(tcr_df = NULL, organism = NULL,
 #' Supports Fisher's exact test (binary variables) and chi-squared test
 #' (multi-category variables).
 #'
-#' @param tcr_df Data.frame with TCR columns.
-#' @param organism Character string (\code{"human"} or \code{"mouse"}).
+#' @param tcr_df Data.frame with TCR columns (optional if \code{dist_matrix}
+#'   is provided).
+#' @param organism Character string (\code{"human"} or \code{"mouse"})
+#'   (optional if \code{dist_matrix} is provided).
 #' @param variable Character or factor vector of length \code{nrow(tcr_df)}.
 #'   The categorical variable to test.
 #' @param radius Numeric. Maximum TCRdist for neighborhood membership.
@@ -334,6 +341,8 @@ cluster_tcrs <- function(tcr_df = NULL, organism = NULL,
 #'   \code{"chisq"} (for multi-category).
 #' @param p_adjust_method Character string. Method for \code{stats::p.adjust()}.
 #'   Default \code{"BH"} (Benjamini-Hochberg).
+#' @param dist_matrix Optional precomputed distance matrix. If provided,
+#'   \code{tcr_df} and \code{organism} are not used for distance computation.
 #'
 #' @return A data.frame with one row per TCR and columns:
 #'   \describe{
@@ -353,12 +362,14 @@ cluster_tcrs <- function(tcr_df = NULL, organism = NULL,
 #'
 #' @seealso \code{\link{tcrdist_hclust}}, \code{\link{cluster_tcrs}}, \code{\link{find_clumping}}
 #' @export
-neighborhood_test <- function(tcr_df, organism, variable, radius = 50,
+neighborhood_test <- function(tcr_df = NULL, organism = NULL, variable,
+                                radius = 50,
                                 test = c("fisher", "chisq"),
-                                p_adjust_method = "BH") {
+                                p_adjust_method = "BH",
+                                dist_matrix = NULL) {
     test <- match.arg(test)
-    n <- nrow(tcr_df)
-    stopifnot(length(variable) == n)
+    n <- length(variable)
+    stopifnot(n >= 1L)
 
     variable <- as.factor(variable)
     lvls <- levels(variable)
@@ -371,7 +382,7 @@ neighborhood_test <- function(tcr_df, organism, variable, radius = 50,
     }
 
     # Compute dense distance matrix
-    dist_mat <- tcrdist_matrix(tcr_df, organism)
+    dist_mat <- .get_dist_matrix(tcr_df, organism, dist_matrix)
 
     # Tally neighborhoods
     tally <- .neighborhood_tally(dist_mat, variable, radius)

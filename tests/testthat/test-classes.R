@@ -202,16 +202,25 @@ test_that("[ rejects logical vector of wrong length", {
     expect_error(rep[c(TRUE, FALSE), ], "logical index length")
 })
 
-test_that("[ clears knn and meta_clonotypes", {
+test_that("[ clears knn and meta_clonotypes with message", {
     data(dash, envir = environment())
     rep <- TCRrep(dash[1:10, ], "mouse", compute_distances = TRUE)
     rep@knn_indices <- matrix(1L, nrow = 10, ncol = 2)
     rep@knn_distances <- matrix(0, nrow = 10, ncol = 2)
     rep@meta_clonotypes <- data.frame(x = 1)
-    sub <- rep[1:5, ]
+    expect_message(
+        expect_message(sub <- rep[1:5, ], "KNN"),
+        "meta-clonotypes"
+    )
     expect_null(sub@knn_indices)
     expect_null(sub@knn_distances)
     expect_null(sub@meta_clonotypes)
+})
+
+test_that("[ does not message when knn/meta are already NULL", {
+    data(dash, envir = environment())
+    rep <- TCRrep(dash[1:10, ], "mouse", compute_distances = TRUE)
+    expect_no_message(sub <- rep[1:5, ])
 })
 
 test_that("[ preserves organism, chains, metric, weights", {
@@ -261,4 +270,51 @@ test_that("subset() handles NA in filter column", {
     target_epi <- tcr_rep@clone_df$epitope[2]
     sub <- subset(tcr_rep, epitope == target_epi)
     expect_false(any(is.na(sub@clone_df$epitope)))
+})
+
+
+# ===========================================================================
+# Gamma-delta (GD) chain mode
+# ===========================================================================
+
+test_that("TCRrep with chains='GD' and organism='human_gd' creates valid object", {
+    gd_df <- data.frame(
+        va    = c("TRGV1*01",  "TRGV1*01",  "TRGV10*01"),
+        cdr3a = c("CATWDRF",   "CATWDRF",   "CATWDSF"),
+        vb    = c("TRDV1*01",  "TRDV2*01",  "TRDV1*01"),
+        cdr3b = c("CALGELGDDKLIF", "CALGELGDDKLIF", "CALGELSDDKLIF"),
+        stringsAsFactors = FALSE
+    )
+    obj <- TCRrep(gd_df, "human_gd", chains = "GD")
+    expect_true(is(obj, "TCRrep"))
+    expect_equal(obj@chains, "GD")
+    expect_equal(obj@organism, "human_gd")
+})
+
+test_that("TCRrep GD with compute_distances=TRUE produces distance matrix", {
+    gd_df <- data.frame(
+        va    = c("TRGV1*01",  "TRGV1*01",  "TRGV10*01"),
+        cdr3a = c("CATWDRF",   "CATWDRF",   "CATWDSF"),
+        vb    = c("TRDV1*01",  "TRDV2*01",  "TRDV1*01"),
+        cdr3b = c("CALGELGDDKLIF", "CALGELGDDKLIF", "CALGELSDDKLIF"),
+        stringsAsFactors = FALSE
+    )
+    obj <- TCRrep(gd_df, "human_gd", chains = "GD", compute_distances = TRUE)
+    expect_false(is.null(obj@paired_dist))
+    expect_true(is.matrix(obj@paired_dist))
+    expect_equal(dim(obj@paired_dist), c(3L, 3L))
+    expect_equal(unname(diag(obj@paired_dist)), c(0, 0, 0))
+})
+
+test_that("TCRrep GD with mouse_gd organism works", {
+    gd_df <- data.frame(
+        va    = c("TRGV1*01",  "TRGV1*01"),
+        cdr3a = c("CATWDRF",   "CATWDSF"),
+        vb    = c("TRAV1*01",  "TRAV1*01"),
+        cdr3b = c("CALGELGDDKLIF", "CALGELSDDKLIF"),
+        stringsAsFactors = FALSE
+    )
+    obj <- TCRrep(gd_df, "mouse_gd", chains = "GD")
+    expect_true(is(obj, "TCRrep"))
+    expect_equal(obj@organism, "mouse_gd")
 })

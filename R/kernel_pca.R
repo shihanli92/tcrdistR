@@ -65,9 +65,10 @@
 #' }
 #'
 #' @param tcr_df A \code{data.frame} with at least columns \code{va},
-#'   \code{cdr3a}, \code{vb}, \code{cdr3b}.
+#'   \code{cdr3a}, \code{vb}, \code{cdr3b}. Optional if \code{dist_matrix}
+#'   is provided.
 #' @param organism Character string. Organism key, e.g. \code{"human"} or
-#'   \code{"mouse"}.
+#'   \code{"mouse"}. Optional if \code{dist_matrix} is provided.
 #' @param n_components Integer. Maximum number of PCA components to return.
 #'   Clamped to \code{nrow(tcr_df)}. Default \code{50L}.
 #' @param kernel \code{NULL} (default linear kernel) or \code{"gaussian"}.
@@ -83,6 +84,8 @@
 #'   (always uses \code{base::eigen()}, same LAPACK as scipy.linalg.eigh),
 #'   or \code{"RSpectra"} (always uses \code{RSpectra::eigs_sym()}, same
 #'   ARPACK as scipy.sparse.linalg.eigsh).
+#' @param dist_matrix Optional precomputed distance matrix. If provided,
+#'   \code{tcr_df} and \code{organism} are not used for distance computation.
 #' @return A named list with elements:
 #'   \describe{
 #'     \item{\code{embeddings}}{Numeric matrix of dimensions
@@ -106,25 +109,28 @@
 #' }
 #' @seealso \code{\link{plot_tcr_scatter}}, \code{\link{knn_from_pca}}, \code{\link{tcrdist_matrix}}
 #' @export
-compute_tcrdist_kernel_pca <- function(tcr_df,
-                                       organism,
+compute_tcrdist_kernel_pca <- function(tcr_df = NULL,
+                                       organism = NULL,
                                        n_components = 50L,
                                        kernel = NULL,
                                        gaussian_kernel_sdev = 100,
                                        force_Dmax = NULL,
                                        method = c("auto", "eigen",
-                                                   "RSpectra")) {
+                                                   "RSpectra"),
+                                       dist_matrix = NULL) {
     # ---- Input validation --------------------------------------------------
-    if (!is.data.frame(tcr_df)) {
+    if (!is.null(tcr_df) && !is.data.frame(tcr_df)) {
         tcr_df <- as.data.frame(tcr_df, stringsAsFactors = FALSE)
     }
-    required_cols <- c("va", "cdr3a", "vb", "cdr3b")
-    missing_cols <- setdiff(required_cols, colnames(tcr_df))
-    if (length(missing_cols) > 0L) {
-        stop(sprintf(
-            "compute_tcrdist_kernel_pca: missing required columns: %s",
-            paste(missing_cols, collapse = ", ")
-        ))
+    if (is.null(dist_matrix) && !is.null(tcr_df)) {
+        required_cols <- c("va", "cdr3a", "vb", "cdr3b")
+        missing_cols <- setdiff(required_cols, colnames(tcr_df))
+        if (length(missing_cols) > 0L) {
+            stop(sprintf(
+                "compute_tcrdist_kernel_pca: missing required columns: %s",
+                paste(missing_cols, collapse = ", ")
+            ))
+        }
     }
     if (!is.numeric(n_components) || length(n_components) != 1L ||
         n_components < 1L) {
@@ -140,8 +146,8 @@ compute_tcrdist_kernel_pca <- function(tcr_df,
     }
 
     method <- match.arg(method)
-    n <- nrow(tcr_df)
-    if (n == 0L) {
+    n <- if (!is.null(dist_matrix)) nrow(dist_matrix) else nrow(tcr_df)
+    if (is.null(n) || n == 0L) {
         return(list(
             embeddings   = matrix(numeric(0L), nrow = 0L, ncol = 0L),
             eigenvalues  = numeric(0L),
@@ -158,13 +164,13 @@ compute_tcrdist_kernel_pca <- function(tcr_df,
     n_components <- min(n_components, n)
 
     # ---- Step 1: Compute TCRdist distance matrix ---------------------------
-    if (n > 20000L) {
+    if (is.null(dist_matrix) && n > 20000L) {
         warning(sprintf(
             "compute_tcrdist_kernel_pca: N=%d requires a full %d x %d distance matrix (%.1f GB). Consider reducing the dataset.",
             n, n, n, as.double(n) * n * 8 / 1e9
         ))
     }
-    D <- tcrdist_matrix(tcr_df, organism)
+    D <- .get_dist_matrix(tcr_df, organism, dist_matrix)
 
     # ---- Step 2: Build Gram (kernel) matrix --------------------------------
     if (is.null(kernel)) {

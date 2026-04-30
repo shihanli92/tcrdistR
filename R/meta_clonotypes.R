@@ -114,6 +114,8 @@
 #'   neighborhood. Default \code{2L}.
 #' @param subject_col Character string. Column name for subject IDs.
 #'   Default \code{"subject"}.
+#' @param dist_matrix Optional precomputed distance matrix. If provided,
+#'   \code{tcr_df} and \code{organism} are not used for distance computation.
 #'
 #' @return A data.frame with one row per meta-clonotype center:
 #'   \describe{
@@ -139,7 +141,8 @@ find_meta_clonotypes <- function(tcr_df, organism,
                                   ctrl_bkgd = 1e-5,
                                   max_radius = 50L,
                                   min_nsubject = 2L,
-                                  subject_col = "subject") {
+                                  subject_col = "subject",
+                                  dist_matrix = NULL) {
     n <- nrow(tcr_df)
     stopifnot(n >= 1L)
 
@@ -167,7 +170,7 @@ find_meta_clonotypes <- function(tcr_df, organism,
     }
 
     # Compute dense distance matrix
-    dist_mat <- tcrdist_matrix(tcr_df, organism)
+    dist_mat <- .get_dist_matrix(tcr_df, organism, dist_matrix)
 
     # Find neighborhoods and count subjects
     results <- vector("list", n)
