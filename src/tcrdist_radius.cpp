@@ -73,8 +73,10 @@ Rcpp::List rcpp_tcrdist_radius_neighbors(
     double radius,
     const IntegerVector&   agroups,
     const IntegerVector&   bgroups,
-    int weight_cdr3_region       = 3,
-    int gap_penalty_cdr3_region  = 12
+    int weight_cdr3_a       = 3,
+    int gap_penalty_cdr3_a  = 12,
+    int weight_cdr3_b       = 3,
+    int gap_penalty_cdr3_b  = 12
 ) {
     // ---- prepare inputs -------------------------------------------------------
     VDistLookup vla, vlb;
@@ -118,14 +120,14 @@ Rcpp::List rcpp_tcrdist_radius_neighbors(
 
             // Stage 2: V + CDR3-alpha early termination
             const double cd_a = cdr3_dist_fast(t.cdr3a[i], t.cdr3a[j],
-                                               weight_cdr3_region,
-                                               gap_penalty_cdr3_region);
+                                               weight_cdr3_a,
+                                               gap_penalty_cdr3_a);
             if (vd + cd_a > radius) continue;
 
             // Stage 3: full distance
             const double cd_b = cdr3_dist_fast(t.cdr3b[i], t.cdr3b[j],
-                                               weight_cdr3_region,
-                                               gap_penalty_cdr3_region);
+                                               weight_cdr3_b,
+                                               gap_penalty_cdr3_b);
             const double d = vd + cd_a + cd_b;
             if (d <= radius) {
                 nbr_idx.push_back(j + 1);   // 1-based

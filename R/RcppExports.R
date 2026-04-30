@@ -323,8 +323,8 @@ rcpp_hamming_matrix <- function(seqs) {
 #'   )
 #' }
 #' @keywords internal
-rcpp_tcrdist_knn <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, K, agroups, bgroups, sort_nbrs = TRUE, weight_cdr3_region = 3L, gap_penalty_cdr3_region = 12L) {
-    .Call(`_tcrdistR_rcpp_tcrdist_knn`, va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, K, agroups, bgroups, sort_nbrs, weight_cdr3_region, gap_penalty_cdr3_region)
+rcpp_tcrdist_knn <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, K, agroups, bgroups, sort_nbrs = TRUE, weight_cdr3_a = 3L, gap_penalty_cdr3_a = 12L, weight_cdr3_b = 3L, gap_penalty_cdr3_b = 12L) {
+    .Call(`_tcrdistR_rcpp_tcrdist_knn`, va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, K, agroups, bgroups, sort_nbrs, weight_cdr3_a, gap_penalty_cdr3_a, weight_cdr3_b, gap_penalty_cdr3_b)
 }
 
 #' Pairwise TCRdist matrix (C++ implementation)
@@ -369,8 +369,8 @@ rcpp_tcrdist_knn <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_
 #'   )
 #' }
 #' @keywords internal
-rcpp_tcrdist_matrix <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, weight_cdr3_region = 3L, gap_penalty_cdr3_region = 12L) {
-    .Call(`_tcrdistR_rcpp_tcrdist_matrix`, va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, weight_cdr3_region, gap_penalty_cdr3_region)
+rcpp_tcrdist_matrix <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, weight_cdr3_a = 3L, gap_penalty_cdr3_a = 12L, weight_cdr3_b = 3L, gap_penalty_cdr3_b = 12L) {
+    .Call(`_tcrdistR_rcpp_tcrdist_matrix`, va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, weight_cdr3_a, gap_penalty_cdr3_a, weight_cdr3_b, gap_penalty_cdr3_b)
 }
 
 #' Radius-based TCRdist neighbor search with group masking (C++ implementation)
@@ -421,8 +421,8 @@ rcpp_tcrdist_matrix <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_di
 #'   )
 #' }
 #' @keywords internal
-rcpp_tcrdist_radius_neighbors <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, radius, agroups, bgroups, weight_cdr3_region = 3L, gap_penalty_cdr3_region = 12L) {
-    .Call(`_tcrdistR_rcpp_tcrdist_radius_neighbors`, va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, radius, agroups, bgroups, weight_cdr3_region, gap_penalty_cdr3_region)
+rcpp_tcrdist_radius_neighbors <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, radius, agroups, bgroups, weight_cdr3_a = 3L, gap_penalty_cdr3_a = 12L, weight_cdr3_b = 3L, gap_penalty_cdr3_b = 12L) {
+    .Call(`_tcrdistR_rcpp_tcrdist_radius_neighbors`, va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, radius, agroups, bgroups, weight_cdr3_a, gap_penalty_cdr3_a, weight_cdr3_b, gap_penalty_cdr3_b)
 }
 
 #' Rectangular TCRdist query-vs-reference distance matrix (C++ implementation)
@@ -473,8 +473,8 @@ rcpp_tcrdist_radius_neighbors <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_
 #'   )
 #' }
 #' @keywords internal
-rcpp_tcrdist_rect <- function(query_va, query_cdr3a, query_vb, query_cdr3b, ref_va, ref_cdr3a, ref_vb, ref_cdr3b, v_dist_a, v_dist_b, weight_cdr3_region = 3L, gap_penalty_cdr3_region = 12L) {
-    .Call(`_tcrdistR_rcpp_tcrdist_rect`, query_va, query_cdr3a, query_vb, query_cdr3b, ref_va, ref_cdr3a, ref_vb, ref_cdr3b, v_dist_a, v_dist_b, weight_cdr3_region, gap_penalty_cdr3_region)
+rcpp_tcrdist_rect <- function(query_va, query_cdr3a, query_vb, query_cdr3b, ref_va, ref_cdr3a, ref_vb, ref_cdr3b, v_dist_a, v_dist_b, weight_cdr3_a = 3L, gap_penalty_cdr3_a = 12L, weight_cdr3_b = 3L, gap_penalty_cdr3_b = 12L) {
+    .Call(`_tcrdistR_rcpp_tcrdist_rect`, query_va, query_cdr3a, query_vb, query_cdr3b, ref_va, ref_cdr3a, ref_vb, ref_cdr3b, v_dist_a, v_dist_b, weight_cdr3_a, gap_penalty_cdr3_a, weight_cdr3_b, gap_penalty_cdr3_b)
 }
 
 #' Sparse TCRdist matrix as COO triplets (C++ implementation)
@@ -526,8 +526,8 @@ rcpp_tcrdist_rect <- function(query_va, query_cdr3a, query_vb, query_cdr3b, ref_
 #'   )
 #' }
 #' @keywords internal
-rcpp_tcrdist_sparse <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, threshold, weight_cdr3_region = 3L, gap_penalty_cdr3_region = 12L) {
-    .Call(`_tcrdistR_rcpp_tcrdist_sparse`, va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, threshold, weight_cdr3_region, gap_penalty_cdr3_region)
+rcpp_tcrdist_sparse <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, threshold, weight_cdr3_a = 3L, gap_penalty_cdr3_a = 12L, weight_cdr3_b = 3L, gap_penalty_cdr3_b = 12L) {
+    .Call(`_tcrdistR_rcpp_tcrdist_sparse`, va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_a, v_dist_b, threshold, weight_cdr3_a, gap_penalty_cdr3_a, weight_cdr3_b, gap_penalty_cdr3_b)
 }
 
 #' Compute pairwise V-region distances (C++ implementation)

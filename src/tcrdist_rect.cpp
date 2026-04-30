@@ -71,8 +71,10 @@ NumericMatrix rcpp_tcrdist_rect(
     const CharacterVector& ref_cdr3b,
     const NumericMatrix&   v_dist_a,
     const NumericMatrix&   v_dist_b,
-    int weight_cdr3_region       = 3,
-    int gap_penalty_cdr3_region  = 12
+    int weight_cdr3_a       = 3,
+    int gap_penalty_cdr3_a  = 12,
+    int weight_cdr3_b       = 3,
+    int gap_penalty_cdr3_b  = 12
 ) {
     // ---- prepare inputs -------------------------------------------------------
     VDistLookup vla, vlb;
@@ -99,11 +101,11 @@ NumericMatrix rcpp_tcrdist_rect(
             const double vd_b = vlb.lookup(qrib, r.vi_b[j]);
 
             const double cd_a = cdr3_dist_fast(q.cdr3a[i], r.cdr3a[j],
-                                               weight_cdr3_region,
-                                               gap_penalty_cdr3_region);
+                                               weight_cdr3_a,
+                                               gap_penalty_cdr3_a);
             const double cd_b = cdr3_dist_fast(q.cdr3b[i], r.cdr3b[j],
-                                               weight_cdr3_region,
-                                               gap_penalty_cdr3_region);
+                                               weight_cdr3_b,
+                                               gap_penalty_cdr3_b);
 
             result(i, j) = vd_a + cd_a + vd_b + cd_b;
         }

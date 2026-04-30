@@ -7,6 +7,7 @@
 tcrdist_matrix(
   tcrs,
   organism,
+  components = "all",
   weight_cdr3 = WEIGHT_CDR3_REGION,
   gap_penalty_cdr3 = GAP_PENALTY_CDR3_REGION
 )
@@ -24,6 +25,12 @@ e.g. \code{"TRBV19*01"}.}
 
 \item{organism}{Character string. Organism key understood by
 \code{load_gene_database}, e.g. \code{"human"} or \code{"mouse"}.}
+
+\item{components}{Character.  Which distance components to include.
+Presets: \code{"all"} (default), \code{"cdr3"} (CDR3 only),
+\code{"v_region"} (CDR1+CDR2+CDR2.5 only), \code{"alpha"} (alpha chain),
+\code{"beta"} (beta chain).  Or a character vector of individual terms:
+\code{"va"}, \code{"cdr3a"}, \code{"vb"}, \code{"cdr3b"}.}
 
 \item{weight_cdr3}{Integer. Weight applied to CDR3 distances. Defaults to
 \code{WEIGHT_CDR3_REGION} (3L).}
@@ -57,6 +64,12 @@ tcrs <- data.frame(
   stringsAsFactors = FALSE
 )
 mat <- tcrdist_matrix(tcrs, "human")
+
+# CDR3-only distance
+mat_cdr3 <- tcrdist_matrix(tcrs, "human", components = "cdr3")
+
+# Alpha chain only
+mat_alpha <- tcrdist_matrix(tcrs, "human", components = "alpha")
 }
 }
 \seealso{

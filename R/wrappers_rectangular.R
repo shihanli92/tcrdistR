@@ -34,6 +34,8 @@
 #' @param ref A \code{data.frame} with the same four columns as \code{query}.
 #' @param organism Character string. Organism key understood by
 #'   \code{load_gene_database}, e.g. \code{"human"} or \code{"mouse"}.
+#' @param components Character.  Which distance components to include.
+#'   See \code{\link{tcrdist_matrix}} for details.  Default \code{"all"}.
 #' @param weight_cdr3 Integer. Weight applied to CDR3 distances. Defaults to
 #'   \code{WEIGHT_CDR3_REGION} (3L).
 #' @param gap_penalty_cdr3 Integer. Gap penalty for CDR3 alignments. Defaults
@@ -57,6 +59,7 @@
 #' @seealso \code{\link{tcrdist_matrix}}, \code{\link{tcrdist_sparse}}, \code{\link{tcrdist_join}}
 #' @export
 tcrdist_rect <- function(query, ref, organism,
+                         components       = "all",
                          weight_cdr3      = WEIGHT_CDR3_REGION,
                          gap_penalty_cdr3 = GAP_PENALTY_CDR3_REGION) {
 
@@ -131,6 +134,9 @@ tcrdist_rect <- function(query, ref, organism,
         stop("tcrdist_rect: 'organism' must be a non-empty character string of length 1")
     }
 
+    # ---- Resolve components -------------------------------------------------
+    comp <- .resolve_components(components)
+
     # ---- Build V-region distance matrices ----------------------------------
     v_dist_a <- .compute_v_region_distance_matrix(organism, "A")
     v_dist_b <- .compute_v_region_distance_matrix(organism, "B")
@@ -171,6 +177,15 @@ tcrdist_rect <- function(query, ref, organism,
         ))
     }
 
+    # ---- Apply component selection -----------------------------------------
+    if (!comp$va)    v_dist_a <- .zero_v_dist_matrix(v_dist_a)
+    if (!comp$vb)    v_dist_b <- .zero_v_dist_matrix(v_dist_b)
+
+    w_a  <- if (comp$cdr3a) as.integer(weight_cdr3)      else 0L
+    gp_a <- if (comp$cdr3a) as.integer(gap_penalty_cdr3) else 0L
+    w_b  <- if (comp$cdr3b) as.integer(weight_cdr3)      else 0L
+    gp_b <- if (comp$cdr3b) as.integer(gap_penalty_cdr3) else 0L
+
     # ---- Dispatch to C++ ---------------------------------------------------
     dist_mat <- rcpp_tcrdist_rect(
         query$va,
@@ -183,8 +198,8 @@ tcrdist_rect <- function(query, ref, organism,
         ref$cdr3b,
         v_dist_a,
         v_dist_b,
-        as.integer(weight_cdr3),
-        as.integer(gap_penalty_cdr3)
+        w_a, gp_a,
+        w_b, gp_b
     )
 
     # ---- Set row/column names ----------------------------------------------

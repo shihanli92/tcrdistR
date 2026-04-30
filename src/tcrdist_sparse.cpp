@@ -71,8 +71,10 @@ Rcpp::List rcpp_tcrdist_sparse(
     const NumericMatrix&   v_dist_a,
     const NumericMatrix&   v_dist_b,
     double threshold,
-    int weight_cdr3_region       = 3,
-    int gap_penalty_cdr3_region  = 12
+    int weight_cdr3_a       = 3,
+    int gap_penalty_cdr3_a  = 12,
+    int weight_cdr3_b       = 3,
+    int gap_penalty_cdr3_b  = 12
 ) {
     // ---- prepare inputs -------------------------------------------------------
     VDistLookup vla, vlb;
@@ -103,14 +105,14 @@ Rcpp::List rcpp_tcrdist_sparse(
 
             // Stage 2: add CDR3-alpha
             const double cd_a = cdr3_dist_fast(t.cdr3a[i], t.cdr3a[j],
-                                               weight_cdr3_region,
-                                               gap_penalty_cdr3_region);
+                                               weight_cdr3_a,
+                                               gap_penalty_cdr3_a);
             if (vd + cd_a > threshold) continue;
 
             // Stage 3: add CDR3-beta for full distance
             const double cd_b = cdr3_dist_fast(t.cdr3b[i], t.cdr3b[j],
-                                               weight_cdr3_region,
-                                               gap_penalty_cdr3_region);
+                                               weight_cdr3_b,
+                                               gap_penalty_cdr3_b);
             const double d = vd + cd_a + cd_b;
             if (d <= threshold) {
                 row_idx.push_back(i + 1);   // 1-based

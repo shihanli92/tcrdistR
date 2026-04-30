@@ -1,5 +1,66 @@
 # Thin R wrappers that validate inputs and dispatch to C++ rcpp_* functions.
 
+
+# ---------------------------------------------------------------------------
+# .resolve_components  (internal)
+# ---------------------------------------------------------------------------
+
+#' Resolve a components specification into per-component flags
+#'
+#' @param components Character.  A single preset string or a vector of
+#'   individual component names.
+#' @return A named logical list with elements \code{va}, \code{cdr3a},
+#'   \code{vb}, \code{cdr3b}.
+#' @keywords internal
+.resolve_components <- function(components) {
+    valid_terms <- c("va", "cdr3a", "vb", "cdr3b")
+    presets <- list(
+        all      = valid_terms,
+        cdr3     = c("cdr3a", "cdr3b"),
+        v_region = c("va", "vb"),
+        alpha    = c("va", "cdr3a"),
+        beta     = c("vb", "cdr3b")
+    )
+
+    if (length(components) == 1L && components %in% names(presets)) {
+        active <- presets[[components]]
+    } else {
+        unknown <- setdiff(components, valid_terms)
+        if (length(unknown) > 0L) {
+            stop(sprintf(
+                "Unknown components: %s. Valid terms: %s. Presets: %s",
+                paste(unknown, collapse = ", "),
+                paste(valid_terms, collapse = ", "),
+                paste(names(presets), collapse = ", ")
+            ), call. = FALSE)
+        }
+        active <- components
+    }
+
+    list(
+        va    = "va"    %in% active,
+        cdr3a = "cdr3a" %in% active,
+        vb    = "vb"    %in% active,
+        cdr3b = "cdr3b" %in% active
+    )
+}
+
+
+#' Create a zero V-region distance matrix with matching gene names
+#'
+#' @param v_dist A named square \code{NumericMatrix} from
+#'   \code{.compute_v_region_distance_matrix()}.
+#' @return A zero matrix with the same dimensions and row/column names.
+#' @keywords internal
+.zero_v_dist_matrix <- function(v_dist) {
+    n <- nrow(v_dist)
+    m <- matrix(0, nrow = n, ncol = n)
+    rownames(m) <- rownames(v_dist)
+    colnames(m) <- colnames(v_dist)
+    m
+}
+
+
 # ---------------------------------------------------------------------------
 # weighted_cdr3_distance
 # ---------------------------------------------------------------------------
@@ -69,6 +130,11 @@ weighted_cdr3_distance <- function(seq1, seq2,
 #'   }
 #' @param organism Character string. Organism key understood by
 #'   \code{load_gene_database}, e.g. \code{"human"} or \code{"mouse"}.
+#' @param components Character.  Which distance components to include.
+#'   Presets: \code{"all"} (default), \code{"cdr3"} (CDR3 only),
+#'   \code{"v_region"} (CDR1+CDR2+CDR2.5 only), \code{"alpha"} (alpha chain),
+#'   \code{"beta"} (beta chain).  Or a character vector of individual terms:
+#'   \code{"va"}, \code{"cdr3a"}, \code{"vb"}, \code{"cdr3b"}.
 #' @param weight_cdr3 Integer. Weight applied to CDR3 distances. Defaults to
 #'   \code{WEIGHT_CDR3_REGION} (3L).
 #' @param gap_penalty_cdr3 Integer. Gap penalty for CDR3 alignments. Defaults
@@ -86,10 +152,17 @@ weighted_cdr3_distance <- function(seq1, seq2,
 #'   stringsAsFactors = FALSE
 #' )
 #' mat <- tcrdist_matrix(tcrs, "human")
+#'
+#' # CDR3-only distance
+#' mat_cdr3 <- tcrdist_matrix(tcrs, "human", components = "cdr3")
+#'
+#' # Alpha chain only
+#' mat_alpha <- tcrdist_matrix(tcrs, "human", components = "alpha")
 #' }
 #' @seealso \code{\link{tcrdist_sparse}}, \code{\link{tcrdist_rect}}, \code{\link{tcrdist_knn}}, \code{\link{TCRrep}}
 #' @export
 tcrdist_matrix <- function(tcrs, organism,
+                           components       = "all",
                            weight_cdr3      = WEIGHT_CDR3_REGION,
                            gap_penalty_cdr3 = GAP_PENALTY_CDR3_REGION) {
     # ---- Input validation ---------------------------------------------------
@@ -145,6 +218,9 @@ tcrdist_matrix <- function(tcrs, organism,
         stop("tcrdist_matrix: 'organism' must be a non-empty character string of length 1")
     }
 
+    # ---- Resolve components -------------------------------------------------
+    comp <- .resolve_components(components)
+
     # ---- Build V-region distance matrices via C++ --------------------------
     v_dist_a <- .compute_v_region_distance_matrix(organism, "A")
     v_dist_b <- .compute_v_region_distance_matrix(organism, "B")
@@ -171,6 +247,15 @@ tcrdist_matrix <- function(tcrs, organism,
         ))
     }
 
+    # ---- Apply component selection -----------------------------------------
+    if (!comp$va)    v_dist_a <- .zero_v_dist_matrix(v_dist_a)
+    if (!comp$vb)    v_dist_b <- .zero_v_dist_matrix(v_dist_b)
+
+    w_a  <- if (comp$cdr3a) as.integer(weight_cdr3)      else 0L
+    gp_a <- if (comp$cdr3a) as.integer(gap_penalty_cdr3) else 0L
+    w_b  <- if (comp$cdr3b) as.integer(weight_cdr3)      else 0L
+    gp_b <- if (comp$cdr3b) as.integer(gap_penalty_cdr3) else 0L
+
     # ---- Dispatch to C++ ---------------------------------------------------
     dist_mat <- rcpp_tcrdist_matrix(
         tcrs$va,
@@ -179,8 +264,8 @@ tcrdist_matrix <- function(tcrs, organism,
         tcrs$cdr3b,
         v_dist_a,
         v_dist_b,
-        as.integer(weight_cdr3),
-        as.integer(gap_penalty_cdr3)
+        w_a, gp_a,
+        w_b, gp_b
     )
 
     # ---- Set row/column names ----------------------------------------------

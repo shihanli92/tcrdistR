@@ -8,6 +8,7 @@ tcrdist_rect(
   query,
   ref,
   organism,
+  components = "all",
   weight_cdr3 = WEIGHT_CDR3_REGION,
   gap_penalty_cdr3 = GAP_PENALTY_CDR3_REGION
 )
@@ -25,6 +26,9 @@ tcrdist_rect(
 
 \item{organism}{Character string. Organism key understood by
 \code{load_gene_database}, e.g. \code{"human"} or \code{"mouse"}.}
+
+\item{components}{Character.  Which distance components to include.
+See \code{\link{tcrdist_matrix}} for details.  Default \code{"all"}.}
 
 \item{weight_cdr3}{Integer. Weight applied to CDR3 distances. Defaults to
 \code{WEIGHT_CDR3_REGION} (3L).}

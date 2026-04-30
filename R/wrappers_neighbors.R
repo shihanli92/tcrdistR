@@ -37,6 +37,8 @@
 #'   group assignments. Same semantics as \code{agroups}.
 #' @param sort_nbrs Logical. If \code{TRUE} (default), sort each row's K
 #'   neighbors by ascending distance.
+#' @param components Character.  Which distance components to include.
+#'   See \code{\link{tcrdist_matrix}} for details.  Default \code{"all"}.
 #' @param weight_cdr3 Integer. CDR3 distance weight. Defaults to
 #'   \code{WEIGHT_CDR3_REGION} (3L).
 #' @param gap_penalty_cdr3 Integer. CDR3 gap penalty. Defaults to
@@ -65,6 +67,7 @@ tcrdist_knn <- function(tcrs, organism, K,
                         agroups          = NULL,
                         bgroups          = NULL,
                         sort_nbrs        = TRUE,
+                        components       = "all",
                         weight_cdr3      = WEIGHT_CDR3_REGION,
                         gap_penalty_cdr3 = GAP_PENALTY_CDR3_REGION) {
 
@@ -137,6 +140,9 @@ tcrdist_knn <- function(tcrs, organism, K,
         stop("tcrdist_knn: 'organism' must be a non-empty character string of length 1")
     }
 
+    # ---- Resolve components -------------------------------------------------
+    comp <- .resolve_components(components)
+
     # ---- Build V-region distance matrices ----------------------------------
     v_dist_a <- .compute_v_region_distance_matrix(organism, "A")
     v_dist_b <- .compute_v_region_distance_matrix(organism, "B")
@@ -157,6 +163,15 @@ tcrdist_knn <- function(tcrs, organism, K,
         ))
     }
 
+    # ---- Apply component selection -----------------------------------------
+    if (!comp$va)    v_dist_a <- .zero_v_dist_matrix(v_dist_a)
+    if (!comp$vb)    v_dist_b <- .zero_v_dist_matrix(v_dist_b)
+
+    w_a  <- if (comp$cdr3a) as.integer(weight_cdr3)      else 0L
+    gp_a <- if (comp$cdr3a) as.integer(gap_penalty_cdr3) else 0L
+    w_b  <- if (comp$cdr3b) as.integer(weight_cdr3)      else 0L
+    gp_b <- if (comp$cdr3b) as.integer(gap_penalty_cdr3) else 0L
+
     # ---- Dispatch to C++ ---------------------------------------------------
     rcpp_tcrdist_knn(
         tcrs$va,
@@ -169,8 +184,8 @@ tcrdist_knn <- function(tcrs, organism, K,
         agroups,
         bgroups,
         isTRUE(sort_nbrs),
-        as.integer(weight_cdr3),
-        as.integer(gap_penalty_cdr3)
+        w_a, gp_a,
+        w_b, gp_b
     )
 }
 
@@ -199,6 +214,8 @@ tcrdist_knn <- function(tcrs, organism, K,
 #'   group assignments.  \code{NULL} assigns each TCR a unique group (no masking).
 #' @param bgroups Integer vector of length N, or \code{NULL}. Beta-chain
 #'   group assignments.
+#' @param components Character.  Which distance components to include.
+#'   See \code{\link{tcrdist_matrix}} for details.  Default \code{"all"}.
 #' @param weight_cdr3 Integer. CDR3 distance weight. Defaults to
 #'   \code{WEIGHT_CDR3_REGION} (3L).
 #' @param gap_penalty_cdr3 Integer. CDR3 gap penalty. Defaults to
@@ -226,6 +243,7 @@ tcrdist_knn <- function(tcrs, organism, K,
 tcrdist_radius_neighbors <- function(tcrs, organism, radius,
                                      agroups          = NULL,
                                      bgroups          = NULL,
+                                     components       = "all",
                                      weight_cdr3      = WEIGHT_CDR3_REGION,
                                      gap_penalty_cdr3 = GAP_PENALTY_CDR3_REGION) {
 
@@ -295,6 +313,9 @@ tcrdist_radius_neighbors <- function(tcrs, organism, radius,
         stop("tcrdist_radius_neighbors: 'organism' must be a non-empty character string of length 1")
     }
 
+    # ---- Resolve components -------------------------------------------------
+    comp <- .resolve_components(components)
+
     # ---- Build V-region distance matrices ----------------------------------
     v_dist_a <- .compute_v_region_distance_matrix(organism, "A")
     v_dist_b <- .compute_v_region_distance_matrix(organism, "B")
@@ -315,6 +336,15 @@ tcrdist_radius_neighbors <- function(tcrs, organism, radius,
         ))
     }
 
+    # ---- Apply component selection -----------------------------------------
+    if (!comp$va)    v_dist_a <- .zero_v_dist_matrix(v_dist_a)
+    if (!comp$vb)    v_dist_b <- .zero_v_dist_matrix(v_dist_b)
+
+    w_a  <- if (comp$cdr3a) as.integer(weight_cdr3)      else 0L
+    gp_a <- if (comp$cdr3a) as.integer(gap_penalty_cdr3) else 0L
+    w_b  <- if (comp$cdr3b) as.integer(weight_cdr3)      else 0L
+    gp_b <- if (comp$cdr3b) as.integer(gap_penalty_cdr3) else 0L
+
     # ---- Dispatch to C++ ---------------------------------------------------
     rcpp_tcrdist_radius_neighbors(
         tcrs$va,
@@ -326,8 +356,8 @@ tcrdist_radius_neighbors <- function(tcrs, organism, radius,
         radius,
         agroups,
         bgroups,
-        as.integer(weight_cdr3),
-        as.integer(gap_penalty_cdr3)
+        w_a, gp_a,
+        w_b, gp_b
     )
 }
 

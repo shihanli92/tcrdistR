@@ -11,6 +11,7 @@ tcrdist_knn(
   agroups = NULL,
   bgroups = NULL,
   sort_nbrs = TRUE,
+  components = "all",
   weight_cdr3 = WEIGHT_CDR3_REGION,
   gap_penalty_cdr3 = GAP_PENALTY_CDR3_REGION
 )
@@ -38,6 +39,9 @@ group assignments. Same semantics as \code{agroups}.}
 
 \item{sort_nbrs}{Logical. If \code{TRUE} (default), sort each row's K
 neighbors by ascending distance.}
+
+\item{components}{Character.  Which distance components to include.
+See \code{\link{tcrdist_matrix}} for details.  Default \code{"all"}.}
 
 \item{weight_cdr3}{Integer. CDR3 distance weight. Defaults to
 \code{WEIGHT_CDR3_REGION} (3L).}

@@ -10,6 +10,7 @@ tcrdist_radius_neighbors(
   radius,
   agroups = NULL,
   bgroups = NULL,
+  components = "all",
   weight_cdr3 = WEIGHT_CDR3_REGION,
   gap_penalty_cdr3 = GAP_PENALTY_CDR3_REGION
 )
@@ -33,6 +34,9 @@ group assignments.  \code{NULL} assigns each TCR a unique group (no masking).}
 
 \item{bgroups}{Integer vector of length N, or \code{NULL}. Beta-chain
 group assignments.}
+
+\item{components}{Character.  Which distance components to include.
+See \code{\link{tcrdist_matrix}} for details.  Default \code{"all"}.}
 
 \item{weight_cdr3}{Integer. CDR3 distance weight. Defaults to
 \code{WEIGHT_CDR3_REGION} (3L).}
