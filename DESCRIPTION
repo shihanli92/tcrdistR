@@ -25,6 +25,7 @@ Suggests:
     ggplot2 (>= 3.4.0),
     ggseqlogo,
     patchwork,
+    png,
     ggrepel,
     uwot,
     igraph,

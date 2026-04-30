@@ -139,6 +139,18 @@ plot_gene_usage(pa, "va", title = "V-alpha usage (PA)")
 plot_gene_usage(pa, "vb", title = "V-beta usage (PA)")
 ```
 
+## V/J Gene Logos
+
+`plot_vj_gene_logo()` renders gene names as text glyphs whose height is
+proportional to frequency --- a "sequence logo" style for gene usage:
+
+```{r gene-logo, eval=has_viz && requireNamespace("png", quietly = TRUE), fig.height=3}
+plot_vj_gene_logo(pa$vb, organism = "mouse",
+                  gene_type = "V", chain = "beta")
+plot_vj_gene_logo(pa$ja, organism = "mouse",
+                  gene_type = "J", chain = "alpha")
+```
+
 ## CDR3 Sequence Logos
 
 Display amino acid frequency at each position as a sequence logo. The
@@ -154,6 +166,30 @@ Frequency ("prob") mode:
 ```{r logo-prob, eval=has_logo, fig.height=3}
 plot_cdr3_logo(pa_sub$cdr3a, chain = "alpha", method = "prob",
                title = "CDR3-alpha logo (PA)")
+```
+
+## Junction Bars
+
+`compute_nucseq_src()` analyzes CDR3 nucleotide sequences to identify
+V/N/D/J segment origins. Pass the result to `plot_cdr3_logo()` with
+`show_junction_bars = TRUE` to display the rearrangement structure:
+
+```{r junction, eval=has_logo, fig.height=4}
+src <- compute_nucseq_src(pa_sub, organism = "mouse", chain = "beta")
+plot_cdr3_logo(pa_sub$cdr3b, chain = "beta",
+               nucseq_src = src, show_junction_bars = TRUE,
+               title = "CDR3-beta with junction bars (PA)")
+```
+
+## TCR Logo Panel
+
+`plot_tcr_logo_panel()` combines V-gene logos, CDR3 sequence logos with
+junction bars, and J-gene logos for both chains into a single composite
+panel:
+
+```{r logo-panel, eval=has_logo && requireNamespace("patchwork", quietly = TRUE) && requireNamespace("png", quietly = TRUE), fig.width=10, fig.height=4}
+plot_tcr_logo_panel(pa_sub, organism = "mouse",
+                    title = "PA-specific TCR rearrangement")
 ```
 
 ## TCR Network Plot

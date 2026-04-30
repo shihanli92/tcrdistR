@@ -319,9 +319,13 @@
 #'   is provided, stack junction bars below the logo via \pkg{patchwork}.
 #' @param nucseq_src List of character vectors with nucleotide source labels
 #'   (one per CDR3). Required for junction bars.
+#' @param return_junction_pwm Logical. If \code{TRUE}, return a list with
+#'   components \code{plot} (the ggplot logo) and \code{junction_pwm} (the
+#'   numeric matrix, or \code{NULL}). Default \code{FALSE}.
 #'
 #' @return A \code{ggplot} object (or \code{patchwork} object if junction bars
-#'   are included).
+#'   are included). When \code{return_junction_pwm = TRUE}, a list with
+#'   \code{plot} and \code{junction_pwm}.
 #'
 #' @examples
 #' \dontrun{
@@ -340,7 +344,8 @@ plot_cdr3_logo <- function(cdr3_seqs,
                             gap_character = "-",
                             title = NULL,
                             nucseq_src = NULL,
-                            show_junction_bars = FALSE) {
+                            show_junction_bars = FALSE,
+                            return_junction_pwm = FALSE) {
     .check_ggplot2("plot_cdr3_logo()")
     if (!requireNamespace("ggseqlogo", quietly = TRUE)) {
         stop("Package 'ggseqlogo' is required for plot_cdr3_logo(). ",
@@ -387,6 +392,10 @@ plot_cdr3_logo <- function(cdr3_seqs,
             axis.text.y = ggplot2::element_text(size = 7),
             legend.position = "none"
         )
+
+    if (return_junction_pwm) {
+        return(list(plot = p, junction_pwm = pwm_result$junction_pwm))
+    }
 
     if (show_junction_bars && !is.null(pwm_result$junction_pwm)) {
         if (!requireNamespace("patchwork", quietly = TRUE)) {
@@ -565,4 +574,416 @@ plot_gene_usage <- function(tcr_df, gene_col, strip_allele = TRUE,
         ggplot2::theme(
             plot.title = ggplot2::element_text(hjust = 0.5, size = 11)
         )
+}
+
+
+# ---------------------------------------------------------------------------
+# .render_gene_text_raster  (internal helper)
+# ---------------------------------------------------------------------------
+
+#' Render a gene name label as a cropped RGBA raster
+#'
+#' Creates a temporary PNG, draws bold text at a large font size, then reads
+#' the image back and crops to the bounding box of non-transparent pixels.
+#' The resulting array can be passed to \code{ggplot2::annotation_raster()}.
+#'
+#' @param label Character string. The text to render.
+#' @param col Character string. Text colour. Default \code{"black"}.
+#' @param width_px Integer. Pixel width of the temporary canvas.
+#'   Default \code{2400L}.
+#' @param height_px Integer. Pixel height of the temporary canvas.
+#'   Default \code{480L}.
+#' @return A numeric array (rows x cols x 4 RGBA channels) suitable for
+#'   \code{annotation_raster()}.
+#' @keywords internal
+#' @noRd
+.render_gene_text_raster <- function(label, col = "black",
+                                      width_px = 2400L, height_px = 480L) {
+    if (!requireNamespace("png", quietly = TRUE)) {
+        stop("Package 'png' is required for gene logo rendering. ",
+             "Install it with: install.packages(\"png\")",
+             call. = FALSE)
+    }
+
+    tf <- tempfile(fileext = ".png")
+    on.exit(unlink(tf), add = TRUE)
+    grDevices::png(tf, width = width_px, height = height_px,
+                   bg = "transparent")
+    grid::grid.newpage()
+    grid::grid.text(label,
+        gp = grid::gpar(fontface = "bold", col = col, fontsize = 320))
+    grDevices::dev.off()
+    img <- png::readPNG(tf)
+
+    # Crop to non-transparent content bounding box
+    alpha <- img[, , 4]
+    rows <- which(rowSums(alpha) > 0)
+    cols <- which(colSums(alpha) > 0)
+    if (length(rows) == 0L || length(cols) == 0L) return(img)
+    img[min(rows):max(rows), min(cols):max(cols), , drop = FALSE]
+}
+
+
+# ---------------------------------------------------------------------------
+# plot_vj_gene_logo  (exported)
+# ---------------------------------------------------------------------------
+
+#' Plot a V/J gene usage logo
+#'
+#' Renders gene names as stacked text glyphs with heights proportional to
+#' their frequency --- a "sequence logo" style for gene usage. Each gene
+#' name is rendered as a coloured raster image and vertically stacked so
+#' that more frequent genes occupy more vertical space.
+#'
+#' @param genes Character vector. V-gene or J-gene allele names
+#'   (e.g., \code{"TRAV1-2*01"}).
+#' @param organism Character string. Organism identifier
+#'   (e.g., \code{"human"}, \code{"mouse"}).
+#' @param gene_type Character string. \code{"V"} or \code{"J"}.
+#' @param chain Character string. \code{"alpha"} or \code{"beta"}.
+#' @param max_genes Integer. Maximum number of genes to display.
+#'   Default \code{10L}.
+#'
+#' @return A \code{ggplot} object.
+#'
+#' @examples
+#' \dontrun{
+#' data(dash)
+#' pa <- dash[dash$epitope == "PA", ]
+#' plot_vj_gene_logo(pa$vb, organism = "mouse", gene_type = "V",
+#'                   chain = "beta")
+#' plot_vj_gene_logo(pa$ja, organism = "mouse", gene_type = "J",
+#'                   chain = "alpha")
+#' }
+#'
+#' @seealso \code{\link{plot_gene_usage}}, \code{\link{plot_tcr_logo_panel}}
+#' @export
+plot_vj_gene_logo <- function(genes,
+                               organism,
+                               gene_type = c("V", "J"),
+                               chain = c("alpha", "beta"),
+                               max_genes = 10L) {
+    .check_ggplot2("plot_vj_gene_logo()")
+
+    gene_type <- match.arg(gene_type)
+    chain <- match.arg(chain)
+    max_genes <- as.integer(max_genes)
+
+    stopifnot(
+        is.character(genes),
+        length(genes) >= 1L
+    )
+
+    # ---- Map alleles to count_rep names --------------------------------------
+    organism_genes <- load_gene_database(organism)
+
+    count_reps <- vapply(genes, function(g) {
+        entry <- organism_genes[[g]]
+        if (!is.null(entry)) {
+            entry$count_rep
+        } else {
+            trim_allele_to_gene(g)
+        }
+    }, character(1L), USE.NAMES = FALSE)
+
+    # ---- Compute frequencies and proportions ---------------------------------
+    freq_table <- sort(table(count_reps), decreasing = TRUE)
+    gene_names <- names(freq_table)
+    proportions <- as.numeric(freq_table) / length(count_reps)
+
+    # Trim to max_genes
+    n_show <- min(length(gene_names), max_genes)
+    gene_names  <- gene_names[seq_len(n_show)]
+    proportions <- proportions[seq_len(n_show)]
+
+    # ---- Trim display names --------------------------------------------------
+    prefixes <- c("TRAV", "TRAJ", "TRBV", "TRBJ",
+                   "TRGV", "TRGJ", "TRDV", "TRDJ",
+                   "IGHV", "IGHJ", "IGLV", "IGLJ", "IGKV", "IGKJ")
+    display_names <- gene_names
+    for (pfx in prefixes) {
+        mask <- startsWith(display_names, pfx)
+        display_names[mask] <- substring(display_names[mask],
+                                          nchar(pfx) + 1L)
+    }
+
+    # ---- Colour palette ------------------------------------------------------
+    pal <- .tcrdistR_palette(n_show)
+
+    # ---- Stack positions (most frequent at bottom) ---------------------------
+    y_top <- cumsum(proportions)
+    y_bottom <- c(0, y_top[-n_show])
+
+    # ---- Title ---------------------------------------------------------------
+    chain_letter <- if (chain == "alpha") "\u03b1" else "\u03b2"
+    plot_title <- paste0(gene_type, chain_letter)
+
+    # ---- Build ggplot with raster gene glyphs --------------------------------
+    p <- ggplot2::ggplot() +
+        ggplot2::scale_x_continuous(limits = c(0, 1),
+                                    expand = c(0, 0)) +
+        ggplot2::scale_y_continuous(limits = c(0, max(y_top)),
+                                    expand = ggplot2::expansion(
+                                        mult = c(0, 0.02))) +
+        ggplot2::labs(title = plot_title, x = NULL, y = NULL) +
+        ggplot2::theme_void() +
+        ggplot2::theme(
+            plot.title = ggplot2::element_text(hjust = 0.5, size = 10,
+                                                face = "bold"),
+            plot.margin = ggplot2::margin(2, 2, 2, 2)
+        )
+
+    for (i in seq_len(n_show)) {
+        img <- .render_gene_text_raster(display_names[i], col = pal[i])
+        p <- p + ggplot2::annotation_raster(img,
+            xmin = 0.05, xmax = 0.95,
+            ymin = y_bottom[i], ymax = y_top[i],
+            interpolate = TRUE)
+    }
+
+    p
+}
+
+
+# ---------------------------------------------------------------------------
+# compute_nucseq_src  (exported)
+# ---------------------------------------------------------------------------
+
+#' Compute nucleotide source annotations for CDR3 sequences
+#'
+#' For each TCR, calls \code{.analyze_junction()} to determine the V/N/D/J
+#' origin of each nucleotide in the CDR3 region. The result can be passed
+#' to \code{\link{plot_cdr3_logo}} via its \code{nucseq_src} parameter to
+#' display junction bars showing the rearrangement structure.
+#'
+#' @param tcrs Data.frame with columns \code{va}, \code{ja}, \code{cdr3a},
+#'   \code{cdr3a_nucseq} (for alpha chain) or \code{vb}, \code{jb},
+#'   \code{cdr3b}, \code{cdr3b_nucseq} (for beta chain).
+#' @param organism Character string. Organism identifier
+#'   (e.g., \code{"human"}, \code{"mouse"}).
+#' @param chain Character string. \code{"alpha"} or \code{"beta"}.
+#'
+#' @return A list of character vectors (one per TCR). Each vector has
+#'   length \code{nchar(cdr3_nucseq)} with elements from
+#'   \code{c("V", "N", "J")} for alpha chain, or
+#'   \code{c("V", "N1", "D", "N2", "J")} for beta chain. Returns
+#'   \code{NULL} for TCRs where junction analysis fails.
+#'
+#' @examples
+#' \dontrun{
+#' data(dash)
+#' pa <- dash[dash$epitope == "PA", ][1:20, ]
+#' src <- compute_nucseq_src(pa, organism = "mouse", chain = "beta")
+#' plot_cdr3_logo(pa$cdr3b, chain = "beta", nucseq_src = src,
+#'                show_junction_bars = TRUE)
+#' }
+#'
+#' @seealso \code{\link{plot_cdr3_logo}}, \code{\link{plot_junction_bars}},
+#'   \code{\link{plot_tcr_logo_panel}}
+#' @export
+compute_nucseq_src <- function(tcrs, organism,
+                                chain = c("alpha", "beta")) {
+    chain <- match.arg(chain)
+    n <- nrow(tcrs)
+    result <- vector("list", n)
+
+    for (i in seq_len(n)) {
+        if (chain == "alpha") {
+            v_gene <- tcrs$va[i]
+            j_gene <- tcrs$ja[i]
+            cdr3   <- tcrs$cdr3a[i]
+            nucseq <- tcrs$cdr3a_nucseq[i]
+        } else {
+            v_gene <- tcrs$vb[i]
+            j_gene <- tcrs$jb[i]
+            cdr3   <- tcrs$cdr3b[i]
+            nucseq <- tcrs$cdr3b_nucseq[i]
+        }
+
+        if (is.na(nucseq) || nucseq == "" || is.na(cdr3) || cdr3 == "") {
+            next
+        }
+
+        res <- tryCatch(
+            .analyze_junction(organism, v_gene, j_gene, cdr3,
+                              tolower(nucseq)),
+            error = function(e) NULL
+        )
+
+        if (is.null(res)) next
+
+        src_chars <- strsplit(res$cdr3_nucseq_src, "", fixed = TRUE)[[1L]]
+
+        # For beta chain: convert N -> N1 (before D) or N2 (after D)
+        if (chain == "beta") {
+            seen_d <- FALSE
+            for (j in seq_along(src_chars)) {
+                if (src_chars[j] == "D") {
+                    seen_d <- TRUE
+                } else if (src_chars[j] == "N") {
+                    src_chars[j] <- if (seen_d) "N2" else "N1"
+                }
+            }
+        }
+
+        result[[i]] <- src_chars
+    }
+
+    result
+}
+
+
+# ---------------------------------------------------------------------------
+# plot_tcr_logo_panel  (exported)
+# ---------------------------------------------------------------------------
+
+#' Plot a composite TCR rearrangement logo panel
+#'
+#' Arranges V-gene logos, CDR3 sequence logos (with optional junction bars),
+#' and J-gene logos for both alpha and beta chains in a single composite
+#' panel. This provides a comprehensive view of TCR rearrangement structure.
+#'
+#' @param tcrs Data.frame with at least columns \code{va}, \code{ja},
+#'   \code{cdr3a}, \code{vb}, \code{jb}, \code{cdr3b}. For junction bars,
+#'   also requires \code{cdr3a_nucseq} and \code{cdr3b_nucseq}.
+#' @param organism Character string. Organism identifier
+#'   (e.g., \code{"human"}, \code{"mouse"}).
+#' @param show_junction_bars Logical. If \code{TRUE} (default) and
+#'   nucleotide sequence columns are present, display V/N/D/J junction bars
+#'   below each CDR3 logo.
+#' @param title Optional character string. Overall panel title.
+#'
+#' @return A \code{patchwork} object.
+#'
+#' @examples
+#' \dontrun{
+#' data(dash)
+#' pa <- dash[dash$epitope == "PA", ][1:30, ]
+#' plot_tcr_logo_panel(pa, organism = "mouse")
+#' plot_tcr_logo_panel(pa, organism = "mouse", show_junction_bars = FALSE)
+#' }
+#'
+#' @seealso \code{\link{plot_vj_gene_logo}}, \code{\link{plot_cdr3_logo}},
+#'   \code{\link{plot_junction_bars}}, \code{\link{compute_nucseq_src}}
+#' @export
+plot_tcr_logo_panel <- function(tcrs,
+                                 organism,
+                                 show_junction_bars = TRUE,
+                                 title = NULL) {
+    .check_ggplot2("plot_tcr_logo_panel()")
+    if (!requireNamespace("patchwork", quietly = TRUE)) {
+        stop("Package 'patchwork' is required for plot_tcr_logo_panel(). ",
+             "Install it with: install.packages(\"patchwork\")",
+             call. = FALSE)
+    }
+
+    stopifnot(is.data.frame(tcrs), nrow(tcrs) >= 1L)
+
+    # ---- Compute junction source annotations if needed -----------------------
+    alpha_nucseq_src <- NULL
+    beta_nucseq_src <- NULL
+    has_nucseq <- show_junction_bars &&
+        "cdr3a_nucseq" %in% colnames(tcrs) &&
+        "cdr3b_nucseq" %in% colnames(tcrs)
+    if (has_nucseq) {
+        alpha_nucseq_src <- tryCatch(
+            compute_nucseq_src(tcrs, organism, "alpha"),
+            error = function(e) NULL
+        )
+        beta_nucseq_src <- tryCatch(
+            compute_nucseq_src(tcrs, organism, "beta"),
+            error = function(e) NULL
+        )
+    }
+
+    panels <- list()
+    widths <- numeric(0)
+
+    # ---- Alpha chain: V-gene logo, CDR3 logo, J-gene logo -------------------
+    alpha_jbar <- NULL
+    alpha_cdr3_idx <- NA_integer_
+
+    panels <- c(panels, list(
+        plot_vj_gene_logo(tcrs$va, organism, "V", "alpha")
+    ))
+    widths <- c(widths, 1.0)
+
+    cdr3a_result <- plot_cdr3_logo(
+        tcrs$cdr3a, chain = "alpha",
+        nucseq_src = alpha_nucseq_src,
+        return_junction_pwm = has_nucseq && !is.null(alpha_nucseq_src)
+    )
+    if (is.list(cdr3a_result) && !inherits(cdr3a_result, "gg")) {
+        panels <- c(panels, list(cdr3a_result$plot))
+        if (!is.null(cdr3a_result$junction_pwm)) {
+            alpha_jbar <- plot_junction_bars(
+                cdr3a_result$junction_pwm, chain = "alpha")
+        }
+    } else {
+        panels <- c(panels, list(cdr3a_result))
+    }
+    alpha_cdr3_idx <- length(panels)
+    widths <- c(widths, 3.0)
+
+    panels <- c(panels, list(
+        plot_vj_gene_logo(tcrs$ja, organism, "J", "alpha")
+    ))
+    widths <- c(widths, 1.0)
+
+    # ---- Beta chain: V-gene logo, CDR3 logo, J-gene logo --------------------
+    beta_jbar <- NULL
+    beta_cdr3_idx <- NA_integer_
+
+    panels <- c(panels, list(
+        plot_vj_gene_logo(tcrs$vb, organism, "V", "beta")
+    ))
+    widths <- c(widths, 1.0)
+
+    cdr3b_result <- plot_cdr3_logo(
+        tcrs$cdr3b, chain = "beta",
+        nucseq_src = beta_nucseq_src,
+        return_junction_pwm = has_nucseq && !is.null(beta_nucseq_src)
+    )
+    if (is.list(cdr3b_result) && !inherits(cdr3b_result, "gg")) {
+        panels <- c(panels, list(cdr3b_result$plot))
+        if (!is.null(cdr3b_result$junction_pwm)) {
+            beta_jbar <- plot_junction_bars(
+                cdr3b_result$junction_pwm, chain = "beta")
+        }
+    } else {
+        panels <- c(panels, list(cdr3b_result))
+    }
+    beta_cdr3_idx <- length(panels)
+    widths <- c(widths, 3.0)
+
+    panels <- c(panels, list(
+        plot_vj_gene_logo(tcrs$jb, organism, "J", "beta")
+    ))
+    widths <- c(widths, 1.0)
+
+    # ---- Assemble with patchwork ---------------------------------------------
+    row1 <- patchwork::wrap_plots(panels, nrow = 1L, widths = widths)
+
+    has_jbars <- !is.null(alpha_jbar) || !is.null(beta_jbar)
+    if (has_jbars) {
+        # Build junction bar row aligned under CDR3 panels
+        spacer <- ggplot2::ggplot() + ggplot2::theme_void()
+        jbar_panels <- vector("list", length(panels))
+        for (k in seq_along(jbar_panels)) jbar_panels[[k]] <- spacer
+        if (!is.null(alpha_jbar)) jbar_panels[[alpha_cdr3_idx]] <- alpha_jbar
+        if (!is.null(beta_jbar))  jbar_panels[[beta_cdr3_idx]]  <- beta_jbar
+
+        row2 <- patchwork::wrap_plots(jbar_panels, nrow = 1L, widths = widths)
+        result <- patchwork::wrap_plots(row1, row2, ncol = 1L,
+                                         heights = c(3, 1))
+    } else {
+        result <- row1
+    }
+
+    if (!is.null(title)) {
+        result <- result +
+            patchwork::plot_annotation(title = title)
+    }
+
+    result
 }

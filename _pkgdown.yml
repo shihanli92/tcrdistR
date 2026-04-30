@@ -88,6 +88,9 @@ reference:
       - plot_distance_distribution
       - plot_cdr3_logo
       - plot_junction_bars
+      - plot_vj_gene_logo
+      - plot_tcr_logo_panel
+      - compute_nucseq_src
       - plot_gene_usage
       - plot_tcr_scatter
       - compute_tcr_network

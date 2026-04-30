@@ -420,3 +420,213 @@ test_that("kernel PCA to scatter pipeline works", {
                            title = "Kernel PCA")
     expect_s3_class(p, "gg")
 })
+
+
+# ===========================================================================
+# .render_gene_text_raster
+# ===========================================================================
+
+test_that(".render_gene_text_raster returns RGBA array", {
+    skip_if_not_installed("png")
+    skip_on_cran()
+    img <- tcrdistR:::.render_gene_text_raster("1-2", col = "red")
+    expect_true(is.array(img))
+    expect_equal(length(dim(img)), 3L)
+    expect_equal(dim(img)[3L], 4L)
+})
+
+test_that(".render_gene_text_raster has non-zero dimensions", {
+    skip_if_not_installed("png")
+    skip_on_cran()
+    img <- tcrdistR:::.render_gene_text_raster("TRAV1")
+    expect_true(dim(img)[1L] > 0L)
+    expect_true(dim(img)[2L] > 0L)
+})
+
+
+# ===========================================================================
+# plot_vj_gene_logo
+# ===========================================================================
+
+test_that("plot_vj_gene_logo returns ggplot for V genes", {
+    skip_if_not_installed("ggplot2")
+    skip_if_not_installed("png")
+    skip_on_cran()
+    data(dash, envir = environment())
+    pa <- dash[dash$epitope == "PA", ]
+    p <- plot_vj_gene_logo(pa$vb, organism = "mouse",
+                            gene_type = "V", chain = "beta")
+    expect_s3_class(p, "gg")
+})
+
+test_that("plot_vj_gene_logo returns ggplot for J genes", {
+    skip_if_not_installed("ggplot2")
+    skip_if_not_installed("png")
+    skip_on_cran()
+    data(dash, envir = environment())
+    pa <- dash[dash$epitope == "PA", ]
+    p <- plot_vj_gene_logo(pa$ja, organism = "mouse",
+                            gene_type = "J", chain = "alpha")
+    expect_s3_class(p, "gg")
+})
+
+test_that("plot_vj_gene_logo respects max_genes", {
+    skip_if_not_installed("ggplot2")
+    skip_if_not_installed("png")
+    skip_on_cran()
+    data(dash, envir = environment())
+    p <- plot_vj_gene_logo(dash$vb, organism = "mouse",
+                            gene_type = "V", chain = "beta",
+                            max_genes = 3L)
+    expect_s3_class(p, "gg")
+})
+
+test_that("plot_vj_gene_logo works with human organism", {
+    skip_if_not_installed("ggplot2")
+    skip_if_not_installed("png")
+    skip_on_cran()
+    genes <- rep(c("TRAV1-2*01", "TRAV12-1*01", "TRAV10*01"), c(5, 3, 2))
+    p <- plot_vj_gene_logo(genes, organism = "human",
+                            gene_type = "V", chain = "alpha")
+    expect_s3_class(p, "gg")
+})
+
+
+# ===========================================================================
+# compute_nucseq_src
+# ===========================================================================
+
+test_that("compute_nucseq_src returns list of correct length", {
+    skip_on_cran()
+    data(dash, envir = environment())
+    pa <- dash[dash$epitope == "PA", ][1:5, ]
+    src <- compute_nucseq_src(pa, organism = "mouse", chain = "alpha")
+    expect_type(src, "list")
+    expect_length(src, 5L)
+})
+
+test_that("compute_nucseq_src alpha chain uses V/N/J labels", {
+    skip_on_cran()
+    data(dash, envir = environment())
+    pa <- dash[dash$epitope == "PA", ][1:5, ]
+    src <- compute_nucseq_src(pa, organism = "mouse", chain = "alpha")
+    for (s in src) {
+        if (!is.null(s)) {
+            expect_true(all(s %in% c("V", "N", "J")))
+        }
+    }
+})
+
+test_that("compute_nucseq_src beta chain uses N1/N2/D labels", {
+    skip_on_cran()
+    data(dash, envir = environment())
+    pa <- dash[dash$epitope == "PA", ][1:5, ]
+    src <- compute_nucseq_src(pa, organism = "mouse", chain = "beta")
+    for (s in src) {
+        if (!is.null(s)) {
+            expect_true(all(s %in% c("V", "N1", "D", "N2", "J")))
+        }
+    }
+})
+
+test_that("compute_nucseq_src returns NULL for missing nucseq", {
+    skip_on_cran()
+    data(dash, envir = environment())
+    pa <- dash[dash$epitope == "PA", ][1:3, ]
+    pa$cdr3b_nucseq <- NA_character_
+    src <- compute_nucseq_src(pa, organism = "mouse", chain = "beta")
+    expect_true(all(vapply(src, is.null, logical(1L))))
+})
+
+
+# ===========================================================================
+# plot_cdr3_logo with return_junction_pwm
+# ===========================================================================
+
+test_that("plot_cdr3_logo return_junction_pwm returns list", {
+    skip_if_not_installed("ggplot2")
+    skip_if_not_installed("ggseqlogo")
+    skip_on_cran()
+    data(dash, envir = environment())
+    pa <- dash[dash$epitope == "PA", ][1:10, ]
+    src <- compute_nucseq_src(pa, organism = "mouse", chain = "beta")
+    result <- plot_cdr3_logo(pa$cdr3b, chain = "beta",
+                              nucseq_src = src,
+                              return_junction_pwm = TRUE)
+    expect_type(result, "list")
+    expect_true("plot" %in% names(result))
+    expect_true("junction_pwm" %in% names(result))
+    expect_s3_class(result$plot, "gg")
+    expect_true(is.matrix(result$junction_pwm))
+})
+
+test_that("plot_cdr3_logo return_junction_pwm FALSE is backward compatible", {
+    skip_if_not_installed("ggplot2")
+    skip_if_not_installed("ggseqlogo")
+    skip_on_cran()
+    seqs <- c("CAVRDSSYKLIF", "CAVKDSSYKLIF", "CAVRDSYKLIF")
+    p <- plot_cdr3_logo(seqs, chain = "alpha",
+                         return_junction_pwm = FALSE)
+    expect_s3_class(p, "gg")
+})
+
+
+# ===========================================================================
+# plot_tcr_logo_panel
+# ===========================================================================
+
+test_that("plot_tcr_logo_panel returns patchwork with junction bars", {
+    skip_if_not_installed("ggplot2")
+    skip_if_not_installed("ggseqlogo")
+    skip_if_not_installed("patchwork")
+    skip_if_not_installed("png")
+    skip_on_cran()
+    data(dash, envir = environment())
+    pa <- dash[dash$epitope == "PA", ][1:10, ]
+    p <- plot_tcr_logo_panel(pa, organism = "mouse",
+                              show_junction_bars = TRUE)
+    expect_true(inherits(p, "patchwork") || inherits(p, "gg"))
+})
+
+test_that("plot_tcr_logo_panel works without junction bars", {
+    skip_if_not_installed("ggplot2")
+    skip_if_not_installed("ggseqlogo")
+    skip_if_not_installed("patchwork")
+    skip_if_not_installed("png")
+    skip_on_cran()
+    data(dash, envir = environment())
+    pa <- dash[dash$epitope == "PA", ][1:10, ]
+    p <- plot_tcr_logo_panel(pa, organism = "mouse",
+                              show_junction_bars = FALSE)
+    expect_true(inherits(p, "patchwork") || inherits(p, "gg"))
+})
+
+test_that("plot_tcr_logo_panel adds title", {
+    skip_if_not_installed("ggplot2")
+    skip_if_not_installed("ggseqlogo")
+    skip_if_not_installed("patchwork")
+    skip_if_not_installed("png")
+    skip_on_cran()
+    data(dash, envir = environment())
+    pa <- dash[dash$epitope == "PA", ][1:10, ]
+    p <- plot_tcr_logo_panel(pa, organism = "mouse",
+                              title = "PA panel",
+                              show_junction_bars = FALSE)
+    expect_true(inherits(p, "patchwork") || inherits(p, "gg"))
+})
+
+test_that("plot_tcr_logo_panel gracefully handles missing nucseq", {
+    skip_if_not_installed("ggplot2")
+    skip_if_not_installed("ggseqlogo")
+    skip_if_not_installed("patchwork")
+    skip_if_not_installed("png")
+    skip_on_cran()
+    data(dash, envir = environment())
+    pa <- dash[dash$epitope == "PA", ][1:10, ]
+    # Remove nucseq columns — should still work, just no junction bars
+    pa$cdr3a_nucseq <- NULL
+    pa$cdr3b_nucseq <- NULL
+    p <- plot_tcr_logo_panel(pa, organism = "mouse",
+                              show_junction_bars = TRUE)
+    expect_true(inherits(p, "patchwork") || inherits(p, "gg"))
+})

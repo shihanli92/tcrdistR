@@ -12,7 +12,8 @@ plot_cdr3_logo(
   gap_character = "-",
   title = NULL,
   nucseq_src = NULL,
-  show_junction_bars = FALSE
+  show_junction_bars = FALSE,
+  return_junction_pwm = FALSE
 )
 }
 \arguments{
@@ -37,10 +38,15 @@ name with Greek letter.}
 
 \item{show_junction_bars}{Logical. If \code{TRUE} and \code{nucseq_src}
 is provided, stack junction bars below the logo via \pkg{patchwork}.}
+
+\item{return_junction_pwm}{Logical. If \code{TRUE}, return a list with
+components \code{plot} (the ggplot logo) and \code{junction_pwm} (the
+numeric matrix, or \code{NULL}). Default \code{FALSE}.}
 }
 \value{
 A \code{ggplot} object (or \code{patchwork} object if junction bars
-are included).
+are included). When \code{return_junction_pwm = TRUE}, a list with
+\code{plot} and \code{junction_pwm}.
 }
 \description{
 Renders a sequence logo from CDR3 amino acid sequences using
