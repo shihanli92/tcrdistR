@@ -52,6 +52,21 @@ A named list:
 
   Numeric. Standard Simpson's diversity for comparison.
 
+## Details
+
+For `order=2`, the fuzzy Simpson's index is computed analytically:
+
+\$\$Z\_{fuzzy} = \frac{\sum\_{i,j} c_i \cdot c_j \cdot I(d(i,j) \le
+threshold)}{(\sum_i c_i)^2}\$\$
+
+where \\I(\cdot)\\ is the indicator function and \\d(i,j)\\ is the
+TCRdist between clonotypes \\i\\ and \\j\\. The fuzzy diversity is \\1 -
+Z\_{fuzzy}\\. This is always \\\le\\ the standard Simpson's diversity
+because merging similar clonotypes increases the concentration.
+
+For higher orders, a sampling-based approximation is used (10,000
+draws).
+
 ## See also
 
 [`tcr_diversity`](https://shihanli92.github.io/tcrdistR/reference/tcr_diversity.md),

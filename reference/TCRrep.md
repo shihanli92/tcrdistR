@@ -49,7 +49,8 @@ TCRrep(
 
   Character string. Organism key recognised by
   [`load_gene_database`](https://shihanli92.github.io/tcrdistR/reference/load_gene_database.md),
-  e.g. `"human"` or `"mouse"`.
+  e.g. `"human"` or `"mouse"`. For gamma-delta TCRs use `"human_gd"` or
+  `"mouse_gd"`.
 
 - chains:
 
@@ -77,8 +78,8 @@ TCRrep(
 
 - metric:
 
-  Character string. Distance metric to use. One of `"tcrdist"`
-  (default), `"hamming"`, `"levenshtein"`, or `"nw"`.
+  Character string. Distance metric to use. One of `"tcrdist"` (default)
+  or `"hamming"`.
 
 - compute_distances:
 
@@ -115,6 +116,11 @@ A valid `TCRrep` S4 object.
 Factor columns (`va`, `cdr3a`, `vb`, `cdr3b`) are automatically coerced
 to character. The organism is validated against the bundled gene
 database on construction.
+
+**Gamma-delta TCRs.** For gamma-delta TCRs, use `chains = "GD"` and
+specify the gamma-delta organism database: `organism = "human_gd"` or
+`organism = "mouse_gd"`. Gamma chain genes map to the `va`/`cdr3a`
+columns; delta chain genes map to the `vb`/`cdr3b` columns.
 
 ## See also
 

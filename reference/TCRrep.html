@@ -88,7 +88,8 @@ on the <code>chains</code> argument:</p><dl><dt><code>"AB"</code></dt>
 
 <dt id="arg-organism">organism<a class="anchor" aria-label="anchor" href="#arg-organism"></a></dt>
 <dd><p>Character string. Organism key recognised by
-<code><a href="load_gene_database.html">load_gene_database</a></code>, e.g. <code>"human"</code> or <code>"mouse"</code>.</p></dd>
+<code><a href="load_gene_database.html">load_gene_database</a></code>, e.g. <code>"human"</code> or <code>"mouse"</code>.
+For gamma-delta TCRs use <code>"human_gd"</code> or <code>"mouse_gd"</code>.</p></dd>
 
 
 <dt id="arg-chains">chains<a class="anchor" aria-label="anchor" href="#arg-chains"></a></dt>
@@ -118,8 +119,7 @@ subject (same as default when subject exists);
 
 <dt id="arg-metric">metric<a class="anchor" aria-label="anchor" href="#arg-metric"></a></dt>
 <dd><p>Character string. Distance metric to use. One of
-<code>"tcrdist"</code> (default), <code>"hamming"</code>, <code>"levenshtein"</code>, or
-<code>"nw"</code>.</p></dd>
+<code>"tcrdist"</code> (default) or <code>"hamming"</code>.</p></dd>
 
 
 <dt id="arg-compute-distances">compute_distances<a class="anchor" aria-label="anchor" href="#arg-compute-distances"></a></dt>
@@ -157,6 +157,11 @@ Defaults to <code>GAP_PENALTY_V_REGION</code> (4L).</p></dd>
     <p>Factor columns (<code>va</code>, <code>cdr3a</code>, <code>vb</code>, <code>cdr3b</code>) are
 automatically coerced to character. The organism is validated against the
 bundled gene database on construction.</p>
+<p><strong>Gamma-delta TCRs.</strong>
+For gamma-delta TCRs, use <code>chains = "GD"</code> and specify the gamma-delta
+organism database: <code>organism = "human_gd"</code> or <code>organism = "mouse_gd"</code>.
+Gamma chain genes map to the <code>va</code>/<code>cdr3a</code> columns; delta chain
+genes map to the <code>vb</code>/<code>cdr3b</code> columns.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

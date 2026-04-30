@@ -90,8 +90,24 @@ diversity index. Higher orders give more weight to dominant clonotypes.</p>
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The effective number of species (Hill number) is also returned:
-<code>D = 1 / (1 - Z^(1/r))</code>.</p>
+    <p>The diversity index \(Z_r\) is the probability that \(r\) randomly
+drawn individuals (without replacement) all belong to the same species:</p>
+<p>$$Z_r = \sum_i \frac{c_i}{n} \prod_{k=1}^{r-1} \frac{c_i - k}{n - k}$$</p>
+<p>where \(c_i\) is the count of clonotype \(i\) and \(n = \sum c_i\).
+The returned entropy is \(1 - Z_r\) (probability of drawing \(r\)
+different species). For \(r=2\) this is the classical Simpson's diversity.</p>
+<p>The effective number of species (Hill number) is:
+\(D = 1 / Z_r^{1/(r-1)}\).</p>
+<p>Confidence intervals use the delta method with the multinomial variance
+of \(Z_r\). For \(r=2\), the exact gradient
+\(\partial Z / \partial p_i = 2 p_i\) is used; for higher orders,
+an approximation \(r \cdot p_i^{r-1}\) is applied.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Hill, M. O. (1973). Diversity and evenness: a unifying notation and its
+consequences. <em>Ecology</em>, 54(2), 427–432.</p>
+<p>Jost, L. (2006). Entropy and diversity. <em>Oikos</em>, 113(2), 363–375.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -112,10 +128,10 @@ diversity index. Higher orders give more weight to dominant clonotypes.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $ci_lower</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.7171593</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.8163265</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $ci_upper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.9154937</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.8163265</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># Single dominant clonotype: low diversity</span></span></span>
@@ -133,7 +149,7 @@ diversity index. Higher orders give more weight to dominant clonotypes.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $ci_upper</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1207433</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.1201095</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

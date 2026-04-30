@@ -64,9 +64,17 @@ table(clusters_h)
 
 ## Neighborhood Statistical Tests
 
-Test whether epitope specificity is enriched in TCR neighborhoods. This
-computes TCRdist radius-based neighborhoods and runs a statistical test
-for each TCR.
+The neighborhood test asks a key biological question: **is antigen
+specificity encoded in TCR sequence similarity?** For each TCR, it
+defines a “neighborhood” (all TCRs within a distance radius), then tests
+whether a variable of interest (e.g., epitope label) is enriched in the
+neighborhood compared to the overall dataset.
+
+A significant result (low adjusted p-value, high odds ratio) means that
+knowing a TCR’s sequence tells you something about its specificity —
+nearby TCRs tend to recognize the same antigen. The p-values are
+adjusted for multiple testing using the Benjamini-Hochberg procedure
+(controls false discovery rate).
 
 ``` r
 # Use a mixed-epitope subset for a meaningful test
@@ -102,9 +110,14 @@ result_chi <- neighborhood_test(
 
 ## Meta-Clonotype Discovery
 
-Identify quasi-public TCR motifs shared across multiple subjects. A
-meta-clonotype is defined by a center TCR and a radius: all TCRs within
-the radius from multiple subjects form the meta-clonotype.
+Meta-clonotypes represent convergent immune responses: TCR motifs that
+appear in multiple individuals, suggesting a shared solution to
+recognizing the same antigen. These can serve as biomarkers of antigen
+exposure, infection, or vaccine response.
+
+A meta-clonotype is defined by a center TCR and a distance radius. All
+TCRs within this radius from at least `min_nsubject` different subjects
+form the meta-clonotype.
 
 ``` r
 meta <- find_meta_clonotypes(
@@ -115,15 +128,15 @@ meta <- find_meta_clonotypes(
 )
 
 nrow(meta)
-#> [1] 113
+#> [1] 324
 head(meta[, c("cdr3a", "cdr3b", "radius", "K_neighbors", "nsubject")])
-#>              cdr3a          cdr3b radius K_neighbors nsubject
-#> 1 CALGDRATGGNNKLTF   CASSPDRGEVFF     48           3        3
-#> 2 CILRVGATGGNNKLTL   CASSLDRGEVFF     48          15       10
-#> 3    CALVPSNTNKVVF   CASSLSGYEQYF     48          10        9
-#> 4    CALGGGSNYQLIW    CASSLGGEVFF     48          29       12
-#> 5  CVLSARAEGADRLTF CASSQAGDSYEQYF     48           4        4
-#> 6 CAASGGTTASLGKLQF   CTCSADENTLYF     48           2        2
+#>              cdr3a             cdr3b radius K_neighbors nsubject
+#> 1    CAVSLDSNYQLIW CASSDFDWGGDAETLYF     48         324       15
+#> 2 CALGDRATGGNNKLTF      CASSPDRGEVFF     48         324       15
+#> 3   CALGSNTGYQNFYF       CASTGGGAPLF     48         324       15
+#> 4    CALAPSNTNKVVF    CASSQDPGDYEQYF     48         324       15
+#> 5    CALVPSNTNKVVF     CASSLGGENTLYF     48         324       15
+#> 6   CALGKNYNQGKLIF       CASDRAGEQYF     48         324       15
 ```
 
 Summarize the composition of a discovered meta-clonotype:
@@ -136,15 +149,25 @@ if (nrow(meta) > 0) {
   summary$va_usage
   summary$vb_usage
 }
-#> TRBV29*01 
-#>         3
+#> 
+#>   TRBV29*01   TRBV19*01   TRBV19*03 TRBV13-3*01    TRBV2*01   TRBV17*01 
+#>         209          32          19          12          12          11 
+#> TRBV13-1*01   TRBV14*01    TRBV5*01    TRBV1*01 TRBV13-2*01   TRBV31*01 
+#>           5           4           4           3           3           3 
+#>    TRBV4*01   TRBV20*01   TRBV15*01   TRBV24*02 
+#>           3           2           1           1
 ```
 
 ## Clumping Detection
 
-Test whether TCRs form statistically significant clusters beyond what is
-expected by chance. This uses a background resampling model to compute
-expected neighbor counts.
+Clumping asks whether TCR neighborhoods are larger than expected by
+chance. Even in a random repertoire, some TCRs will be close to each
+other simply because they use the same V-gene or have similar CDR3
+lengths. The clumping test corrects for this by building a background
+model through chain resampling (shuffling alpha and beta chains
+independently to break biologically meaningful pairing) and comparing
+observed neighbor counts against this null distribution using a Poisson
+model (Dash et al., 2017).
 
 The
 [`find_clumping()`](https://shihanli92.github.io/tcrdistR/reference/find_clumping.md)
@@ -222,12 +245,31 @@ head(pca_gauss$eigenvalues)
 #> [1] 35.031673 21.435992 16.936445 15.145947 11.507637  8.617358
 ```
 
+### Human TCR example with the flu dataset
+
+tcrdistR also ships with a **flu** dataset containing 2271 human TCRs
+from VDJdb. This dataset works identically with `organism = "human"`:
+
+``` r
+data(flu)
+flu_sub <- flu[1:200, ]
+
+pca_flu <- compute_tcrdist_kernel_pca(
+  flu_sub, organism = "human", n_components = 10L
+)
+dim(pca_flu$embeddings)
+#> [1] 200  10
+```
+
 ## Fuzzy Diversity
 
-Compute TCR-aware diversity that accounts for sequence similarity.
-Unlike standard diversity which treats each unique clonotype as
-completely distinct, fuzzy diversity merges clonotypes within a distance
-threshold:
+Standard diversity treats each unique CDR3 sequence as completely
+distinct, even if two sequences differ by a single amino acid. Fuzzy
+diversity accounts for sequence similarity: clonotypes within a TCRdist
+threshold are considered “the same” for diversity calculations. This
+gives a more biologically meaningful measure when a repertoire contains
+many closely related variants (e.g., from somatic hypermutation or
+convergent recombination):
 
 ``` r
 fd <- tcr_fuzzy_diversity(pa, organism = "mouse", threshold = 50)
@@ -304,4 +346,42 @@ on known CD4/CD8 repertoires. This is only available for human TCRs:
 ``` r
 scores <- make_cd8_score_table_column(human_tcrs)
 # Returns a numeric vector of CD8 probability scores
+```
+
+## Session Info
+
+``` r
+sessionInfo()
+#> R version 4.6.0 (2026-04-24)
+#> Platform: x86_64-pc-linux-gnu
+#> Running under: Ubuntu 24.04.4 LTS
+#> 
+#> Matrix products: default
+#> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+#> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
+#> 
+#> locale:
+#>  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+#>  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+#>  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+#> [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
+#> 
+#> time zone: UTC
+#> tzcode source: system (glibc)
+#> 
+#> attached base packages:
+#> [1] stats     graphics  grDevices utils     datasets  methods   base     
+#> 
+#> other attached packages:
+#> [1] tcrdistR_0.1.0
+#> 
+#> loaded via a namespace (and not attached):
+#>  [1] cli_3.6.6         knitr_1.51        rlang_1.2.0       xfun_0.57        
+#>  [5] textshaping_1.0.5 jsonlite_2.0.0    htmltools_0.5.9   ragg_1.5.2       
+#>  [9] sass_0.4.10       rmarkdown_2.31    grid_4.6.0        evaluate_1.0.5   
+#> [13] jquerylib_0.1.4   fastmap_1.2.0     yaml_2.3.12       lifecycle_1.0.5  
+#> [17] compiler_4.6.0    RSpectra_0.16-2   fs_2.1.0          Rcpp_1.1.1-1.1   
+#> [21] systemfonts_1.3.2 lattice_0.22-9    digest_0.6.39     R6_2.6.1         
+#> [25] bslib_0.10.0      Matrix_1.7-5      tools_4.6.0       pkgdown_2.2.0    
+#> [29] cachem_1.1.0      desc_1.4.3
 ```

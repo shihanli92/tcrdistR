@@ -7,13 +7,14 @@ the pairwise TCRdist distance matrix.
 
 ``` r
 compute_tcrdist_kernel_pca(
-  tcr_df,
-  organism,
+  tcr_df = NULL,
+  organism = NULL,
   n_components = 50L,
   kernel = NULL,
   gaussian_kernel_sdev = 100,
   force_Dmax = NULL,
-  method = c("auto", "eigen", "RSpectra")
+  method = c("auto", "eigen", "RSpectra"),
+  dist_matrix = NULL
 )
 ```
 
@@ -22,10 +23,12 @@ compute_tcrdist_kernel_pca(
 - tcr_df:
 
   A `data.frame` with at least columns `va`, `cdr3a`, `vb`, `cdr3b`.
+  Optional if `dist_matrix` is provided.
 
 - organism:
 
-  Character string. Organism key, e.g. `"human"` or `"mouse"`.
+  Character string. Organism key, e.g. `"human"` or `"mouse"`. Optional
+  if `dist_matrix` is provided.
 
 - n_components:
 
@@ -56,6 +59,11 @@ compute_tcrdist_kernel_pca(
   same LAPACK as scipy.linalg.eigh), or `"RSpectra"` (always uses
   [`RSpectra::eigs_sym()`](https://rdrr.io/pkg/RSpectra/man/eigs.html),
   same ARPACK as scipy.sparse.linalg.eigsh).
+
+- dist_matrix:
+
+  Optional precomputed distance matrix. If provided, `tcr_df` and
+  `organism` are not used for distance computation.
 
 ## Value
 

@@ -24,7 +24,8 @@ A numeric scalar between 0 and 1.
 ## See also
 
 [`tcr_diversity`](https://shihanli92.github.io/tcrdistR/reference/tcr_diversity.md),
-[`tcr_richness`](https://shihanli92.github.io/tcrdistR/reference/tcr_richness.md)
+[`tcr_richness`](https://shihanli92.github.io/tcrdistR/reference/tcr_richness.md),
+[`tcr_shannon_entropy`](https://shihanli92.github.io/tcrdistR/reference/tcr_shannon_entropy.md)
 
 ## Examples
 

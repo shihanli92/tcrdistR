@@ -90,6 +90,10 @@ S4 class and constructor for TCR repertoire data
   : Create a TCRrep object
 - [`show(`*`<TCRrep>`*`)`](https://shihanli92.github.io/tcrdistR/reference/show-TCRrep-method.md)
   : Show method for TCRrep objects
+- [`subset(`*`<TCRrep>`*`)`](https://shihanli92.github.io/tcrdistR/reference/subset-TCRrep-method.md)
+  : Subset a TCRrep using non-standard evaluation
+- [`` `[`( ``*`<TCRrep>`*`,`*`<ANY>`*`,`*`<ANY>`*`,`*`<ANY>`*`)`](https://shihanli92.github.io/tcrdistR/reference/subset-TCRrep.md)
+  : Subset a TCRrep object by row indices
 
 ## Distance Computation
 
@@ -170,7 +174,7 @@ Logistic regression-based CD8 phenotype scoring
 
 ## Diversity Metrics
 
-Repertoire diversity, richness, and clonality
+Repertoire diversity, richness, clonality, and overlap
 
 - [`tcr_diversity()`](https://shihanli92.github.io/tcrdistR/reference/tcr_diversity.md)
   : Generalized Simpson's diversity (Hill numbers framework)
@@ -180,6 +184,12 @@ Repertoire diversity, richness, and clonality
   : TCR repertoire richness
 - [`tcr_clonality()`](https://shihanli92.github.io/tcrdistR/reference/tcr_clonality.md)
   : TCR repertoire clonality
+- [`tcr_shannon_entropy()`](https://shihanli92.github.io/tcrdistR/reference/tcr_shannon_entropy.md)
+  : Shannon entropy of a clonotype distribution
+- [`tcr_gini()`](https://shihanli92.github.io/tcrdistR/reference/tcr_gini.md)
+  : Gini index of a clonotype distribution
+- [`tcr_repertoire_overlap()`](https://shihanli92.github.io/tcrdistR/reference/tcr_repertoire_overlap.md)
+  : Repertoire overlap metrics
 
 ## Clustering & Neighborhood Tests
 
@@ -188,7 +198,7 @@ Hierarchical clustering and neighborhood-based statistics
 - [`tcrdist_hclust()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_hclust.md)
   : Hierarchical clustering of TCRs by TCRdist
 - [`cluster_tcrs()`](https://shihanli92.github.io/tcrdistR/reference/cluster_tcrs.md)
-  : Cluster TCRs by TCRdist-based hierarchical clustering
+  : Cluster TCRs using various algorithms
 - [`neighborhood_test()`](https://shihanli92.github.io/tcrdistR/reference/neighborhood_test.md)
   : Test association between a variable and TCR neighborhoods
 
@@ -220,6 +230,8 @@ Plotting functions for TCR repertoire data
   : Plot the distribution of pairwise TCRdist distances
 - [`plot_cdr3_logo()`](https://shihanli92.github.io/tcrdistR/reference/plot_cdr3_logo.md)
   : Plot a CDR3 sequence logo
+- [`plot_cdr3_length()`](https://shihanli92.github.io/tcrdistR/reference/plot_cdr3_length.md)
+  : Plot CDR3 length distribution
 - [`plot_junction_bars()`](https://shihanli92.github.io/tcrdistR/reference/plot_junction_bars.md)
   : Plot junction bars showing V/N/D/J nucleotide composition
 - [`plot_vj_gene_logo()`](https://shihanli92.github.io/tcrdistR/reference/plot_vj_gene_logo.md)
@@ -267,6 +279,8 @@ Gene database, constants, and helper functions
 
 - [`load_gene_database()`](https://shihanli92.github.io/tcrdistR/reference/load_gene_database.md)
   : Load and cache the TCR/BCR gene database
+- [`list_organisms()`](https://shihanli92.github.io/tcrdistR/reference/list_organisms.md)
+  : List available organisms in the gene database
 - [`trim_allele_to_gene()`](https://shihanli92.github.io/tcrdistR/reference/trim_allele_to_gene.md)
   : Trim allele designation from a gene ID
 - [`get_translation()`](https://shihanli92.github.io/tcrdistR/reference/get_translation.md)
@@ -282,11 +296,15 @@ Gene database, constants, and helper functions
 
 - [Getting Started with
   tcrdistR](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-getting-started.md):
+- [Glossary of
+  Terms](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-glossary.md):
 
 ### Guides
 
 - [TCRrep
   Workflow](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-tcrrep-workflow.md):
+- [Comparing TCR
+  Repertoires](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-comparing-repertoires.md):
 - [Advanced TCR Repertoire
   Analysis](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-advanced.md):
 - [Visualization

@@ -93,6 +93,17 @@ for comparison.</p></dd>
 
 </dl></div>
     <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>For <code>order=2</code>, the fuzzy Simpson's index is computed analytically:</p>
+<p>$$Z_{fuzzy} = \frac{\sum_{i,j} c_i \cdot c_j \cdot
+  I(d(i,j) \le threshold)}{(\sum_i c_i)^2}$$</p>
+<p>where \(I(\cdot)\) is the indicator function and \(d(i,j)\) is the
+TCRdist between clonotypes \(i\) and \(j\). The fuzzy diversity is
+\(1 - Z_{fuzzy}\). This is always \(\le\) the standard Simpson's
+diversity because merging similar clonotypes increases the concentration.</p>
+<p>For higher orders, a sampling-based approximation is used (10,000 draws).</p>
+    </div>
+    <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="tcr_diversity.html">tcr_diversity</a></code>, <code><a href="tcrdist_matrix.html">tcrdist_matrix</a></code></p></div>
     </div>

@@ -16,7 +16,8 @@ find_meta_clonotypes(
   ctrl_bkgd = 1e-05,
   max_radius = 50L,
   min_nsubject = 2L,
-  subject_col = "subject"
+  subject_col = "subject",
+  dist_matrix = NULL
 )
 ```
 
@@ -59,6 +60,11 @@ find_meta_clonotypes(
 - subject_col:
 
   Character string. Column name for subject IDs. Default `"subject"`.
+
+- dist_matrix:
+
+  Optional precomputed distance matrix. If provided, `tcr_df` and
+  `organism` are not used for distance computation.
 
 ## Value
 

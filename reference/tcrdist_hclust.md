@@ -7,18 +7,25 @@ performs hierarchical clustering via
 ## Usage
 
 ``` r
-tcrdist_hclust(tcr_df, organism, method = "average", max_tcrs = 2000L)
+tcrdist_hclust(
+  tcr_df = NULL,
+  organism = NULL,
+  method = "average",
+  max_tcrs = 2000L,
+  dist_matrix = NULL
+)
 ```
 
 ## Arguments
 
 - tcr_df:
 
-  Data.frame with TCR columns.
+  Data.frame with TCR columns (optional if `dist_matrix` is provided).
 
 - organism:
 
-  Character string (`"human"` or `"mouse"`).
+  Character string (`"human"` or `"mouse"`) (optional if `dist_matrix`
+  is provided).
 
 - method:
 
@@ -29,6 +36,11 @@ tcrdist_hclust(tcr_df, organism, method = "average", max_tcrs = 2000L)
 - max_tcrs:
 
   Integer. Subsample if N exceeds this. Default `2000L`.
+
+- dist_matrix:
+
+  Optional precomputed distance matrix. If provided, `tcr_df` and
+  `organism` are not used for distance computation.
 
 ## Value
 

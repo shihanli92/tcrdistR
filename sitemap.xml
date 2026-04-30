@@ -1,14 +1,16 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://shihanli92.github.io/tcrdistR/404.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/LICENSE-text.html</loc></url>
-<url><loc>https://shihanli92.github.io/tcrdistR/PROGRESS.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/articles/index.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/articles/tcrdistR-advanced.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/articles/tcrdistR-comparing-repertoires.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/articles/tcrdistR-getting-started.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/articles/tcrdistR-glossary.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/articles/tcrdistR-tcrrep-workflow.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/articles/tcrdistR-visualization.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/authors.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/index.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/news/index.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/AA2DEGENERATE_CODONS.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/ALIGN_CDR3S.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/AMINO_ACIDS.html</loc></url>
@@ -79,10 +81,12 @@
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/index.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/knn_from_matrix.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/knn_from_pca.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/list_organisms.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/load_gene_database.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/make_cd8_score_table_column.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/match_tcrs_to_db.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/neighborhood_test.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/plot_cdr3_length.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/plot_cdr3_logo.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/plot_distance_distribution.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/plot_gene_usage.html</loc></url>
@@ -116,11 +120,16 @@
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/setup_tcr_groups.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/show-TCRrep-method.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/strict_single_chain_match_tcrs_to_db.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/subset-TCRrep-method.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/subset-TCRrep.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/summarize_meta_clonotype.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/tcr_clonality.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/tcr_diversity.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/tcr_fuzzy_diversity.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/tcr_gini.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/tcr_repertoire_overlap.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/tcr_richness.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/tcr_shannon_entropy.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/tcrdistR-package.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/tcrdist_hclust.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/tcrdist_join.html</loc></url>

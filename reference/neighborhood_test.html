@@ -49,12 +49,13 @@ Supports Fisher's exact test (binary variables) and chi-squared test
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">neighborhood_test</span><span class="op">(</span></span>
-<span>  <span class="va">tcr_df</span>,</span>
-<span>  <span class="va">organism</span>,</span>
+<span>  tcr_df <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  organism <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  <span class="va">variable</span>,</span>
 <span>  radius <span class="op">=</span> <span class="fl">50</span>,</span>
 <span>  test <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"fisher"</span>, <span class="st">"chisq"</span><span class="op">)</span>,</span>
-<span>  p_adjust_method <span class="op">=</span> <span class="st">"BH"</span></span>
+<span>  p_adjust_method <span class="op">=</span> <span class="st">"BH"</span>,</span>
+<span>  dist_matrix <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -63,11 +64,13 @@ Supports Fisher's exact test (binary variables) and chi-squared test
 
 
 <dl><dt id="arg-tcr-df">tcr_df<a class="anchor" aria-label="anchor" href="#arg-tcr-df"></a></dt>
-<dd><p>Data.frame with TCR columns.</p></dd>
+<dd><p>Data.frame with TCR columns (optional if <code>dist_matrix</code>
+is provided).</p></dd>
 
 
 <dt id="arg-organism">organism<a class="anchor" aria-label="anchor" href="#arg-organism"></a></dt>
-<dd><p>Character string (<code>"human"</code> or <code>"mouse"</code>).</p></dd>
+<dd><p>Character string (<code>"human"</code> or <code>"mouse"</code>)
+(optional if <code>dist_matrix</code> is provided).</p></dd>
 
 
 <dt id="arg-variable">variable<a class="anchor" aria-label="anchor" href="#arg-variable"></a></dt>
@@ -89,6 +92,11 @@ Default <code>50</code>.</p></dd>
 <dd><p>Character string. Method for <code><a href="https://rdrr.io/r/stats/p.adjust.html" class="external-link">stats::p.adjust()</a></code>.
 Default <code>"BH"</code> (Benjamini-Hochberg).</p></dd>
 
+
+<dt id="arg-dist-matrix">dist_matrix<a class="anchor" aria-label="anchor" href="#arg-dist-matrix"></a></dt>
+<dd><p>Optional precomputed distance matrix. If provided,
+<code>tcr_df</code> and <code>organism</code> are not used for distance computation.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -109,6 +117,25 @@ Default <code>"BH"</code> (Benjamini-Hochberg).</p></dd>
 
 
 </dl></div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>For each TCR \(i\), the test constructs a 2x2 (Fisher) or 2xK
+(chi-squared) contingency table comparing category frequencies inside
+the neighborhood (TCRs within <code>radius</code>) versus outside. The null
+hypothesis is that the neighborhood is a random sample of the full
+repertoire with respect to the variable.</p>
+<p>P-values are adjusted across all N tests using the method specified by
+<code>p_adjust_method</code> (default: Benjamini-Hochberg, which controls
+the false discovery rate). Note that TCR neighborhoods are spatially
+correlated (nearby TCRs share neighbors), so the effective number of
+independent tests is smaller than N. BH remains a reasonable choice
+but may be conservative.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="references">References<a class="anchor" aria-label="anchor" href="#references"></a></h2>
+    <p>Dash, P. et al. (2017). Quantifiable predictive features define
+epitope-specific T cell receptor repertoires. <em>Nature</em>, 547, 89–93.</p>
+    </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
     <div class="dont-index"><p><code><a href="tcrdist_hclust.html">tcrdist_hclust</a></code>, <code><a href="cluster_tcrs.html">cluster_tcrs</a></code>, <code><a href="find_clumping.html">find_clumping</a></code></p></div>

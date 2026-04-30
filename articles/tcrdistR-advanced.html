@@ -119,9 +119,16 @@ clustering:</p>
 <div class="section level2">
 <h2 id="neighborhood-statistical-tests">Neighborhood Statistical Tests<a class="anchor" aria-label="anchor" href="#neighborhood-statistical-tests"></a>
 </h2>
-<p>Test whether epitope specificity is enriched in TCR neighborhoods.
-This computes TCRdist radius-based neighborhoods and runs a statistical
-test for each TCR.</p>
+<p>The neighborhood test asks a key biological question: <strong>is
+antigen specificity encoded in TCR sequence similarity?</strong> For
+each TCR, it defines a “neighborhood” (all TCRs within a distance
+radius), then tests whether a variable of interest (e.g., epitope label)
+is enriched in the neighborhood compared to the overall dataset.</p>
+<p>A significant result (low adjusted p-value, high odds ratio) means
+that knowing a TCR’s sequence tells you something about its specificity
+— nearby TCRs tend to recognize the same antigen. The p-values are
+adjusted for multiple testing using the Benjamini-Hochberg procedure
+(controls false discovery rate).</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Use a mixed-epitope subset for a meaningful test</span></span>
 <span><span class="va">mixed</span> <span class="op">&lt;-</span> <span class="va">dash</span><span class="op">[</span><span class="va">dash</span><span class="op">$</span><span class="va">epitope</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"PA"</span>, <span class="st">"NP"</span><span class="op">)</span>, <span class="op">]</span></span>
@@ -153,9 +160,13 @@ test for each TCR.</p>
 <div class="section level2">
 <h2 id="meta-clonotype-discovery">Meta-Clonotype Discovery<a class="anchor" aria-label="anchor" href="#meta-clonotype-discovery"></a>
 </h2>
-<p>Identify quasi-public TCR motifs shared across multiple subjects. A
-meta-clonotype is defined by a center TCR and a radius: all TCRs within
-the radius from multiple subjects form the meta-clonotype.</p>
+<p>Meta-clonotypes represent convergent immune responses: TCR motifs
+that appear in multiple individuals, suggesting a shared solution to
+recognizing the same antigen. These can serve as biomarkers of antigen
+exposure, infection, or vaccine response.</p>
+<p>A meta-clonotype is defined by a center TCR and a distance radius.
+All TCRs within this radius from at least <code>min_nsubject</code>
+different subjects form the meta-clonotype.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">meta</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_meta_clonotypes.html">find_meta_clonotypes</a></span><span class="op">(</span></span>
 <span>  <span class="va">pa</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>,</span>
@@ -165,15 +176,15 @@ the radius from multiple subjects form the meta-clonotype.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">meta</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 113</span></span>
+<span><span class="co">#&gt; [1] 324</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">meta</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cdr3a"</span>, <span class="st">"cdr3b"</span>, <span class="st">"radius"</span>, <span class="st">"K_neighbors"</span>, <span class="st">"nsubject"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;              cdr3a          cdr3b radius K_neighbors nsubject</span></span>
-<span><span class="co">#&gt; 1 CALGDRATGGNNKLTF   CASSPDRGEVFF     48           3        3</span></span>
-<span><span class="co">#&gt; 2 CILRVGATGGNNKLTL   CASSLDRGEVFF     48          15       10</span></span>
-<span><span class="co">#&gt; 3    CALVPSNTNKVVF   CASSLSGYEQYF     48          10        9</span></span>
-<span><span class="co">#&gt; 4    CALGGGSNYQLIW    CASSLGGEVFF     48          29       12</span></span>
-<span><span class="co">#&gt; 5  CVLSARAEGADRLTF CASSQAGDSYEQYF     48           4        4</span></span>
-<span><span class="co">#&gt; 6 CAASGGTTASLGKLQF   CTCSADENTLYF     48           2        2</span></span></code></pre></div>
+<span><span class="co">#&gt;              cdr3a             cdr3b radius K_neighbors nsubject</span></span>
+<span><span class="co">#&gt; 1    CAVSLDSNYQLIW CASSDFDWGGDAETLYF     48         324       15</span></span>
+<span><span class="co">#&gt; 2 CALGDRATGGNNKLTF      CASSPDRGEVFF     48         324       15</span></span>
+<span><span class="co">#&gt; 3   CALGSNTGYQNFYF       CASTGGGAPLF     48         324       15</span></span>
+<span><span class="co">#&gt; 4    CALAPSNTNKVVF    CASSQDPGDYEQYF     48         324       15</span></span>
+<span><span class="co">#&gt; 5    CALVPSNTNKVVF     CASSLGGENTLYF     48         324       15</span></span>
+<span><span class="co">#&gt; 6   CALGKNYNQGKLIF       CASDRAGEQYF     48         324       15</span></span></code></pre></div>
 <p>Summarize the composition of a discovered meta-clonotype:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">meta</span><span class="op">)</span> <span class="op">&gt;</span> <span class="fl">0</span><span class="op">)</span> <span class="op">{</span></span>
@@ -183,15 +194,25 @@ the radius from multiple subjects form the meta-clonotype.</p>
 <span>  <span class="va">summary</span><span class="op">$</span><span class="va">va_usage</span></span>
 <span>  <span class="va">summary</span><span class="op">$</span><span class="va">vb_usage</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; TRBV29*01 </span></span>
-<span><span class="co">#&gt;         3</span></span></code></pre></div>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt;   TRBV29*01   TRBV19*01   TRBV19*03 TRBV13-3*01    TRBV2*01   TRBV17*01 </span></span>
+<span><span class="co">#&gt;         209          32          19          12          12          11 </span></span>
+<span><span class="co">#&gt; TRBV13-1*01   TRBV14*01    TRBV5*01    TRBV1*01 TRBV13-2*01   TRBV31*01 </span></span>
+<span><span class="co">#&gt;           5           4           4           3           3           3 </span></span>
+<span><span class="co">#&gt;    TRBV4*01   TRBV20*01   TRBV15*01   TRBV24*02 </span></span>
+<span><span class="co">#&gt;           3           2           1           1</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="clumping-detection">Clumping Detection<a class="anchor" aria-label="anchor" href="#clumping-detection"></a>
 </h2>
-<p>Test whether TCRs form statistically significant clusters beyond what
-is expected by chance. This uses a background resampling model to
-compute expected neighbor counts.</p>
+<p>Clumping asks whether TCR neighborhoods are larger than expected by
+chance. Even in a random repertoire, some TCRs will be close to each
+other simply because they use the same V-gene or have similar CDR3
+lengths. The clumping test corrects for this by building a background
+model through chain resampling (shuffling alpha and beta chains
+independently to break biologically meaningful pairing) and comparing
+observed neighbor counts against this null distribution using a Poisson
+model (Dash et al., 2017).</p>
 <p>The <code><a href="../reference/find_clumping.html">find_clumping()</a></code> function requires nucleotide
 sequences and J-gene annotations, which the DASH dataset provides:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -258,15 +279,34 @@ Gaussian kernel is also available.</p>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">pca_gauss</span><span class="op">$</span><span class="va">eigenvalues</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 35.031673 21.435992 16.936445 15.145947 11.507637  8.617358</span></span></code></pre></div>
+<div class="section level3">
+<h3 id="human-tcr-example-with-the-flu-dataset">Human TCR example with the flu dataset<a class="anchor" aria-label="anchor" href="#human-tcr-example-with-the-flu-dataset"></a>
+</h3>
+<p>tcrdistR also ships with a <strong>flu</strong> dataset containing
+2271 human TCRs from VDJdb. This dataset works identically with
+<code>organism = "human"</code>:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">flu</span><span class="op">)</span></span>
+<span><span class="va">flu_sub</span> <span class="op">&lt;-</span> <span class="va">flu</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span>, <span class="op">]</span></span>
+<span></span>
+<span><span class="va">pca_flu</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_tcrdist_kernel_pca.html">compute_tcrdist_kernel_pca</a></span><span class="op">(</span></span>
+<span>  <span class="va">flu_sub</span>, organism <span class="op">=</span> <span class="st">"human"</span>, n_components <span class="op">=</span> <span class="fl">10L</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">pca_flu</span><span class="op">$</span><span class="va">embeddings</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 200  10</span></span></code></pre></div>
+</div>
 </div>
 <div class="section level2">
 <h2 id="fuzzy-diversity">Fuzzy Diversity<a class="anchor" aria-label="anchor" href="#fuzzy-diversity"></a>
 </h2>
-<p>Compute TCR-aware diversity that accounts for sequence similarity.
-Unlike standard diversity which treats each unique clonotype as
-completely distinct, fuzzy diversity merges clonotypes within a distance
-threshold:</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<p>Standard diversity treats each unique CDR3 sequence as completely
+distinct, even if two sequences differ by a single amino acid. Fuzzy
+diversity accounts for sequence similarity: clonotypes within a TCRdist
+threshold are considered “the same” for diversity calculations. This
+gives a more biologically meaningful measure when a repertoire contains
+many closely related variants (e.g., from somatic hypermutation or
+convergent recombination):</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fd</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcr_fuzzy_diversity.html">tcr_fuzzy_diversity</a></span><span class="op">(</span><span class="va">pa</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, threshold <span class="op">=</span> <span class="fl">50</span><span class="op">)</span></span>
 <span><span class="va">fd</span><span class="op">$</span><span class="va">fuzzy_diversity</span>     <span class="co"># diversity accounting for similar TCRs</span></span>
 <span><span class="co">#&gt; [1] 0.977633</span></span>
@@ -278,7 +318,7 @@ threshold:</p>
 </h2>
 <p>Fuzzy-join two TCR datasets by distance threshold. This finds all
 pairs of TCRs (one from each dataset) within a specified radius:</p>
-<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">left</span> <span class="op">&lt;-</span> <span class="va">pa</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">20</span>, <span class="op">]</span></span>
 <span><span class="va">right</span> <span class="op">&lt;-</span> <span class="va">pa</span><span class="op">[</span><span class="fl">21</span><span class="op">:</span><span class="fl">100</span>, <span class="op">]</span></span>
 <span></span>
@@ -301,7 +341,7 @@ pairs of TCRs (one from each dataset) within a specified radius:</p>
 </h2>
 <p>Embed TCRs in 2D using UMAP computed directly from TCRdist KNN
 neighbors:</p>
-<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">umap</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_tcrdist_umap.html">compute_tcrdist_umap</a></span><span class="op">(</span><span class="va">pa</span>, organism <span class="op">=</span> <span class="st">"mouse"</span>, K <span class="op">=</span> <span class="fl">15L</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># umap$embeddings is an N x 2 matrix</span></span>
@@ -318,7 +358,7 @@ neighbors:</p>
 <p>Build an igraph-based TCR similarity network. TCRs become nodes,
 edges connect TCRs within a distance threshold. The threshold can be set
 manually or auto-detected from the bimodal distance distribution:</p>
-<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Auto-detect threshold from distance distribution</span></span>
 <span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_tcr_network.html">compute_tcr_network</a></span><span class="op">(</span><span class="va">pa</span>, organism <span class="op">=</span> <span class="st">"mouse"</span><span class="op">)</span></span>
 <span></span>
@@ -335,9 +375,47 @@ manually or auto-detected from the bimodal distance distribution:</p>
 <p>Score TCRs for CD8 phenotype using a logistic regression model
 trained on known CD4/CD8 repertoires. This is only available for human
 TCRs:</p>
-<div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">scores</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/make_cd8_score_table_column.html">make_cd8_score_table_column</a></span><span class="op">(</span><span class="va">human_tcrs</span><span class="op">)</span></span>
 <span><span class="co"># Returns a numeric vector of CD8 probability scores</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
+</h2>
+<div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; R version 4.6.0 (2026-04-24)</span></span>
+<span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 24.04.4 LTS</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Matrix products: default</span></span>
+<span><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
+<span><span class="co">#&gt; LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; locale:</span></span>
+<span><span class="co">#&gt;  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       </span></span>
+<span><span class="co">#&gt;  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   </span></span>
+<span><span class="co">#&gt;  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          </span></span>
+<span><span class="co">#&gt; [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; time zone: UTC</span></span>
+<span><span class="co">#&gt; tzcode source: system (glibc)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attached base packages:</span></span>
+<span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; other attached packages:</span></span>
+<span><span class="co">#&gt; [1] tcrdistR_0.1.0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span><span class="co">#&gt;  [1] cli_3.6.6         knitr_1.51        rlang_1.2.0       xfun_0.57        </span></span>
+<span><span class="co">#&gt;  [5] textshaping_1.0.5 jsonlite_2.0.0    htmltools_0.5.9   ragg_1.5.2       </span></span>
+<span><span class="co">#&gt;  [9] sass_0.4.10       rmarkdown_2.31    grid_4.6.0        evaluate_1.0.5   </span></span>
+<span><span class="co">#&gt; [13] jquerylib_0.1.4   fastmap_1.2.0     yaml_2.3.12       lifecycle_1.0.5  </span></span>
+<span><span class="co">#&gt; [17] compiler_4.6.0    RSpectra_0.16-2   fs_2.1.0          Rcpp_1.1.1-1.1   </span></span>
+<span><span class="co">#&gt; [21] systemfonts_1.3.2 lattice_0.22-9    digest_0.6.39     R6_2.6.1         </span></span>
+<span><span class="co">#&gt; [25] bslib_0.10.0      Matrix_1.7-5      tools_4.6.0       pkgdown_2.2.0    </span></span>
+<span><span class="co">#&gt; [29] cachem_1.1.0      desc_1.4.3</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

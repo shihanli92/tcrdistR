@@ -14,7 +14,8 @@ tcrdist_join(
   radius,
   max_n = 5L,
   type = c("inner", "left"),
-  suffix = c("_x", "_y")
+  suffix = c("_x", "_y"),
+  rect_dist_matrix = NULL
 )
 ```
 
@@ -52,6 +53,11 @@ tcrdist_join(
 
   Character vector of length 2. Suffixes for disambiguating column
   names. Default `c("_x", "_y")`.
+
+- rect_dist_matrix:
+
+  Optional precomputed rectangular distance matrix (rows = left, cols =
+  right). If provided, `organism` is not used for distance computation.
 
 ## Value
 

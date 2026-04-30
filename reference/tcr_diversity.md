@@ -55,8 +55,30 @@ A named list:
 
 ## Details
 
-The effective number of species (Hill number) is also returned:
-`D = 1 / (1 - Z^(1/r))`.
+The diversity index \\Z_r\\ is the probability that \\r\\ randomly drawn
+individuals (without replacement) all belong to the same species:
+
+\$\$Z_r = \sum_i \frac{c_i}{n} \prod\_{k=1}^{r-1} \frac{c_i - k}{n -
+k}\$\$
+
+where \\c_i\\ is the count of clonotype \\i\\ and \\n = \sum c_i\\. The
+returned entropy is \\1 - Z_r\\ (probability of drawing \\r\\ different
+species). For \\r=2\\ this is the classical Simpson's diversity.
+
+The effective number of species (Hill number) is: \\D = 1 /
+Z_r^{1/(r-1)}\\.
+
+Confidence intervals use the delta method with the multinomial variance
+of \\Z_r\\. For \\r=2\\, the exact gradient \\\partial Z / \partial p_i
+= 2 p_i\\ is used; for higher orders, an approximation \\r \cdot
+p_i^{r-1}\\ is applied.
+
+## References
+
+Hill, M. O. (1973). Diversity and evenness: a unifying notation and its
+consequences. *Ecology*, 54(2), 427–432.
+
+Jost, L. (2006). Entropy and diversity. *Oikos*, 113(2), 363–375.
 
 ## See also
 
@@ -79,10 +101,10 @@ tcr_diversity(rep(10, 5))
 #> [1] 2
 #> 
 #> $ci_lower
-#> [1] 0.7171593
+#> [1] 0.8163265
 #> 
 #> $ci_upper
-#> [1] 0.9154937
+#> [1] 0.8163265
 #> 
 
 # Single dominant clonotype: low diversity
@@ -100,6 +122,6 @@ tcr_diversity(c(100, 1, 1, 1))
 #> [1] 0
 #> 
 #> $ci_upper
-#> [1] 0.1207433
+#> [1] 0.1201095
 #> 
 ```

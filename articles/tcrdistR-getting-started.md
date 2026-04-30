@@ -13,9 +13,29 @@ All distance computations are implemented in C++ for high performance.
 
 ## Installation
 
+tcrdistR uses C++ code (via Rcpp) for fast distance computation, so you
+need a C++ compiler:
+
+- **macOS**: Install Xcode Command Line Tools by running
+  `xcode-select --install` in Terminal.
+- **Windows**: Install
+  [Rtools](https://cran.r-project.org/bin/windows/Rtools/) (match the
+  version to your R version).
+- **Linux**: Install `r-base-dev` (Debian/Ubuntu) or `R-devel`
+  (Fedora/RHEL).
+
+Then install from GitHub:
+
 ``` r
 # install.packages("devtools")
 devtools::install_github("shihanli92/tcrdistR")
+```
+
+**Optional dependencies** for visualization and UMAP (install any you
+need):
+
+``` r
+install.packages(c("ggplot2", "ggseqlogo", "patchwork", "uwot", "igraph"))
 ```
 
 ## The DASH Dataset
@@ -44,23 +64,82 @@ The required columns for distance computation are `va`, `cdr3a`, `vb`,
 and `cdr3b`. Additional columns like `epitope` and `subject` are carried
 along for downstream analysis.
 
-## Reading TCR Data from Files
+## Loading Your Own Data
 
-tcrdistR can read TCR data from multiple common formats. All readers
-produce a data.frame with standardized column names (`va`, `cdr3a`,
-`vb`, `cdr3b`).
+If you have a CSV or TSV file from a sequencing core, you can load it
+directly. tcrdistR needs four columns for paired-chain analysis: `va`
+(V-alpha gene), `cdr3a` (CDR3-alpha amino acid sequence), `vb` (V-beta
+gene), and `cdr3b` (CDR3-beta amino acid sequence). If you have only
+beta-chain data, you need just `vb` and `cdr3b`.
+
+``` r
+# Step 1: Read your file
+my_data <- read.csv("my_tcr_data.csv")
+
+# Step 2: Check your columns
+colnames(my_data)
+# e.g., [1] "V_alpha" "CDR3_alpha" "V_beta" "CDR3_beta" "patient"
+
+# Step 3: Map your column names to tcrdistR names
+tcrs <- as_tcr_df(my_data, col_map = c(
+  va   = "V_alpha",
+  cdr3a = "CDR3_alpha",
+  vb   = "V_beta",
+  cdr3b = "CDR3_beta"
+))
+
+# Step 4: Check the result
+head(tcrs[, c("va", "cdr3a", "vb", "cdr3b")])
+```
+
+V-gene names should look like `TRAV1-1*01` or `TRBV5-1*01`. If your
+genes lack allele suffixes (e.g., `TRAV1-1` instead of `TRAV1-1*01`),
+set `normalize_genes = TRUE` in
+[`as_tcr_df()`](https://shihanli92.github.io/tcrdistR/reference/as_tcr_df.md)
+to append `*01` automatically.
+
+**Beta-only data** (common from bulk sequencing): just provide `vb` and
+`cdr3b` columns. All distance functions automatically detect
+single-chain input:
+
+``` r
+beta_tcrs <- as_tcr_df(my_data, col_map = c(
+  vb   = "V_beta",
+  cdr3b = "CDR3_beta"
+))
+d <- tcrdist_matrix(beta_tcrs, "human")  # works with beta-only data
+```
+
+## Reading from Common Formats
+
+tcrdistR also has dedicated readers for common pipeline outputs. All
+produce a data.frame with standardized column names.
 
 ``` r
 # Auto-detect format from column naming conventions
 tcrs <- read_tcr_table("my_data.tsv")
 
-# Format-specific readers
+# 10X Genomics (produces paired alpha-beta data; cells with only one chain
+# are dropped with a message showing how many were excluded)
 tcrs <- read_10x("filtered_contig_annotations.csv")
+
+# AIRR Community Standard format (paired if both chains present)
 tcrs <- read_airr("airr_rearrangements.tsv")
+
+# Adaptive Biotechnologies (beta-chain only)
 tcrs <- read_adaptive("immunoseq_export.tsv")
 ```
 
 ## Computing the Distance Matrix
+
+**What is TCRdist?** TCRdist quantifies how similar two TCR sequences
+are. It aligns the CDR3 regions of both TCRs, scores each amino acid
+match/mismatch using a biochemical similarity matrix (BSD4, derived from
+BLOSUM62), adds a penalty for insertions/deletions (gaps), then adds the
+distance between the germline-encoded CDR1, CDR2, and CDR2.5 loops
+(looked up from the V-gene). Lower distance means more similar TCRs.
+TCRs with small distances (roughly \< 50) often recognize the same
+antigen.
 
 The core function
 [`tcrdist_matrix()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_matrix.md)
@@ -84,11 +163,18 @@ dist_mat[1:5, 1:5]
 ```
 
 Each entry is an integer TCRdist value. Identical TCRs have distance 0;
-typical distances range from 0 to ~400.
+typical distances range from 0 to ~400. As a rough guide:
+
+- **0–25**: Very similar; likely recognize the same epitope with similar
+  binding mode.
+- **25–75**: Moderately similar; may share specificity.
+- **75–200**: Distantly related; different CDR3 or V-gene usage.
+- **\> 200**: Unrelated.
 
 ## Sparse Distances
 
-For large datasets, storing the full N x N matrix is impractical. Use
+For large datasets, the full N x N matrix becomes impractical — a 10,000
+TCR dataset needs ~800 MB, and 50,000 TCRs would need ~20 GB. Use
 [`tcrdist_sparse()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_sparse.md)
 to only store distances below a threshold:
 
@@ -100,8 +186,10 @@ class(sparse_mat)
 #> [1] "Matrix"
 ```
 
-The result is a `Matrix::dgCMatrix`. Non-stored entries represent
-distances above the threshold.
+The result is a `Matrix::dgCMatrix` (a compressed sparse column matrix).
+Non-stored entries represent distances above the threshold. Since most
+TCR pairs are unrelated, the sparse matrix is dramatically smaller than
+the dense version.
 
 ## Rectangular Distances
 
@@ -155,9 +243,15 @@ neighbors[[1]]$distances
 ## Per-Component Distances
 
 All distance functions accept a `components` parameter to compute
-distances from specific TCR regions. This is useful for comparing
-CDR3-only distances, V-region-only contributions, or single-chain
-distances.
+distances from specific TCR regions. This lets you ask focused
+biological questions:
+
+- **CDR3 only** (`"cdr3"`): captures the unique rearrangement-derived
+  binding interface — the most variable part of the TCR.
+- **V-region only** (`"v_region"`): captures germline-encoded contacts
+  (CDR1, CDR2, CDR2.5) that interact with the MHC molecule.
+- **Single chain** (`"alpha"` or `"beta"`): useful when you suspect one
+  chain dominates antigen recognition.
 
 ``` r
 # CDR3 only (both chains, no V-region)
@@ -238,27 +332,35 @@ hamming_distance("CASSI", "CASSK")
 
 ## Diversity Metrics
 
-Repertoire diversity functions work on clone count vectors:
+Diversity metrics summarize how “spread out” a repertoire is. A
+repertoire dominated by one or two clonotypes (high clonality) suggests
+a strong antigen-driven expansion, while a highly diverse repertoire
+suggests a broad, unstimulated sample.
 
 ``` r
 # Clone counts for PA-specific TCRs
 pa_counts <- pa$count
 
 # Generalized diversity (order 2 = inverse Simpson)
+# entropy: 0 = dominated by one clone, 1 = perfectly even
 div <- tcr_diversity(pa_counts, order = 2)
 div$entropy
 #> [1] 0.9958049
-div$effective_number
+div$effective_number  # "how many equally-abundant clones would give this diversity"
 #> [1] 238.3727
 
-# Species richness
+# Species richness: simply the number of distinct clonotypes
 tcr_richness(pa_counts)
 #> [1] 324
 
-# Clonality (1 - normalized Shannon entropy)
+# Clonality: 0 = maximally diverse, 1 = single dominant clone
 tcr_clonality(pa_counts)
 #> [1] 0.05175504
 ```
+
+The `effective_number` is particularly intuitive: if your repertoire has
+an effective number of 50, it behaves *as if* it had 50 equally abundant
+clonotypes, even though the actual distribution may be uneven.
 
 ## The TCRrep Object
 
@@ -298,10 +400,79 @@ nrow(rep_raw@clone_df)
 #> [1] 50
 ```
 
+## Choosing Parameters
+
+Several functions take a **radius** or **threshold** parameter. Here are
+practical starting points:
+
+| Parameter                           | Recommended range | Notes                                           |
+|-------------------------------------|-------------------|-------------------------------------------------|
+| `tcrdist_sparse(threshold=)`        | 50–200            | Use 50 for tight clusters, 200 for broad search |
+| `tcrdist_radius_neighbors(radius=)` | 24–96             | 48 is a common default for paired chains        |
+| `neighborhood_test(radius=)`        | 48–96             | Smaller radius = more specific neighborhoods    |
+| `find_meta_clonotypes(radius=)`     | 36–72             | Balance sensitivity vs. specificity             |
+| `find_clumping(radii=)`             | c(24, 48, 72)     | Test multiple radii                             |
+| `cluster_tcrs(k=)`                  | 5–20              | Start with expected number of groups            |
+
+These values assume paired alpha-beta TCRs with default weights. For
+single-chain analysis, distances are roughly halved, so use
+proportionally smaller thresholds.
+
+## Performance and Scalability
+
+All distance computations are implemented in C++ for performance.
+Approximate guidance for dataset sizing:
+
+| N (TCRs) | `tcrdist_matrix` | `tcrdist_sparse` | `tcrdist_knn` | Memory (dense) |
+|----------|------------------|------------------|---------------|----------------|
+| 1,000    | \< 1 sec         | \< 1 sec         | \< 1 sec      | ~8 MB          |
+| 5,000    | ~5 sec           | ~5 sec           | ~3 sec        | ~200 MB        |
+| 10,000   | ~20 sec          | ~15 sec          | ~10 sec       | ~800 MB        |
+| 50,000   | minutes          | ~minutes         | ~1 min        | ~20 GB         |
+
+**When to use each function:**
+
+- **\< 5,000 TCRs**:
+  [`tcrdist_matrix()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_matrix.md)
+  is fast and convenient.
+- **5,000–20,000 TCRs**:
+  [`tcrdist_sparse()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_sparse.md)
+  saves memory; use for downstream analyses that only need nearby
+  neighbors.
+- **\> 20,000 TCRs**: Use
+  [`tcrdist_knn()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_knn.md)
+  which avoids materializing the full matrix. For dimensionality
+  reduction, use the UMAP KNN path rather than kernel PCA (which needs
+  the full matrix).
+
+## tcrdist3 Feature Map
+
+For users migrating from Python tcrdist3:
+
+| tcrdist3 concept                      | tcrdistR equivalent                                                                                                                                                                        | Notes                           |
+|---------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------|
+| `TCRrep`                              | [`TCRrep()`](https://shihanli92.github.io/tcrdistR/reference/TCRrep.md) S4 class                                                                                                           | Similar dedup behavior          |
+| `compute_distances()`                 | [`tcrdist_matrix()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_matrix.md)                                                                                                    | Per-component via `components=` |
+| `compute_sparse_rect_distances()`     | [`tcrdist_sparse()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_sparse.md), [`tcrdist_rect()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_rect.md)               |                                 |
+| `nn_approach()`                       | [`tcrdist_knn()`](https://shihanli92.github.io/tcrdistR/reference/tcrdist_knn.md)                                                                                                          |                                 |
+| `TCRpublic` / `find_metaclonotypes()` | [`find_meta_clonotypes()`](https://shihanli92.github.io/tcrdistR/reference/find_meta_clonotypes.md)                                                                                        |                                 |
+| `TCRsampler`-based clumping           | [`find_clumping()`](https://shihanli92.github.io/tcrdistR/reference/find_clumping.md)                                                                                                      | Chain-resampling background     |
+| Kernel PCA                            | [`compute_tcrdist_kernel_pca()`](https://shihanli92.github.io/tcrdistR/reference/compute_tcrdist_kernel_pca.md)                                                                            | Linear + Gaussian kernels       |
+| Diversity metrics                     | [`tcr_diversity()`](https://shihanli92.github.io/tcrdistR/reference/tcr_diversity.md), [`tcr_clonality()`](https://shihanli92.github.io/tcrdistR/reference/tcr_clonality.md), etc.         |                                 |
+| CDR3 motif logos                      | [`plot_cdr3_logo()`](https://shihanli92.github.io/tcrdistR/reference/plot_cdr3_logo.md), [`plot_tcr_logo_panel()`](https://shihanli92.github.io/tcrdistR/reference/plot_tcr_logo_panel.md) | ggseqlogo-based                 |
+| DB search                             | [`match_tcrs_to_db()`](https://shihanli92.github.io/tcrdistR/reference/match_tcrs_to_db.md)                                                                                                | Human only                      |
+| CD8 scoring                           | [`make_cd8_score_table_column()`](https://shihanli92.github.io/tcrdistR/reference/make_cd8_score_table_column.md)                                                                          | Human only                      |
+
 ## Next Steps
 
+- [`vignette("tcrdistR-tcrrep-workflow")`](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-tcrrep-workflow.md)
+  — End-to-end analysis with the TCRrep S4 object
 - [`vignette("tcrdistR-advanced")`](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-advanced.md)
   — Clustering, neighborhood tests, meta-clonotypes, database matching,
   kernel PCA, fuzzy diversity
 - [`vignette("tcrdistR-visualization")`](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-visualization.md)
   — Heatmaps, dendrograms, CDR3 logos, scatter plots
+- [`vignette("tcrdistR-comparing-repertoires")`](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-comparing-repertoires.md)
+  — Comparing repertoires between conditions
+- [`vignette("tcrdistR-glossary")`](https://shihanli92.github.io/tcrdistR/articles/tcrdistR-glossary.md)
+  — Glossary of technical terms

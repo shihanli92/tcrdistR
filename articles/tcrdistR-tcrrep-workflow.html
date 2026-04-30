@@ -150,6 +150,11 @@ from the TCRrep slots. We subsample for a cleaner plot:</p>
 <div class="section level2">
 <h2 id="kernel-pca-and-scatter-plots">Kernel PCA and Scatter Plots<a class="anchor" aria-label="anchor" href="#kernel-pca-and-scatter-plots"></a>
 </h2>
+<p>Kernel PCA projects the high-dimensional distance matrix into a few
+key axes (principal components) that capture the most variation. TCRs
+that cluster together in this 2D view share similar sequences — if they
+also share the same epitope label, that confirms that TCR sequence
+similarity predicts antigen specificity.</p>
 <p>Compute a kernel PCA embedding from the TCRrep:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pca</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/compute_tcrdist_kernel_pca.html">compute_tcrdist_kernel_pca</a></span><span class="op">(</span></span>
@@ -296,6 +301,11 @@ a TCRrep with <code>chains = "B"</code>:</p>
 <div class="section level2">
 <h2 id="neighborhood-test">Neighborhood Test<a class="anchor" aria-label="anchor" href="#neighborhood-test"></a>
 </h2>
+<p>The neighborhood test asks: for each TCR, are the nearby TCRs (within
+a distance radius) enriched for a particular label compared to the
+overall dataset? A significant result means that antigen specificity is
+encoded in the TCR sequence — nearby TCRs tend to recognize the same
+epitope.</p>
 <p>Test whether epitope labels are enriched in TCR neighborhoods:</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">nhood</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/neighborhood_test.html">neighborhood_test</a></span><span class="op">(</span></span>
@@ -315,6 +325,11 @@ a TCRrep with <code>chains = "B"</code>:</p>
 <div class="section level2">
 <h2 id="meta-clonotypes">Meta-Clonotypes<a class="anchor" aria-label="anchor" href="#meta-clonotypes"></a>
 </h2>
+<p>Meta-clonotypes are groups of similar TCRs found in multiple
+individuals. They represent convergent immune responses — different
+people independently generate similar TCRs against the same antigen.
+These shared motifs can serve as biomarkers of antigen exposure or
+vaccine response.</p>
 <p>Find TCR motifs shared across subjects:</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">meta</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/find_meta_clonotypes.html">find_meta_clonotypes</a></span><span class="op">(</span></span>
@@ -323,15 +338,15 @@ a TCRrep with <code>chains = "B"</code>:</p>
 <span>  subject_col <span class="op">=</span> <span class="st">"subject"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">meta</span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] 594</span></span>
+<span><span class="co">#&gt; [1] 1888</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">meta</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cdr3a"</span>, <span class="st">"cdr3b"</span>, <span class="st">"radius"</span>, <span class="st">"K_neighbors"</span>, <span class="st">"nsubject"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
-<span><span class="co">#&gt;             cdr3a             cdr3b radius K_neighbors nsubject</span></span>
-<span><span class="co">#&gt; 1    CAADTGNYKYVF     CASSTGDYAEQFF     48           2        2</span></span>
-<span><span class="co">#&gt; 2 CAASRYGSSGNKLIF CTCSAGTGGYNYAEQFF     48          19        9</span></span>
-<span><span class="co">#&gt; 3 CAASRYGSSGNKLIF CTCSAGTGGYNYAEQFF     48          19        9</span></span>
-<span><span class="co">#&gt; 4 CAASRYGSSGNKLIF CTCSAGTGGYNYAEQFF     48          19        9</span></span>
-<span><span class="co">#&gt; 5    CAASSGSWQLIF   CASSPTGGDQNTLYF     48           2        2</span></span>
-<span><span class="co">#&gt; 6    CAGSSGSWQLIF   CASSPTGGDQNTLYF     48           2        2</span></span></code></pre></div>
+<span><span class="co">#&gt;            cdr3a           cdr3b radius K_neighbors nsubject</span></span>
+<span><span class="co">#&gt; 1  CAAATSSGQKLVF   CASSGTANSDYTF     48        1888       78</span></span>
+<span><span class="co">#&gt; 2   CAVDYNQGKLIF CASSPLGGRRDTQYF     48        1888       78</span></span>
+<span><span class="co">#&gt; 3  CAVLNNYAQGLTF    CASSNLEAEQFF     48        1888       78</span></span>
+<span><span class="co">#&gt; 4 CAVRDRNYAQGLTF CASSLELGDYAEQFF     48        1888       78</span></span>
+<span><span class="co">#&gt; 5  CAAASSGSWQLIF   CASSDFSNSDYTF     48        1888       78</span></span>
+<span><span class="co">#&gt; 6 CAADNVGDNSKLIW  CASSLLQLQDTQYF     48        1888       78</span></span></code></pre></div>
 <p>Store back into the TCRrep:</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rep</span><span class="op">@</span><span class="va">meta_clonotypes</span> <span class="op">&lt;-</span> <span class="va">meta</span></span></code></pre></div>
@@ -339,14 +354,15 @@ a TCRrep with <code>chains = "B"</code>:</p>
 <div class="section level2">
 <h2 id="diversity">Diversity<a class="anchor" aria-label="anchor" href="#diversity"></a>
 </h2>
-<p>Compute repertoire diversity using the clone counts stored in the
-TCRrep:</p>
+<p>Diversity metrics summarize how “spread out” a repertoire is. High
+clonality (close to 1) suggests antigen-driven clonal expansion; low
+clonality (close to 0) suggests a broad, polyclonal sample.</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">div</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/tcr_diversity.html">tcr_diversity</a></span><span class="op">(</span><span class="va">rep</span><span class="op">@</span><span class="va">clone_df</span><span class="op">$</span><span class="va">count</span>, order <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
-<span><span class="va">div</span><span class="op">$</span><span class="va">effective_number</span></span>
+<span><span class="va">div</span><span class="op">$</span><span class="va">effective_number</span>  <span class="co"># "equivalent number of equally-abundant clonotypes"</span></span>
 <span><span class="co">#&gt; [1] 897.1068</span></span>
 <span></span>
-<span><span class="fu"><a href="../reference/tcr_clonality.html">tcr_clonality</a></span><span class="op">(</span><span class="va">rep</span><span class="op">@</span><span class="va">clone_df</span><span class="op">$</span><span class="va">count</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/tcr_clonality.html">tcr_clonality</a></span><span class="op">(</span><span class="va">rep</span><span class="op">@</span><span class="va">clone_df</span><span class="op">$</span><span class="va">count</span><span class="op">)</span>  <span class="co"># 0 = diverse, 1 = dominated</span></span>
 <span><span class="co">#&gt; [1] 0.04746628</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -367,6 +383,76 @@ TCRrep:</p>
 <span><span class="op">(</span><span class="va">p1</span> <span class="op">|</span> <span class="va">p2</span><span class="op">)</span> <span class="op">/</span> <span class="op">(</span><span class="va">p3</span> <span class="op">|</span> <span class="va">p4</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_annotation.html" class="external-link">plot_annotation</a></span><span class="op">(</span>title <span class="op">=</span> <span class="st">"DASH Repertoire Overview"</span><span class="op">)</span></span></code></pre></div>
 <p><img src="tcrdistR-tcrrep-workflow_files/figure-html/panel-1.png" class="r-plt" alt="" width="960"></p>
+</div>
+<div class="section level2">
+<h2 id="integration-with-other-tools">Integration with Other Tools<a class="anchor" aria-label="anchor" href="#integration-with-other-tools"></a>
+</h2>
+<p>tcrdistR works with standard R data.frames, making it easy to
+integrate with other single-cell and repertoire analysis tools:</p>
+<ul>
+<li>
+<strong>Seurat / scRepertoire</strong>: Extract TCR data from Seurat
+metadata using <code><a href="../reference/as_tcr_df.html">as_tcr_df()</a></code>, run tcrdistR analyses, then add
+results (clusters, diversity scores) back to the Seurat object’s
+metadata.</li>
+<li>
+<strong>immunarch</strong>: Use tcrdistR for distance-based analyses
+(neighborhood tests, meta-clonotypes) and immunarch for its gene usage
+statistics and tracking plots.</li>
+<li>
+<strong>Downstream</strong>: All tcrdistR results are standard R
+objects (data.frames, matrices, ggplot2 plots) that work with any R
+pipeline.</li>
+</ul>
+<div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Example: Seurat integration (pseudocode)</span></span>
+<span><span class="co"># tcr_meta &lt;- seurat_obj@meta.data[, c("TRAV", "CDR3a", "TRBV", "CDR3b")]</span></span>
+<span><span class="co"># tcrs &lt;- as_tcr_df(tcr_meta, col_map = c(va="TRAV", cdr3a="CDR3a",</span></span>
+<span><span class="co">#                                          vb="TRBV", cdr3b="CDR3b"))</span></span>
+<span><span class="co"># clusters &lt;- cluster_tcrs(tcrs, "human", k = 10)</span></span>
+<span><span class="co"># seurat_obj$tcr_cluster &lt;- clusters</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="session-info">Session Info<a class="anchor" aria-label="anchor" href="#session-info"></a>
+</h2>
+<div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/sessionInfo.html" class="external-link">sessionInfo</a></span><span class="op">(</span><span class="op">)</span></span>
+<span><span class="co">#&gt; R version 4.6.0 (2026-04-24)</span></span>
+<span><span class="co">#&gt; Platform: x86_64-pc-linux-gnu</span></span>
+<span><span class="co">#&gt; Running under: Ubuntu 24.04.4 LTS</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Matrix products: default</span></span>
+<span><span class="co">#&gt; BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 </span></span>
+<span><span class="co">#&gt; LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; locale:</span></span>
+<span><span class="co">#&gt;  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       </span></span>
+<span><span class="co">#&gt;  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   </span></span>
+<span><span class="co">#&gt;  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          </span></span>
+<span><span class="co">#&gt; [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; time zone: UTC</span></span>
+<span><span class="co">#&gt; tzcode source: system (glibc)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; attached base packages:</span></span>
+<span><span class="co">#&gt; [1] stats     graphics  grDevices utils     datasets  methods   base     </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; other attached packages:</span></span>
+<span><span class="co">#&gt; [1] patchwork_1.3.2 ggplot2_4.0.3   tcrdistR_0.1.0 </span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; loaded via a namespace (and not attached):</span></span>
+<span><span class="co">#&gt;  [1] Matrix_1.7-5       gtable_0.3.6       jsonlite_2.0.0     compiler_4.6.0    </span></span>
+<span><span class="co">#&gt;  [5] Rcpp_1.1.1-1.1     FNN_1.1.4.1        jquerylib_0.1.4    systemfonts_1.3.2 </span></span>
+<span><span class="co">#&gt;  [9] scales_1.4.0       textshaping_1.0.5  yaml_2.3.12        fastmap_1.2.0     </span></span>
+<span><span class="co">#&gt; [13] uwot_0.2.4         lattice_0.22-9     R6_2.6.1           labeling_0.4.3    </span></span>
+<span><span class="co">#&gt; [17] igraph_2.3.0       knitr_1.51         desc_1.4.3         pillar_1.11.1     </span></span>
+<span><span class="co">#&gt; [21] bslib_0.10.0       RColorBrewer_1.1-3 rlang_1.2.0        cachem_1.1.0      </span></span>
+<span><span class="co">#&gt; [25] xfun_0.57          fs_2.1.0           sass_0.4.10        S7_0.2.2          </span></span>
+<span><span class="co">#&gt; [29] cli_3.6.6          pkgdown_2.2.0      withr_3.0.2        magrittr_2.0.5    </span></span>
+<span><span class="co">#&gt; [33] digest_0.6.39      grid_4.6.0         lifecycle_1.0.5    vctrs_0.7.3       </span></span>
+<span><span class="co">#&gt; [37] RSpectra_0.16-2    evaluate_1.0.5     glue_1.8.1         farver_2.1.2      </span></span>
+<span><span class="co">#&gt; [41] ragg_1.5.2         ggseqlogo_0.2.2    rmarkdown_2.31     tools_4.6.0       </span></span>
+<span><span class="co">#&gt; [45] pkgconfig_2.0.3    htmltools_0.5.9</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

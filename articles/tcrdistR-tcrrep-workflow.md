@@ -101,6 +101,12 @@ plot_tcrdist_dendrogram(
 
 ## Kernel PCA and Scatter Plots
 
+Kernel PCA projects the high-dimensional distance matrix into a few key
+axes (principal components) that capture the most variation. TCRs that
+cluster together in this 2D view share similar sequences — if they also
+share the same epitope label, that confirms that TCR sequence similarity
+predicts antigen specificity.
+
 Compute a kernel PCA embedding from the TCRrep:
 
 ``` r
@@ -270,6 +276,11 @@ plot_cdr3_logo(
 
 ## Neighborhood Test
 
+The neighborhood test asks: for each TCR, are the nearby TCRs (within a
+distance radius) enriched for a particular label compared to the overall
+dataset? A significant result means that antigen specificity is encoded
+in the TCR sequence — nearby TCRs tend to recognize the same epitope.
+
 Test whether epitope labels are enriched in TCR neighborhoods:
 
 ``` r
@@ -290,6 +301,12 @@ head(nhood[order(nhood$p_adjusted), c("index", "n_neighbors", "p_value", "p_adju
 
 ## Meta-Clonotypes
 
+Meta-clonotypes are groups of similar TCRs found in multiple
+individuals. They represent convergent immune responses — different
+people independently generate similar TCRs against the same antigen.
+These shared motifs can serve as biomarkers of antigen exposure or
+vaccine response.
+
 Find TCR motifs shared across subjects:
 
 ``` r
@@ -299,15 +316,15 @@ meta <- find_meta_clonotypes(
   subject_col = "subject"
 )
 nrow(meta)
-#> [1] 594
+#> [1] 1888
 head(meta[, c("cdr3a", "cdr3b", "radius", "K_neighbors", "nsubject")])
-#>             cdr3a             cdr3b radius K_neighbors nsubject
-#> 1    CAADTGNYKYVF     CASSTGDYAEQFF     48           2        2
-#> 2 CAASRYGSSGNKLIF CTCSAGTGGYNYAEQFF     48          19        9
-#> 3 CAASRYGSSGNKLIF CTCSAGTGGYNYAEQFF     48          19        9
-#> 4 CAASRYGSSGNKLIF CTCSAGTGGYNYAEQFF     48          19        9
-#> 5    CAASSGSWQLIF   CASSPTGGDQNTLYF     48           2        2
-#> 6    CAGSSGSWQLIF   CASSPTGGDQNTLYF     48           2        2
+#>            cdr3a           cdr3b radius K_neighbors nsubject
+#> 1  CAAATSSGQKLVF   CASSGTANSDYTF     48        1888       78
+#> 2   CAVDYNQGKLIF CASSPLGGRRDTQYF     48        1888       78
+#> 3  CAVLNNYAQGLTF    CASSNLEAEQFF     48        1888       78
+#> 4 CAVRDRNYAQGLTF CASSLELGDYAEQFF     48        1888       78
+#> 5  CAAASSGSWQLIF   CASSDFSNSDYTF     48        1888       78
+#> 6 CAADNVGDNSKLIW  CASSLLQLQDTQYF     48        1888       78
 ```
 
 Store back into the TCRrep:
@@ -318,15 +335,16 @@ rep@meta_clonotypes <- meta
 
 ## Diversity
 
-Compute repertoire diversity using the clone counts stored in the
-TCRrep:
+Diversity metrics summarize how “spread out” a repertoire is. High
+clonality (close to 1) suggests antigen-driven clonal expansion; low
+clonality (close to 0) suggests a broad, polyclonal sample.
 
 ``` r
 div <- tcr_diversity(rep@clone_df$count, order = 2)
-div$effective_number
+div$effective_number  # "equivalent number of equally-abundant clonotypes"
 #> [1] 897.1068
 
-tcr_clonality(rep@clone_df$count)
+tcr_clonality(rep@clone_df$count)  # 0 = diverse, 1 = dominated
 #> [1] 0.04746628
 ```
 
@@ -349,3 +367,69 @@ p4 <- plot_gene_usage(rep@clone_df, "vb", title = "V-beta usage")
 ```
 
 ![](tcrdistR-tcrrep-workflow_files/figure-html/panel-1.png)
+
+## Integration with Other Tools
+
+tcrdistR works with standard R data.frames, making it easy to integrate
+with other single-cell and repertoire analysis tools:
+
+- **Seurat / scRepertoire**: Extract TCR data from Seurat metadata using
+  [`as_tcr_df()`](https://shihanli92.github.io/tcrdistR/reference/as_tcr_df.md),
+  run tcrdistR analyses, then add results (clusters, diversity scores)
+  back to the Seurat object’s metadata.
+- **immunarch**: Use tcrdistR for distance-based analyses (neighborhood
+  tests, meta-clonotypes) and immunarch for its gene usage statistics
+  and tracking plots.
+- **Downstream**: All tcrdistR results are standard R objects
+  (data.frames, matrices, ggplot2 plots) that work with any R pipeline.
+
+``` r
+# Example: Seurat integration (pseudocode)
+# tcr_meta <- seurat_obj@meta.data[, c("TRAV", "CDR3a", "TRBV", "CDR3b")]
+# tcrs <- as_tcr_df(tcr_meta, col_map = c(va="TRAV", cdr3a="CDR3a",
+#                                          vb="TRBV", cdr3b="CDR3b"))
+# clusters <- cluster_tcrs(tcrs, "human", k = 10)
+# seurat_obj$tcr_cluster <- clusters
+```
+
+## Session Info
+
+``` r
+sessionInfo()
+#> R version 4.6.0 (2026-04-24)
+#> Platform: x86_64-pc-linux-gnu
+#> Running under: Ubuntu 24.04.4 LTS
+#> 
+#> Matrix products: default
+#> BLAS:   /usr/lib/x86_64-linux-gnu/openblas-pthread/libblas.so.3 
+#> LAPACK: /usr/lib/x86_64-linux-gnu/openblas-pthread/libopenblasp-r0.3.26.so;  LAPACK version 3.12.0
+#> 
+#> locale:
+#>  [1] LC_CTYPE=C.UTF-8       LC_NUMERIC=C           LC_TIME=C.UTF-8       
+#>  [4] LC_COLLATE=C.UTF-8     LC_MONETARY=C.UTF-8    LC_MESSAGES=C.UTF-8   
+#>  [7] LC_PAPER=C.UTF-8       LC_NAME=C              LC_ADDRESS=C          
+#> [10] LC_TELEPHONE=C         LC_MEASUREMENT=C.UTF-8 LC_IDENTIFICATION=C   
+#> 
+#> time zone: UTC
+#> tzcode source: system (glibc)
+#> 
+#> attached base packages:
+#> [1] stats     graphics  grDevices utils     datasets  methods   base     
+#> 
+#> other attached packages:
+#> [1] patchwork_1.3.2 ggplot2_4.0.3   tcrdistR_0.1.0 
+#> 
+#> loaded via a namespace (and not attached):
+#>  [1] Matrix_1.7-5       gtable_0.3.6       jsonlite_2.0.0     compiler_4.6.0    
+#>  [5] Rcpp_1.1.1-1.1     FNN_1.1.4.1        jquerylib_0.1.4    systemfonts_1.3.2 
+#>  [9] scales_1.4.0       textshaping_1.0.5  yaml_2.3.12        fastmap_1.2.0     
+#> [13] uwot_0.2.4         lattice_0.22-9     R6_2.6.1           labeling_0.4.3    
+#> [17] igraph_2.3.0       knitr_1.51         desc_1.4.3         pillar_1.11.1     
+#> [21] bslib_0.10.0       RColorBrewer_1.1-3 rlang_1.2.0        cachem_1.1.0      
+#> [25] xfun_0.57          fs_2.1.0           sass_0.4.10        S7_0.2.2          
+#> [29] cli_3.6.6          pkgdown_2.2.0      withr_3.0.2        magrittr_2.0.5    
+#> [33] digest_0.6.39      grid_4.6.0         lifecycle_1.0.5    vctrs_0.7.3       
+#> [37] RSpectra_0.16-2    evaluate_1.0.5     glue_1.8.1         farver_2.1.2      
+#> [41] ragg_1.5.2         ggseqlogo_0.2.2    rmarkdown_2.31     tools_4.6.0       
+#> [45] pkgconfig_2.0.3    htmltools_0.5.9
+```

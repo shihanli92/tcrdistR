@@ -56,7 +56,8 @@ meta-clonotype.</p>
 <span>  ctrl_bkgd <span class="op">=</span> <span class="fl">1e-05</span>,</span>
 <span>  max_radius <span class="op">=</span> <span class="fl">50L</span>,</span>
 <span>  min_nsubject <span class="op">=</span> <span class="fl">2L</span>,</span>
-<span>  subject_col <span class="op">=</span> <span class="st">"subject"</span></span>
+<span>  subject_col <span class="op">=</span> <span class="st">"subject"</span>,</span>
+<span>  dist_matrix <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -101,6 +102,11 @@ neighborhood. Default <code>2L</code>.</p></dd>
 <dt id="arg-subject-col">subject_col<a class="anchor" aria-label="anchor" href="#arg-subject-col"></a></dt>
 <dd><p>Character string. Column name for subject IDs.
 Default <code>"subject"</code>.</p></dd>
+
+
+<dt id="arg-dist-matrix">dist_matrix<a class="anchor" aria-label="anchor" href="#arg-dist-matrix"></a></dt>
+<dd><p>Optional precomputed distance matrix. If provided,
+<code>tcr_df</code> and <code>organism</code> are not used for distance computation.</p></dd>
 
 </dl></div>
     <div class="section level2">

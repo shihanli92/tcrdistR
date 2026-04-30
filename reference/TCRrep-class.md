@@ -28,8 +28,8 @@ constructor rather than calling `new("TCRrep", ...)` directly.
 
 - `metric`:
 
-  Character string specifying the distance metric. One of `"tcrdist"`,
-  `"hamming"`, `"levenshtein"`, or `"nw"`.
+  Character string specifying the distance metric. One of `"tcrdist"` or
+  `"hamming"`.
 
 - `weights`:
 
