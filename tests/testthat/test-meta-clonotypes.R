@@ -202,3 +202,28 @@ test_that("find_meta_clonotypes accepts precomputed dist_matrix", {
                                 dist_matrix = dm)
     expect_equal(r1, r2)
 })
+
+test_that("find_meta_clonotypes sparse path matches dense path", {
+    skip_on_cran()
+
+    tcr_df <- data.frame(
+        va = c("TRAV1-1*01", "TRAV1-1*01", "TRAV1-2*01",
+               "TRAV1-1*01", "TRAV1-2*01"),
+        cdr3a = c("CAVRDSSYKLIF", "CAVRDSSYKLIF", "CAVKDSSYKLIF",
+                   "CAVRDSSYKLIF", "CAVKDSYKLIF"),
+        vb = c("TRBV5-1*01", "TRBV5-1*01", "TRBV6-1*01",
+               "TRBV5-1*01", "TRBV6-1*01"),
+        cdr3b = c("CASSIRSSYEQY", "CASSIRSSYEQF", "CASSIKSSYEQY",
+                   "CASSIRSSYEQY", "CASSIKSSYEQF"),
+        subject = c("S1", "S2", "S1", "S2", "S1"),
+        stringsAsFactors = FALSE
+    )
+
+    # Default path now uses sparse internally
+    r_sparse <- find_meta_clonotypes(tcr_df, "human", radius = 200)
+    # Dense path via dist_matrix
+    dm <- tcrdist_matrix(tcr_df, "human")
+    r_dense <- find_meta_clonotypes(tcr_df, "human", radius = 200,
+                                     dist_matrix = dm)
+    expect_equal(r_sparse, r_dense)
+})

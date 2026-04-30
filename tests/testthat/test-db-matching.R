@@ -162,3 +162,68 @@ test_that("match_tcrs_to_db warns for non-human organism without custom DB", {
         "default paired database"
     )
 })
+
+
+# ---------------------------------------------------------------------------
+# Test 6: find_significant_tcrdist_matches end-to-end
+# ---------------------------------------------------------------------------
+
+test_that("find_significant_tcrdist_matches end-to-end returns matches", {
+    skip_on_cran()
+
+    data(dash, envir = environment())
+    # Use first 5 mouse TCRs as query (has nucseq columns for background)
+    query <- dash[1:5, ]
+
+    # Put identical TCRs in db — guarantees distance = 0 matches
+    db <- data.frame(
+        va    = query$va,
+        cdr3a = query$cdr3a,
+        vb    = query$vb,
+        cdr3b = query$cdr3b,
+        stringsAsFactors = FALSE
+    )
+
+    result <- find_significant_tcrdist_matches(
+        query, db, "mouse",
+        adjusted_pvalue_threshold = 1.0,
+        num_random_samples = 500L
+    )
+
+    expect_true(is.data.frame(result))
+    expect_true(nrow(result) >= 5L)
+    expect_true("tcrdist" %in% colnames(result))
+    expect_true("pvalue_adj" %in% colnames(result))
+    expect_true("fdr_value" %in% colnames(result))
+    expect_true("db_va" %in% colnames(result))
+    # Self-matches should have distance 0
+    self_matches <- result[result$tcrdist == 0, ]
+    expect_true(nrow(self_matches) >= 5L)
+    # Results sorted by pvalue_adj
+    expect_equal(result$pvalue_adj, sort(result$pvalue_adj))
+})
+
+test_that("find_significant_tcrdist_matches returns empty for stringent threshold", {
+    skip_on_cran()
+
+    data(dash, envir = environment())
+    query <- dash[1:3, ]
+
+    # db with very different CDR3s (use mouse V genes, valid AAs)
+    db <- data.frame(
+        va    = rep("TRAV7-3*01", 3),
+        cdr3a = c("CAAAAAAAAF", "CGGGGGGGGF", "CLLLLLLLLLF"),
+        vb    = rep("TRBV13-1*01", 3),
+        cdr3b = c("CASSSSSSSSF", "CATTTTTTTTF", "CASRRRRRRRRF"),
+        stringsAsFactors = FALSE
+    )
+
+    result <- find_significant_tcrdist_matches(
+        query, db, "mouse",
+        adjusted_pvalue_threshold = 0.05,
+        num_random_samples = 500L
+    )
+
+    expect_true(is.data.frame(result))
+    expect_true(all(c("tcrdist", "pvalue_adj") %in% colnames(result)))
+})

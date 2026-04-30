@@ -130,3 +130,33 @@ test_that("tcrdist_join: empty input returns empty", {
     result <- tcrdist_join(empty, tcr_df, "human", radius = 50)
     expect_equal(nrow(result), 0L)
 })
+
+
+# ===========================================================================
+# rect_dist_matrix bypass
+# ===========================================================================
+
+test_that("tcrdist_join accepts precomputed rect_dist_matrix", {
+    skip_on_cran()
+
+    left_df <- data.frame(
+        va = c("TRAV1-1*01", "TRAV1-2*01"),
+        cdr3a = c("CAVRDSSYKLIF", "CAVKDSSYKLIF"),
+        vb = c("TRBV5-1*01", "TRBV6-1*01"),
+        cdr3b = c("CASSIRSSYEQY", "CASSIKSSYEQY"),
+        stringsAsFactors = FALSE
+    )
+    right_df <- data.frame(
+        va = c("TRAV1-1*01", "TRAV10*01"),
+        cdr3a = c("CAVRDSSYKLIF", "CAVRDSYKLIF"),
+        vb = c("TRBV5-1*01", "TRBV7-2*01"),
+        cdr3b = c("CASSIRSSYEQY", "CASSIRSYEQY"),
+        stringsAsFactors = FALSE
+    )
+
+    rm <- tcrdist_rect(left_df, right_df, "human")
+    r1 <- tcrdist_join(left_df, right_df, "human", radius = 200)
+    r2 <- tcrdist_join(left_df, right_df, "human", radius = 200,
+                        rect_dist_matrix = rm)
+    expect_equal(r1, r2)
+})

@@ -169,15 +169,27 @@ find_meta_clonotypes <- function(tcr_df, organism,
         radii <- as.integer(radius)
     }
 
-    # Compute dense distance matrix
-    dist_mat <- .get_dist_matrix(tcr_df, organism, dist_matrix)
+    # Compute distances — sparse when auto-computed, dense when user-provided
+    if (!is.null(dist_matrix)) {
+        dist_mat <- as.matrix(dist_matrix)
+        use_sparse <- FALSE
+    } else {
+        dist_mat <- tcrdist_sparse(tcr_df, organism, threshold = max(radii))
+        use_sparse <- TRUE
+    }
 
     # Find neighborhoods and count subjects
     results <- vector("list", n)
     neighbor_sets <- vector("list", n)
 
     for (i in seq_len(n)) {
-        nbrs <- which(dist_mat[i, ] <= radii[i])
+        if (use_sparse) {
+            row_vals <- dist_mat[i, ]
+            within <- which(row_vals <= radii[i])
+            nbrs <- sort(unique(c(i, within)))
+        } else {
+            nbrs <- which(dist_mat[i, ] <= radii[i])
+        }
         nbr_subjects <- unique(subjects[nbrs])
         nsubject <- length(nbr_subjects)
 

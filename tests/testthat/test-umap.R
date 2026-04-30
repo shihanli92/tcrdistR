@@ -188,3 +188,26 @@ test_that(".build_knn_graph produces symmetric sparse matrix", {
     expect_equal(ncol(g), 4L)
     expect_true(Matrix::isSymmetric(g, tol = 1e-10))
 })
+
+test_that("compute_tcrdist_umap connectivity loop has bounded n_neighbors", {
+    skip_on_cran()
+    skip_if_not_installed("uwot")
+    skip_if_not_installed("igraph")
+
+    # Two very different TCR clusters — likely fragmented at small n_neighbors
+    tcr_df <- data.frame(
+        va = c(rep("TRAV1-1*01", 3), rep("TRAV12-2*01", 3)),
+        cdr3a = c("CAVRDSSYKLIF", "CAVRDSSYKLIF", "CAVRDSSYKLIF",
+                   "CAVSANSGTYF", "CAVSANSGTYF", "CAVSANSGTYF"),
+        vb = c(rep("TRBV19*01", 3), rep("TRBV20-1*01", 3)),
+        cdr3b = c("CASSIRSSYEQYF", "CASSIRSYEQYF", "CASSIRSSYEQYF",
+                   "CSARDRTGNTIYF", "CSARDRTGNTIYF", "CSARDRTGNTIYF"),
+        stringsAsFactors = FALSE
+    )
+
+    # Should complete without infinite loop even with small n_neighbors
+    result <- expect_no_error(
+        compute_tcrdist_umap(tcr_df, "human", n_neighbors = 2L, seed = 42L)
+    )
+    expect_equal(nrow(result$embeddings), 6L)
+})

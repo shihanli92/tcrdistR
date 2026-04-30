@@ -450,6 +450,8 @@ compute_tcrdist_umap <- function(tcr_df = NULL,
     # Step 2: KNN with group masking + connectivity check
     knn <- NULL
     knn_graph <- NULL
+    initial_n_neighbors <- n_neighbors
+    max_n_neighbors <- min(n - 1L, initial_n_neighbors * 8L)
 
     repeat {
         knn <- tcrdist_knn(
@@ -468,12 +470,22 @@ compute_tcrdist_umap <- function(tcr_df = NULL,
             )
             n_comp <- igraph::components(g_tmp)$no
             if (n_comp > 2L * n_components) {
+                new_k <- min(2L * n_neighbors, max_n_neighbors)
+                if (new_k <= n_neighbors) {
+                    warning(
+                        "KNN graph has ", n_comp, " connected components ",
+                        "but n_neighbors has reached its cap (",
+                        n_neighbors, "). Proceeding with fragmented graph.",
+                        call. = FALSE
+                    )
+                    break
+                }
                 message(
                     "KNN graph has ", n_comp, " connected components; ",
                     "increasing n_neighbors from ", n_neighbors,
-                    " to ", 2L * n_neighbors
+                    " to ", new_k
                 )
-                n_neighbors <- 2L * n_neighbors
+                n_neighbors <- new_k
                 next
             }
         }

@@ -27,6 +27,9 @@
 #'   unmatched).
 #' @param suffix Character vector of length 2. Suffixes for disambiguating
 #'   column names. Default \code{c("_x", "_y")}.
+#' @param rect_dist_matrix Optional precomputed rectangular distance matrix
+#'   (rows = left, cols = right). If provided, \code{organism} is not used
+#'   for distance computation.
 #'
 #' @return A data.frame with columns from both sides (suffixed if
 #'   overlapping) plus a \code{tcrdist} column.
@@ -40,7 +43,8 @@
 #' @export
 tcrdist_join <- function(left_df, right_df, organism, radius,
                           max_n = 5L, type = c("inner", "left"),
-                          suffix = c("_x", "_y")) {
+                          suffix = c("_x", "_y"),
+                          rect_dist_matrix = NULL) {
     type <- match.arg(type)
     stopifnot(
         is.data.frame(left_df), is.data.frame(right_df),
@@ -55,7 +59,11 @@ tcrdist_join <- function(left_df, right_df, organism, radius,
     }
 
     # Compute rectangular distances (dense, with threshold applied)
-    rect_mat <- tcrdist_rect(left_df, right_df, organism)
+    if (!is.null(rect_dist_matrix)) {
+        rect_mat <- as.matrix(rect_dist_matrix)
+    } else {
+        rect_mat <- tcrdist_rect(left_df, right_df, organism)
+    }
 
     # Build result rows
     left_names <- paste0(colnames(left_df), suffix[1L])
