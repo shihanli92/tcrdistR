@@ -140,6 +140,38 @@ test_that("TCRrep default weights and gap penalties match package constants", {
     expect_equal(obj@gap_penalties$v_region,  4L)
 })
 
+test_that("TCRrep rejects removed metrics (levenshtein, nw)", {
+    tcrs <- data.frame(
+        va    = c("TRAV1-1*01"),
+        cdr3a = c("CAVRDSSYKLIF"),
+        vb    = c("TRBV19*01"),
+        cdr3b = c("CASSIRSSYEQYF"),
+        stringsAsFactors = FALSE
+    )
+
+    expect_error(TCRrep(tcrs, "human", metric = "levenshtein"))
+    expect_error(TCRrep(tcrs, "human", metric = "nw"))
+})
+
+test_that("TCRrep with metric='hamming' computes hamming distances", {
+    tcrs <- data.frame(
+        va    = c("TRAV1-1*01",  "TRAV1-1*01",  "TRAV12-2*01"),
+        cdr3a = c("CAVRDSSYKLIF", "CAVRDSSYKLIF", "CAVSANSGTYF"),
+        vb    = c("TRBV19*01",   "TRBV19*01",   "TRBV20-1*01"),
+        cdr3b = c("CASSIRSSYEQYF", "CASSIRSYEQYF", "CSARDRTGNTIYF"),
+        stringsAsFactors = FALSE
+    )
+
+    obj <- TCRrep(tcrs, "human", metric = "hamming", compute_distances = TRUE)
+    expect_true(is(obj, "TCRrep"))
+    expect_equal(obj@metric, "hamming")
+    expect_false(is.null(obj@paired_dist))
+    expect_true(is.matrix(obj@paired_dist))
+    expect_equal(dim(obj@paired_dist), c(3L, 3L))
+    # Diagonal should be 0
+    expect_equal(diag(obj@paired_dist), c(0, 0, 0))
+})
+
 
 # ===========================================================================
 # Subsetting: [ and subset()

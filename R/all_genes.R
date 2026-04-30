@@ -537,3 +537,25 @@ load_gene_database <- function(organism = NULL) {
 
     .tcrdistR_env$all_genes[[organism]]
 }
+
+
+# ---------------------------------------------------------------------------
+# list_organisms  (exported)
+# ---------------------------------------------------------------------------
+
+#' List available organisms in the gene database
+#'
+#' Returns the names of all organisms available in the bundled gene
+#' database. These are the valid values for the \code{organism} parameter
+#' in functions like \code{\link{tcrdist_matrix}} and \code{\link{TCRrep}}.
+#'
+#' @return A character vector of organism names, sorted alphabetically.
+#'
+#' @examples
+#' list_organisms()
+#'
+#' @seealso \code{\link{load_gene_database}}
+#' @export
+list_organisms <- function() {
+    sort(names(load_gene_database(organism = NULL)))
+}

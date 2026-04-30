@@ -43,3 +43,21 @@ test_that("gene database contains expected organisms", {
     expect_true(length(human_genes) > 0)
     expect_true(length(mouse_genes) > 0)
 })
+
+
+# ===========================================================================
+# list_organisms
+# ===========================================================================
+
+test_that("list_organisms returns character vector with human and mouse", {
+    orgs <- list_organisms()
+    expect_type(orgs, "character")
+    expect_true(length(orgs) >= 2L)
+    expect_true("human" %in% orgs)
+    expect_true("mouse" %in% orgs)
+})
+
+test_that("list_organisms returns sorted names", {
+    orgs <- list_organisms()
+    expect_equal(orgs, sort(orgs))
+})

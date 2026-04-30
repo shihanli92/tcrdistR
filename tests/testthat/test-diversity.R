@@ -103,6 +103,71 @@ test_that("tcr_clonality: bounded [0, 1]", {
 
 
 # ===========================================================================
+# tcr_shannon_entropy
+# ===========================================================================
+
+test_that("tcr_shannon_entropy: uniform equals log(S)", {
+    H <- tcr_shannon_entropy(rep(10, 5))
+    expect_equal(H, log(5), tolerance = 1e-10)
+})
+
+test_that("tcr_shannon_entropy: single species = 0", {
+    expect_equal(tcr_shannon_entropy(c(100)), 0)
+})
+
+test_that("tcr_shannon_entropy: base=2 gives bits", {
+    H_nats <- tcr_shannon_entropy(rep(10, 4))
+    H_bits <- tcr_shannon_entropy(rep(10, 4), base = 2)
+    expect_equal(H_bits, log2(4), tolerance = 1e-10)
+    expect_equal(H_nats / log(2), H_bits, tolerance = 1e-10)
+})
+
+test_that("tcr_shannon_entropy: zeros are ignored", {
+    H1 <- tcr_shannon_entropy(c(10, 20, 30))
+    H2 <- tcr_shannon_entropy(c(10, 20, 30, 0, 0))
+    expect_equal(H1, H2)
+})
+
+test_that("tcr_shannon_entropy: dominated distribution has low entropy", {
+    H <- tcr_shannon_entropy(c(10000, 1, 1))
+    expect_true(H < 0.01)
+})
+
+
+# ===========================================================================
+# tcr_gini
+# ===========================================================================
+
+test_that("tcr_gini: uniform distribution near 0", {
+    G <- tcr_gini(rep(100, 10))
+    expect_true(G < 0.01)
+})
+
+test_that("tcr_gini: dominated distribution has high Gini", {
+    # With few species, Gini max is (n-1)/n; need many species for > 0.9
+    G <- tcr_gini(c(100000, rep(1, 100)))
+    expect_true(G > 0.9)
+})
+
+test_that("tcr_gini: single species = 0", {
+    expect_equal(tcr_gini(c(100)), 0)
+})
+
+test_that("tcr_gini: bounded [0, 1]", {
+    for (counts in list(c(1,1,1), c(100,1), c(50,50,50,50), c(10000,1,1))) {
+        G <- tcr_gini(counts)
+        expect_true(G >= 0 && G <= 1)
+    }
+})
+
+test_that("tcr_gini: more unequal = higher Gini", {
+    G_uniform <- tcr_gini(rep(10, 5))
+    G_skewed <- tcr_gini(c(100, 1, 1, 1, 1))
+    expect_true(G_skewed > G_uniform)
+})
+
+
+# ===========================================================================
 # tcr_fuzzy_diversity (requires compiled code)
 # ===========================================================================
 

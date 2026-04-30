@@ -106,26 +106,17 @@ tcr_diversity <- function(counts, order = 2L, ci = TRUE, alpha = 0.05) {
     )
 
     if (ci) {
-        # Delta method CI approximation
-        # Variance of Z via multinomial covariance
-        # Var(Z) ≈ sum_i (dZ/dp_i)^2 * p_i*(1-p_i)/n
-        # For order 2: Z = sum p_i^2, so dZ/dp_i = 2*p_i
-        # Simplified: se ≈ sqrt(sum(4 * p^2 * p * (1-p)) / n)
+        # Delta method with full multinomial covariance:
+        # Var(Z) = (1/n) * [sum(grad^2 * p) - (sum(grad * p))^2]
         if (r == 2L) {
-            var_z <- sum(4 * p^2 * p * (1 - p)) / n
+            # dZ/dp_i = 2*p_i
+            sum_p3 <- sum(p^3)
+            sum_p2_sq <- sum(p^2)^2
+            var_z <- (4 / n) * (sum_p3 - sum_p2_sq)
         } else {
-            # General case: numerical gradient
-            var_z <- 0
-            for (i in seq_along(p)) {
-                term_i <- p[i]^(r - 1)
-                for (k in seq_len(r - 1L)) {
-                    if (n - k > 0) {
-                        term_i <- term_i * (counts[i] - k) / (n - k)
-                    }
-                }
-                grad_i <- r * term_i
-                var_z <- var_z + grad_i^2 * p[i] * (1 - p[i]) / n
-            }
+            # dZ/dp_i ≈ r * p_i^(r-1)
+            grad <- r * p^(r - 1)
+            var_z <- (1 / n) * (sum(grad^2 * p) - (sum(grad * p))^2)
         }
         se <- sqrt(max(0, var_z))
         z_crit <- stats::qnorm(1 - alpha / 2)
@@ -278,6 +269,74 @@ tcr_richness <- function(counts) {
 
 
 # ---------------------------------------------------------------------------
+# tcr_shannon_entropy  (exported)
+# ---------------------------------------------------------------------------
+
+#' Shannon entropy of a clonotype distribution
+#'
+#' Computes Shannon entropy \code{H = -sum(p * log(p, base))} for a
+#' vector of clonotype counts. Natural log (nats) by default; set
+#' \code{base = 2} for bits.
+#'
+#' @param counts Integer vector. Clonotype counts (positive integers).
+#' @param base Numeric. Logarithm base. Default \code{exp(1)} (natural log).
+#'   Use \code{2} for bits.
+#' @return A numeric scalar >= 0.
+#'
+#' @examples
+#' # Uniform: H = log(S)
+#' tcr_shannon_entropy(rep(10, 5))
+#'
+#' # Single species: H = 0
+#' tcr_shannon_entropy(c(100))
+#'
+#' @seealso \code{\link{tcr_clonality}}, \code{\link{tcr_diversity}},
+#'   \code{\link{tcr_gini}}
+#' @export
+tcr_shannon_entropy <- function(counts, base = exp(1)) {
+    counts <- as.integer(counts)
+    counts <- counts[counts > 0L]
+    if (length(counts) <= 1L) return(0)
+    p <- counts / sum(counts)
+    -sum(p * log(p, base = base))
+}
+
+
+# ---------------------------------------------------------------------------
+# tcr_gini  (exported)
+# ---------------------------------------------------------------------------
+
+#' Gini index of a clonotype distribution
+#'
+#' Computes the Gini coefficient measuring inequality in clonotype
+#' abundances. Values near 0 indicate a uniform (equal) distribution;
+#' values near 1 indicate extreme inequality (one dominant clone).
+#'
+#' @param counts Integer vector. Clonotype counts (positive integers).
+#' @return A numeric scalar between 0 and 1.
+#'
+#' @examples
+#' # Uniform: Gini near 0
+#' tcr_gini(rep(10, 5))
+#'
+#' # Dominated: Gini near 1
+#' tcr_gini(c(10000, 1, 1))
+#'
+#' @seealso \code{\link{tcr_shannon_entropy}}, \code{\link{tcr_clonality}},
+#'   \code{\link{tcr_diversity}}
+#' @export
+tcr_gini <- function(counts) {
+    counts <- as.integer(counts)
+    counts <- counts[counts > 0L]
+    n <- length(counts)
+    if (n <= 1L) return(0)
+    counts <- sort(counts)
+    idx <- seq_len(n)
+    2 * sum(idx * counts) / (n * sum(counts)) - (n + 1) / n
+}
+
+
+# ---------------------------------------------------------------------------
 # tcr_clonality  (exported)
 # ---------------------------------------------------------------------------
 
@@ -298,15 +357,14 @@ tcr_richness <- function(counts) {
 #' # Dominated: clonality near 1
 #' tcr_clonality(c(1000, 1, 1))
 #'
-#' @seealso \code{\link{tcr_diversity}}, \code{\link{tcr_richness}}
+#' @seealso \code{\link{tcr_diversity}}, \code{\link{tcr_richness}},
+#'   \code{\link{tcr_shannon_entropy}}
 #' @export
 tcr_clonality <- function(counts) {
     counts <- as.integer(counts)
     counts <- counts[counts > 0L]
     S <- length(counts)
     if (S <= 1L) return(1)
-
-    p <- counts / sum(counts)
-    H <- -sum(p * log(p))
+    H <- tcr_shannon_entropy(counts)
     1 - H / log(S)
 }

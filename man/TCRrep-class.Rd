@@ -28,7 +28,7 @@ organisms available in the bundled gene database (e.g. \code{"human"},
 \code{"AB"}, \code{"A"}, \code{"B"}, or \code{"GD"}.}
 
 \item{\code{metric}}{Character string specifying the distance metric. One of
-\code{"tcrdist"}, \code{"hamming"}, \code{"levenshtein"}, or \code{"nw"}.}
+\code{"tcrdist"} or \code{"hamming"}.}
 
 \item{\code{weights}}{A named list with elements \code{cdr3} and \code{v_region}
 specifying the integer weights applied to each region's distance

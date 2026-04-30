@@ -61,6 +61,8 @@ reference:
       - tcr_fuzzy_diversity
       - tcr_richness
       - tcr_clonality
+      - tcr_shannon_entropy
+      - tcr_gini
 
   - title: "Clustering & Neighborhood Tests"
     desc: "Hierarchical clustering and neighborhood-based statistics"
@@ -115,6 +117,7 @@ reference:
     desc: "Gene database, constants, and helper functions"
     contents:
       - load_gene_database
+      - list_organisms
       - trim_allele_to_gene
       - get_translation
       - reverse_complement

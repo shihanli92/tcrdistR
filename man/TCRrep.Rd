@@ -49,8 +49,7 @@ subject (same as default when subject exists);
 }}
 
 \item{metric}{Character string. Distance metric to use. One of
-\code{"tcrdist"} (default), \code{"hamming"}, \code{"levenshtein"}, or
-\code{"nw"}.}
+\code{"tcrdist"} (default) or \code{"hamming"}.}
 
 \item{compute_distances}{Logical. If \code{TRUE} and \code{nrow(clone_df) > 0},
 compute the pairwise distance matrix immediately and store it in the

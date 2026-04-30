@@ -27,5 +27,6 @@ tcr_clonality(c(1000, 1, 1))
 
 }
 \seealso{
-\code{\link{tcr_diversity}}, \code{\link{tcr_richness}}
+\code{\link{tcr_diversity}}, \code{\link{tcr_richness}},
+\code{\link{tcr_shannon_entropy}}
 }

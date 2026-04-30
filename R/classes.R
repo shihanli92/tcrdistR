@@ -20,7 +20,7 @@ NULL
 #' @slot chains Character string specifying the chain combination. One of
 #'   \code{"AB"}, \code{"A"}, \code{"B"}, or \code{"GD"}.
 #' @slot metric Character string specifying the distance metric. One of
-#'   \code{"tcrdist"}, \code{"hamming"}, \code{"levenshtein"}, or \code{"nw"}.
+#'   \code{"tcrdist"} or \code{"hamming"}.
 #' @slot weights A named list with elements \code{cdr3} and \code{v_region}
 #'   specifying the integer weights applied to each region's distance
 #'   contribution.
@@ -107,7 +107,7 @@ setValidity("TCRrep", function(object) {
     }
 
     # ---- metric --------------------------------------------------------------
-    valid_metrics <- c("tcrdist", "hamming", "levenshtein", "nw")
+    valid_metrics <- c("tcrdist", "hamming")
     if (length(object@metric) != 1L ||
         !(object@metric %in% valid_metrics)) {
         errors <- c(errors, sprintf(

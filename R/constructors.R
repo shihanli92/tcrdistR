@@ -110,8 +110,7 @@ NULL
 #'       \code{character(0)} groups by chain columns only.}
 #'   }
 #' @param metric Character string. Distance metric to use. One of
-#'   \code{"tcrdist"} (default), \code{"hamming"}, \code{"levenshtein"}, or
-#'   \code{"nw"}.
+#'   \code{"tcrdist"} (default) or \code{"hamming"}.
 #' @param compute_distances Logical. If \code{TRUE} and \code{nrow(clone_df) > 0},
 #'   compute the pairwise distance matrix immediately and store it in the
 #'   \code{paired_dist} slot. Defaults to \code{FALSE}.
@@ -226,16 +225,25 @@ TCRrep <- function(clone_df,
 
     # ---- Optionally compute distances ---------------------------------------
     if (isTRUE(compute_distances) && nrow(clone_df) > 0L) {
-        comp <- switch(chains,
-            "AB" = "all", "A" = "alpha", "B" = "beta", "GD" = "all"
-        )
-        obj@paired_dist <- tcrdist_matrix(
-            clone_df,
-            organism,
-            components       = comp,
-            weight_cdr3      = weight_cdr3,
-            gap_penalty_cdr3 = gap_penalty_cdr3
-        )
+        if (metric == "hamming") {
+            chain_col <- switch(chains,
+                "AB" = , "GD" = "cdr3b",
+                "A" = "cdr3a",
+                "B" = "cdr3b"
+            )
+            obj@paired_dist <- hamming_matrix(clone_df[[chain_col]])
+        } else {
+            comp <- switch(chains,
+                "AB" = "all", "A" = "alpha", "B" = "beta", "GD" = "all"
+            )
+            obj@paired_dist <- tcrdist_matrix(
+                clone_df,
+                organism,
+                components       = comp,
+                weight_cdr3      = weight_cdr3,
+                gap_penalty_cdr3 = gap_penalty_cdr3
+            )
+        }
     }
 
     obj
