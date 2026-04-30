@@ -171,6 +171,50 @@ test_that("tcr_gini: more unequal = higher Gini", {
 # tcr_fuzzy_diversity (requires compiled code)
 # ===========================================================================
 
+test_that("tcr_repertoire_overlap: identical repertoires have overlap 1", {
+    a <- c(clone1 = 10, clone2 = 5, clone3 = 1)
+    ov <- tcr_repertoire_overlap(a, a)
+    expect_equal(ov$jaccard, 1)
+    expect_equal(ov$morisita_horn, 1, tolerance = 1e-10)
+    expect_equal(ov$overlap_coef, 1)
+})
+
+test_that("tcr_repertoire_overlap: disjoint repertoires have overlap 0", {
+    a <- c(clone1 = 10, clone2 = 5)
+    b <- c(clone3 = 8, clone4 = 3)
+    ov <- tcr_repertoire_overlap(a, b)
+    expect_equal(ov$jaccard, 0)
+    expect_equal(ov$morisita_horn, 0)
+    expect_equal(ov$overlap_coef, 0)
+})
+
+test_that("tcr_repertoire_overlap: partial overlap gives expected Jaccard", {
+    a <- c(clone1 = 10, clone2 = 5, clone3 = 1)
+    b <- c(clone1 = 8, clone3 = 3, clone4 = 2)
+    ov <- tcr_repertoire_overlap(a, b)
+    # shared = {clone1, clone3} = 2, union = {clone1..clone4} = 4
+    expect_equal(ov$jaccard, 2 / 4)
+})
+
+test_that("tcr_repertoire_overlap: Morisita-Horn is abundance-weighted", {
+    # Two samples sharing one dominant clone
+    a <- c(clone1 = 100, clone2 = 1)
+    b <- c(clone1 = 100, clone3 = 1)
+    ov <- tcr_repertoire_overlap(a, b)
+    # Morisita-Horn should be very high because clone1 dominates both
+    expect_true(ov$morisita_horn > 0.9)
+})
+
+test_that("tcr_repertoire_overlap: handles single metric request", {
+    a <- c(clone1 = 10, clone2 = 5)
+    b <- c(clone1 = 8, clone3 = 3)
+    ov <- tcr_repertoire_overlap(a, b, metrics = "jaccard")
+    expect_true("jaccard" %in% names(ov))
+    expect_false("morisita_horn" %in% names(ov))
+    expect_false("overlap_coef" %in% names(ov))
+})
+
+
 test_that("tcr_fuzzy_diversity works with synthetic TCRs", {
     skip_on_cran()
 

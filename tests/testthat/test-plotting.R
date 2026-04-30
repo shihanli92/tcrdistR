@@ -181,6 +181,43 @@ test_that(".hclust_to_segments correct segment count", {
 # Exported: plot functions (require ggplot2)
 # ===========================================================================
 
+test_that("plot_cdr3_length returns ggplot for alpha chain", {
+    skip_if_not_installed("ggplot2")
+
+    tcr_df <- data.frame(
+        cdr3a = c("CAVRDSSYKLIF", "CAVKDSSYKLIF", "CAVRDSYKLIF",
+                   "CAVRDSSYKLIF", "CAVKDSYKLIF"),
+        stringsAsFactors = FALSE
+    )
+    p <- plot_cdr3_length(tcr_df, chain = "alpha")
+    expect_s3_class(p, "gg")
+})
+
+test_that("plot_cdr3_length returns ggplot for both chains", {
+    skip_if_not_installed("ggplot2")
+
+    tcr_df <- data.frame(
+        cdr3a = c("CAVRDSSYKLIF", "CAVKDSSYKLIF", "CAVRDSYKLIF"),
+        cdr3b = c("CASSIRSSYEQY", "CASSIKSSYEQY", "CASSIRSYEQY"),
+        stringsAsFactors = FALSE
+    )
+    p <- plot_cdr3_length(tcr_df, chain = "both")
+    expect_s3_class(p, "gg")
+})
+
+test_that("plot_cdr3_length handles empty CDR3 gracefully", {
+    skip_if_not_installed("ggplot2")
+
+    tcr_df <- data.frame(
+        cdr3a = character(0),
+        cdr3b = character(0),
+        stringsAsFactors = FALSE
+    )
+    p <- plot_cdr3_length(tcr_df, chain = "both")
+    expect_s3_class(p, "gg")
+})
+
+
 test_that("plot_gene_usage returns ggplot", {
     skip_if_not_installed("ggplot2")
 

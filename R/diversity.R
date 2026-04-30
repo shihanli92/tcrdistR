@@ -368,3 +368,78 @@ tcr_clonality <- function(counts) {
     H <- tcr_shannon_entropy(counts)
     1 - H / log(S)
 }
+
+
+# ---------------------------------------------------------------------------
+# tcr_repertoire_overlap  (exported)
+# ---------------------------------------------------------------------------
+
+#' Repertoire overlap metrics
+#'
+#' Computes overlap metrics between two named count vectors representing
+#' clonotype abundances from two samples. Available metrics:
+#'
+#' \describe{
+#'   \item{Jaccard index}{\code{|A \u2229 B| / |A \u222a B|} — proportion of
+#'     shared clonotype species (presence/absence).}
+#'   \item{Morisita-Horn}{\code{2 * sum(p_a * p_b) / (sum(p_a^2) + sum(p_b^2))}
+#'     — abundance-weighted overlap.}
+#'   \item{Overlap coefficient}{\code{|A \u2229 B| / min(|A|, |B|)} — overlap
+#'     normalized by the smaller set.}
+#' }
+#'
+#' @param counts_a,counts_b Named numeric vectors of clonotype counts.
+#'   Names are clonotype identifiers.
+#' @param metrics Character vector. Which metrics to compute. Default
+#'   computes all three.
+#'
+#' @return A named list with the requested metrics, each a scalar in
+#'   \code{[0, 1]}.
+#'
+#' @examples
+#' a <- c(clone1 = 10, clone2 = 5, clone3 = 1)
+#' b <- c(clone1 = 8, clone3 = 3, clone4 = 2)
+#' tcr_repertoire_overlap(a, b)
+#'
+#' @seealso \code{\link{tcr_diversity}}, \code{\link{tcr_clonality}}
+#' @export
+tcr_repertoire_overlap <- function(counts_a, counts_b,
+                                    metrics = c("jaccard", "morisita_horn",
+                                                "overlap_coef")) {
+    metrics <- match.arg(metrics, several.ok = TRUE)
+    stopifnot(is.numeric(counts_a), is.numeric(counts_b))
+    stopifnot(!is.null(names(counts_a)), !is.null(names(counts_b)))
+
+    counts_a <- counts_a[counts_a > 0]
+    counts_b <- counts_b[counts_b > 0]
+
+    species_a <- names(counts_a)
+    species_b <- names(counts_b)
+    shared <- intersect(species_a, species_b)
+    union_sp <- union(species_a, species_b)
+
+    result <- list()
+
+    if ("jaccard" %in% metrics) {
+        result$jaccard <- length(shared) / max(length(union_sp), 1L)
+    }
+
+    if ("morisita_horn" %in% metrics) {
+        p_a <- counts_a / sum(counts_a)
+        p_b <- counts_b / sum(counts_b)
+        all_sp <- union_sp
+        pa <- setNames(rep(0, length(all_sp)), all_sp)
+        pb <- pa
+        pa[names(p_a)] <- p_a
+        pb[names(p_b)] <- p_b
+        denom <- sum(pa^2) + sum(pb^2)
+        result$morisita_horn <- if (denom > 0) 2 * sum(pa * pb) / denom else 0
+    }
+
+    if ("overlap_coef" %in% metrics) {
+        min_size <- min(length(species_a), length(species_b))
+        result$overlap_coef <- length(shared) / max(min_size, 1L)
+    }
+
+    result
+}

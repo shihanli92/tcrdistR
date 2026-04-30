@@ -11,7 +11,8 @@ tcrdist_join(
   radius,
   max_n = 5L,
   type = c("inner", "left"),
-  suffix = c("_x", "_y")
+  suffix = c("_x", "_y"),
+  rect_dist_matrix = NULL
 )
 }
 \arguments{
@@ -34,6 +35,10 @@ unmatched).}
 
 \item{suffix}{Character vector of length 2. Suffixes for disambiguating
 column names. Default \code{c("_x", "_y")}.}
+
+\item{rect_dist_matrix}{Optional precomputed rectangular distance matrix
+(rows = left, cols = right). If provided, \code{organism} is not used
+for distance computation.}
 }
 \value{
 A data.frame with columns from both sides (suffixed if

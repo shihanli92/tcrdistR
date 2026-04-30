@@ -5,21 +5,23 @@
 \title{Kernel PCA on TCRdist distances}
 \usage{
 compute_tcrdist_kernel_pca(
-  tcr_df,
-  organism,
+  tcr_df = NULL,
+  organism = NULL,
   n_components = 50L,
   kernel = NULL,
   gaussian_kernel_sdev = 100,
   force_Dmax = NULL,
-  method = c("auto", "eigen", "RSpectra")
+  method = c("auto", "eigen", "RSpectra"),
+  dist_matrix = NULL
 )
 }
 \arguments{
 \item{tcr_df}{A \code{data.frame} with at least columns \code{va},
-\code{cdr3a}, \code{vb}, \code{cdr3b}.}
+\code{cdr3a}, \code{vb}, \code{cdr3b}. Optional if \code{dist_matrix}
+is provided.}
 
 \item{organism}{Character string. Organism key, e.g. \code{"human"} or
-\code{"mouse"}.}
+\code{"mouse"}. Optional if \code{dist_matrix} is provided.}
 
 \item{n_components}{Integer. Maximum number of PCA components to return.
 Clamped to \code{nrow(tcr_df)}. Default \code{50L}.}
@@ -40,6 +42,9 @@ decomposition, falling back to \code{base::eigen()}), \code{"eigen"}
 (always uses \code{base::eigen()}, same LAPACK as scipy.linalg.eigh),
 or \code{"RSpectra"} (always uses \code{RSpectra::eigs_sym()}, same
 ARPACK as scipy.sparse.linalg.eigsh).}
+
+\item{dist_matrix}{Optional precomputed distance matrix. If provided,
+\code{tcr_df} and \code{organism} are not used for distance computation.}
 }
 \value{
 A named list with elements:

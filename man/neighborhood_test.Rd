@@ -5,18 +5,21 @@
 \title{Test association between a variable and TCR neighborhoods}
 \usage{
 neighborhood_test(
-  tcr_df,
-  organism,
+  tcr_df = NULL,
+  organism = NULL,
   variable,
   radius = 50,
   test = c("fisher", "chisq"),
-  p_adjust_method = "BH"
+  p_adjust_method = "BH",
+  dist_matrix = NULL
 )
 }
 \arguments{
-\item{tcr_df}{Data.frame with TCR columns.}
+\item{tcr_df}{Data.frame with TCR columns (optional if \code{dist_matrix}
+is provided).}
 
-\item{organism}{Character string (\code{"human"} or \code{"mouse"}).}
+\item{organism}{Character string (\code{"human"} or \code{"mouse"})
+(optional if \code{dist_matrix} is provided).}
 
 \item{variable}{Character or factor vector of length \code{nrow(tcr_df)}.
 The categorical variable to test.}
@@ -29,6 +32,9 @@ Default \code{50}.}
 
 \item{p_adjust_method}{Character string. Method for \code{stats::p.adjust()}.
 Default \code{"BH"} (Benjamini-Hochberg).}
+
+\item{dist_matrix}{Optional precomputed distance matrix. If provided,
+\code{tcr_df} and \code{organism} are not used for distance computation.}
 }
 \value{
 A data.frame with one row per TCR and columns:

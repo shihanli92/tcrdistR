@@ -12,7 +12,8 @@ find_meta_clonotypes(
   ctrl_bkgd = 1e-05,
   max_radius = 50L,
   min_nsubject = 2L,
-  subject_col = "subject"
+  subject_col = "subject",
+  dist_matrix = NULL
 )
 }
 \arguments{
@@ -38,6 +39,9 @@ neighborhood. Default \code{2L}.}
 
 \item{subject_col}{Character string. Column name for subject IDs.
 Default \code{"subject"}.}
+
+\item{dist_matrix}{Optional precomputed distance matrix. If provided,
+\code{tcr_df} and \code{organism} are not used for distance computation.}
 }
 \value{
 A data.frame with one row per meta-clonotype center:

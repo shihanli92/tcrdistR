@@ -591,6 +591,85 @@ plot_gene_usage <- function(tcr_df, gene_col, strip_allele = TRUE,
 
 
 # ---------------------------------------------------------------------------
+# plot_cdr3_length  (exported)
+# ---------------------------------------------------------------------------
+
+#' Plot CDR3 length distribution
+#'
+#' Draws a bar chart of CDR3 amino-acid sequence lengths for the alpha chain,
+#' beta chain, or both (faceted side-by-side).
+#'
+#' @param tcr_df Data.frame with \code{cdr3a} and/or \code{cdr3b} columns.
+#' @param chain Character string. Which chain(s) to plot:
+#'   \code{"alpha"}, \code{"beta"}, or \code{"both"} (default). When
+#'   \code{"both"}, the plot is faceted by chain.
+#' @param max_lengths Integer. Maximum number of distinct lengths to display.
+#'   Rare extremes are dropped. Default \code{30L}.
+#' @param title Optional character string. Plot title.
+#'
+#' @return A \code{ggplot} object.
+#'
+#' @examples
+#' \dontrun{
+#' data(dash)
+#' plot_cdr3_length(dash, chain = "both")
+#' plot_cdr3_length(dash, chain = "beta", title = "Beta CDR3 lengths")
+#' }
+#'
+#' @seealso \code{\link{plot_gene_usage}}, \code{\link{plot_cdr3_logo}}
+#' @export
+plot_cdr3_length <- function(tcr_df, chain = c("alpha", "beta", "both"),
+                              max_lengths = 30L, title = NULL) {
+    .check_ggplot2("plot_cdr3_length()")
+    chain <- match.arg(chain)
+
+    build_lengths <- function(seqs, label) {
+        seqs <- seqs[!is.na(seqs) & nzchar(seqs)]
+        if (length(seqs) == 0L) return(NULL)
+        lens <- nchar(seqs)
+        data.frame(length = lens, chain = label, stringsAsFactors = FALSE)
+    }
+
+    dfs <- list()
+    if (chain %in% c("alpha", "both") && "cdr3a" %in% colnames(tcr_df)) {
+        dfs$alpha <- build_lengths(tcr_df$cdr3a, "CDR3\u03b1")
+    }
+    if (chain %in% c("beta", "both") && "cdr3b" %in% colnames(tcr_df)) {
+        dfs$beta <- build_lengths(tcr_df$cdr3b, "CDR3\u03b2")
+    }
+
+    df <- do.call(rbind, dfs)
+    if (is.null(df) || nrow(df) == 0L) {
+        return(ggplot2::ggplot() + ggplot2::theme_void() +
+                   ggplot2::ggtitle(title %||% "No CDR3 data"))
+    }
+
+    tally <- as.data.frame(table(df$length, df$chain), stringsAsFactors = FALSE)
+    colnames(tally) <- c("length", "chain", "count")
+    tally$length <- as.integer(tally$length)
+    tally <- tally[tally$count > 0L, ]
+
+    if (is.null(title)) {
+        title <- "CDR3 length distribution"
+    }
+
+    p <- ggplot2::ggplot(tally, ggplot2::aes(x = .data$length, y = .data$count)) +
+        ggplot2::geom_col(fill = "#1f77b4", width = 0.7) +
+        ggplot2::labs(x = "CDR3 length (aa)", y = "Count", title = title) +
+        ggplot2::theme_minimal() +
+        ggplot2::theme(
+            plot.title = ggplot2::element_text(hjust = 0.5, size = 11)
+        )
+
+    if (chain == "both") {
+        p <- p + ggplot2::facet_wrap(~ chain, scales = "free_y")
+    }
+
+    p
+}
+
+
+# ---------------------------------------------------------------------------
 # .render_gene_text_raster  (internal helper)
 # ---------------------------------------------------------------------------
 

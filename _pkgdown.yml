@@ -55,7 +55,7 @@ reference:
       - make_cd8_score_table_column
 
   - title: "Diversity Metrics"
-    desc: "Repertoire diversity, richness, and clonality"
+    desc: "Repertoire diversity, richness, clonality, and overlap"
     contents:
       - tcr_diversity
       - tcr_fuzzy_diversity
@@ -63,6 +63,7 @@ reference:
       - tcr_clonality
       - tcr_shannon_entropy
       - tcr_gini
+      - tcr_repertoire_overlap
 
   - title: "Clustering & Neighborhood Tests"
     desc: "Hierarchical clustering and neighborhood-based statistics"
@@ -89,6 +90,7 @@ reference:
       - plot_tcrdist_dendrogram
       - plot_distance_distribution
       - plot_cdr3_logo
+      - plot_cdr3_length
       - plot_junction_bars
       - plot_vj_gene_logo
       - plot_tcr_logo_panel

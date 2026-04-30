@@ -4,17 +4,28 @@
 \alias{tcrdist_hclust}
 \title{Hierarchical clustering of TCRs by TCRdist}
 \usage{
-tcrdist_hclust(tcr_df, organism, method = "average", max_tcrs = 2000L)
+tcrdist_hclust(
+  tcr_df = NULL,
+  organism = NULL,
+  method = "average",
+  max_tcrs = 2000L,
+  dist_matrix = NULL
+)
 }
 \arguments{
-\item{tcr_df}{Data.frame with TCR columns.}
+\item{tcr_df}{Data.frame with TCR columns (optional if \code{dist_matrix}
+is provided).}
 
-\item{organism}{Character string (\code{"human"} or \code{"mouse"}).}
+\item{organism}{Character string (\code{"human"} or \code{"mouse"})
+(optional if \code{dist_matrix} is provided).}
 
 \item{method}{Clustering method for \code{stats::hclust()}. Default
 \code{"average"} (UPGMA).}
 
 \item{max_tcrs}{Integer. Subsample if N exceeds this. Default \code{2000L}.}
+
+\item{dist_matrix}{Optional precomputed distance matrix. If provided,
+\code{tcr_df} and \code{organism} are not used for distance computation.}
 }
 \value{
 A named list:

@@ -30,7 +30,8 @@ on the \code{chains} argument:
 }}
 
 \item{organism}{Character string. Organism key recognised by
-\code{\link{load_gene_database}}, e.g. \code{"human"} or \code{"mouse"}.}
+\code{\link{load_gene_database}}, e.g. \code{"human"} or \code{"mouse"}.
+For gamma-delta TCRs use \code{"human_gd"} or \code{"mouse_gd"}.}
 
 \item{chains}{Character string. One of \code{"AB"} (default), \code{"A"},
 \code{"B"}, or \code{"GD"}.}
@@ -80,6 +81,12 @@ instance (following Bioconductor convention, rather than calling
 Factor columns (\code{va}, \code{cdr3a}, \code{vb}, \code{cdr3b}) are
 automatically coerced to character. The organism is validated against the
 bundled gene database on construction.
+
+\strong{Gamma-delta TCRs.}
+For gamma-delta TCRs, use \code{chains = "GD"} and specify the gamma-delta
+organism database: \code{organism = "human_gd"} or \code{organism = "mouse_gd"}.
+Gamma chain genes map to the \code{va}/\code{cdr3a} columns; delta chain
+genes map to the \code{vb}/\code{cdr3b} columns.
 }
 \examples{
 \donttest{
