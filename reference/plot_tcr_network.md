@@ -90,6 +90,7 @@ A `ggplot` object.
 data(dash)
 sub <- dash[1:200, ]
 net <- compute_tcr_network(sub, "mouse", threshold = 48, seed = 42)
+
 plot_tcr_network(net, color_by = "epitope", title = "TCR network")
 
 # }

@@ -50,6 +50,7 @@
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-get_trbd_nucseq.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-get_v_cdr3_nucseq.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-gmm_2_component.html</loc></url>
+<url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-jitter_overlapping.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-load_cd8_logreg_models.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-normalize_gene_names.html</loc></url>
 <url><loc>https://shihanli92.github.io/tcrdistR/reference/dot-normalize_tcr_db_columns.html</loc></url>

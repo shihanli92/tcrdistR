@@ -13,6 +13,8 @@ compute_tcr_network(
   threshold = NULL,
   dist_matrix = NULL,
   scale = NULL,
+  min_edges = 0L,
+  jitter = TRUE,
   layout = "fr",
   seed = NULL
 )
@@ -46,6 +48,18 @@ compute_tcr_network(
 
   Numeric or `NULL`. Scale parameter for the similarity transform
   `exp(-dist / scale)`. If `NULL`, defaults to `threshold / 4`.
+
+- min_edges:
+
+  Integer. Minimum number of edges a vertex must have to be kept. `0`
+  (default) keeps all vertices. `1` removes singletons (isolated nodes),
+  `2` removes vertices with fewer than 2 edges, etc.
+
+- jitter:
+
+  Logical. If `TRUE` (default), slightly offset overlapping nodes (e.g.
+  identical clones with distance 0) so they are individually visible
+  instead of stacking on top of each other.
 
 - layout:
 
@@ -85,11 +99,20 @@ A named list with elements:
 
   Integer. Number of edges in the graph.
 
+- `dist_plot`:
+
+  `ggplot` object showing the distance distribution with the threshold
+  line, or `NULL` if ggplot2 is not available.
+
 ## Details
 
 When `threshold = NULL`, the threshold is auto-detected by finding the
 valley between the two peaks of the (typically bimodal) TCRdist
 distribution, using kernel density estimation on a subsample.
+
+A distance distribution plot with the threshold marked is automatically
+displayed when ggplot2 is available. The plot is also stored in the
+returned list as `dist_plot`.
 
 ## See also
 
@@ -104,6 +127,7 @@ distribution, using kernel density estimation on a subsample.
 data(dash)
 sub <- dash[1:200, ]
 net <- compute_tcr_network(sub, "mouse", threshold = 48, seed = 42)
+
 net$n_components
 #> [1] 146
 net$n_edges

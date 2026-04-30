@@ -51,6 +51,8 @@ via exponential decay: <code>exp(-distance / scale)</code>.</p>
 <span>  threshold <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  dist_matrix <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  scale <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  min_edges <span class="op">=</span> <span class="fl">0L</span>,</span>
+<span>  jitter <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  layout <span class="op">=</span> <span class="st">"fr"</span>,</span>
 <span>  seed <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -88,6 +90,19 @@ transform <code>exp(-dist / scale)</code>.  If <code>NULL</code>, defaults to
 <code>threshold / 4</code>.</p></dd>
 
 
+<dt id="arg-min-edges">min_edges<a class="anchor" aria-label="anchor" href="#arg-min-edges"></a></dt>
+<dd><p>Integer.  Minimum number of edges a vertex must have to
+be kept.  <code>0</code> (default) keeps all vertices.  <code>1</code> removes
+singletons (isolated nodes), <code>2</code> removes vertices with fewer than
+2 edges, etc.</p></dd>
+
+
+<dt id="arg-jitter">jitter<a class="anchor" aria-label="anchor" href="#arg-jitter"></a></dt>
+<dd><p>Logical.  If <code>TRUE</code> (default), slightly offset
+overlapping nodes (e.g. identical clones with distance 0) so they are
+individually visible instead of stacking on top of each other.</p></dd>
+
+
 <dt id="arg-layout">layout<a class="anchor" aria-label="anchor" href="#arg-layout"></a></dt>
 <dd><p>Character.  Layout algorithm: <code>"fr"</code>
 (Fruchterman-Reingold), <code>"kk"</code> (Kamada-Kawai), <code>"drl"</code>,
@@ -121,6 +136,11 @@ all columns from <code>tcrs</code>.  Edge attributes: <code>weight</code>
 <dt><code>n_edges</code></dt>
 <dd><p>Integer.  Number of edges in the graph.</p></dd>
 
+<dt><code>dist_plot</code></dt>
+<dd><p><code>ggplot</code> object showing the distance
+distribution with the threshold line, or <code>NULL</code> if
+<span class="pkg">ggplot2</span> is not available.</p></dd>
+
 
 </dl></div>
     <div class="section level2">
@@ -128,6 +148,9 @@ all columns from <code>tcrs</code>.  Edge attributes: <code>weight</code>
     <p>When <code>threshold = NULL</code>, the threshold is auto-detected by finding the
 valley between the two peaks of the (typically bimodal) TCRdist
 distribution, using kernel density estimation on a subsample.</p>
+<p>A distance distribution plot with the threshold marked is automatically
+displayed when <span class="pkg">ggplot2</span> is available.  The plot is also stored in the
+returned list as <code>dist_plot</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>
@@ -141,6 +164,7 @@ distribution, using kernel density estimation on a subsample.</p>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="va">dash</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">sub</span> <span class="op">&lt;-</span> <span class="va">dash</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">200</span>, <span class="op">]</span></span></span>
 <span class="r-in"><span><span class="va">net</span> <span class="op">&lt;-</span> <span class="fu">compute_tcr_network</span><span class="op">(</span><span class="va">sub</span>, <span class="st">"mouse"</span>, threshold <span class="op">=</span> <span class="fl">48</span>, seed <span class="op">=</span> <span class="fl">42</span><span class="op">)</span></span></span>
+<span class="r-plt img"><img src="compute_tcr_network-1.png" alt="" width="700" height="433"></span>
 <span class="r-in"><span><span class="va">net</span><span class="op">$</span><span class="va">n_components</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> [1] 146</span>
 <span class="r-in"><span><span class="va">net</span><span class="op">$</span><span class="va">n_edges</span></span></span>
