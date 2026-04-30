@@ -2,39 +2,100 @@
 % Please edit documentation in R/hierarchical.R
 \name{cluster_tcrs}
 \alias{cluster_tcrs}
-\title{Cluster TCRs by TCRdist-based hierarchical clustering}
+\title{Cluster TCRs using various algorithms}
 \usage{
-cluster_tcrs(tcr_df, organism, k = NULL, h = NULL, method = "average")
+cluster_tcrs(
+  tcr_df = NULL,
+  organism = NULL,
+  method = c("hierarchical", "leiden", "louvain", "dbscan", "kmedoids"),
+  dist_matrix = NULL,
+  k = NULL,
+  h = NULL,
+  hclust_method = "average",
+  resolution = 1,
+  n_neighbors = 10L,
+  eps = NULL,
+  min_pts = 5L
+)
 }
 \arguments{
-\item{tcr_df}{Data.frame with TCR columns.}
+\item{tcr_df}{Data.frame with TCR columns. Required unless
+\code{dist_matrix} is provided.}
 
-\item{organism}{Character string (\code{"human"} or \code{"mouse"}).}
+\item{organism}{Character string (\code{"human"} or \code{"mouse"}).
+Required unless \code{dist_matrix} is provided.}
 
-\item{k}{Integer. Number of clusters. Exactly one of \code{k} or
-\code{h} must be specified.}
+\item{method}{Clustering method. One of \code{"hierarchical"} (default),
+\code{"leiden"}, \code{"louvain"}, \code{"dbscan"}, or
+\code{"kmedoids"}.}
 
-\item{h}{Numeric. Height at which to cut the dendrogram. Exactly one
-of \code{k} or \code{h} must be specified.}
+\item{dist_matrix}{Optional precomputed N x N distance matrix. If
+provided, \code{tcr_df} and \code{organism} are only needed for
+graph-based methods (Leiden/Louvain) when KNN must be computed.}
 
-\item{method}{Clustering method. Default \code{"average"}.}
+\item{k}{Integer. Number of clusters for \code{"hierarchical"} and
+\code{"kmedoids"}. For hierarchical, exactly one of \code{k} or
+\code{h} must be specified. For kmedoids, required.}
+
+\item{h}{Numeric. Height for dendrogram cutting (hierarchical only).}
+
+\item{hclust_method}{Character. Agglomeration method for
+\code{stats::hclust()}. Default \code{"average"} (UPGMA).}
+
+\item{resolution}{Numeric. Resolution parameter for Leiden/Louvain.
+Higher values yield more clusters. Default \code{1.0}.}
+
+\item{n_neighbors}{Integer. Number of nearest neighbors for KNN graph
+construction (Leiden/Louvain). Default \code{10L}.}
+
+\item{eps}{Numeric or \code{NULL}. DBSCAN neighborhood radius. If
+\code{NULL}, auto-detected from the k-distance knee.}
+
+\item{min_pts}{Integer. DBSCAN minimum points for core point.
+Default \code{5L}.}
 }
 \value{
-An integer vector of cluster assignments (length
-\code{nrow(tcr_df)}).
+An integer vector of cluster assignments (length N).
+\itemize{
+\item For \code{hierarchical}, \code{leiden}, \code{louvain}, and
+\code{kmedoids}: 1-based cluster IDs.
+\item For \code{dbscan}: 0-based (0 = noise/unassigned), with
+cluster IDs starting at 1.
+}
 }
 \description{
-Computes TCRdist distances, performs hierarchical clustering, and cuts
-the tree into groups using either a fixed number of clusters (\code{k})
-or a height threshold (\code{h}).
+Assigns TCR clonotypes to clusters using one of five methods:
+hierarchical clustering, Leiden or Louvain community detection,
+DBSCAN density-based clustering, or k-medoids (PAM).
+}
+\details{
+Distances can be precomputed via \code{dist_matrix} or computed
+internally from \code{tcr_df} and \code{organism}.
 }
 \examples{
 \dontrun{
-clusters <- cluster_tcrs(tcr_df, "human", k = 5)
-table(clusters)
+data(dash)
+sub <- dash[1:50, ]
+
+# Hierarchical (default)
+clusters <- cluster_tcrs(sub, "mouse", k = 5)
+
+# K-medoids
+km <- cluster_tcrs(sub, "mouse", method = "kmedoids", k = 4)
+
+# DBSCAN with auto-detected eps
+db <- cluster_tcrs(sub, "mouse", method = "dbscan")
+
+# Leiden on KNN graph
+lei <- cluster_tcrs(sub, "mouse", method = "leiden", resolution = 1.0)
+
+# Precomputed distance matrix
+dm <- tcrdist_matrix(sub, "mouse")
+clusters <- cluster_tcrs(dist_matrix = dm, method = "kmedoids", k = 3)
 }
 
 }
 \seealso{
-\code{\link{tcrdist_hclust}}, \code{\link{neighborhood_test}}
+\code{\link{tcrdist_hclust}}, \code{\link{neighborhood_test}},
+\code{\link{compute_tcrdist_umap}}
 }

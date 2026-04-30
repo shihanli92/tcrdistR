@@ -100,6 +100,161 @@ test_that("cluster_tcrs errors without k or h", {
     expect_error(cluster_tcrs(tcr_df, "human"), "exactly one")
 })
 
+test_that("cluster_tcrs with dist_matrix param works for hierarchical", {
+    skip_on_cran()
+
+    tcr_df <- data.frame(
+        va = c("TRAV1-1*01", "TRAV1-2*01", "TRAV10*01",
+               "TRAV1-1*01", "TRAV1-2*01"),
+        cdr3a = c("CAVRDSSYKLIF", "CAVKDSSYKLIF", "CAVRDSYKLIF",
+                   "CAVRDSSYKLIF", "CAVKDSYKLIF"),
+        vb = c("TRBV5-1*01", "TRBV6-1*01", "TRBV7-2*01",
+               "TRBV5-1*01", "TRBV6-1*01"),
+        cdr3b = c("CASSIRSSYEQY", "CASSIKSSYEQY", "CASSIRSYEQY",
+                   "CASSIRSSYEQF", "CASSIKSSYEQF"),
+        stringsAsFactors = FALSE
+    )
+
+    dm <- tcrdist_matrix(tcr_df, "human")
+    cl1 <- cluster_tcrs(tcr_df, "human", k = 3)
+    cl2 <- cluster_tcrs(dist_matrix = dm, k = 3)
+    expect_equal(cl1, cl2)
+})
+
+
+# ===========================================================================
+# cluster_tcrs: Leiden
+# ===========================================================================
+
+test_that("cluster_tcrs method='leiden' returns valid clusters", {
+    skip_on_cran()
+    skip_if_not_installed("igraph")
+
+    data(dash, envir = environment())
+    sub <- dash[1:30, ]
+
+    cl <- cluster_tcrs(sub, "mouse", method = "leiden")
+    expect_length(cl, 30L)
+    expect_true(all(cl >= 1L))
+    expect_true(is.integer(cl))
+})
+
+
+# ===========================================================================
+# cluster_tcrs: Louvain
+# ===========================================================================
+
+test_that("cluster_tcrs method='louvain' returns valid clusters", {
+    skip_on_cran()
+    skip_if_not_installed("igraph")
+
+    data(dash, envir = environment())
+    sub <- dash[1:30, ]
+
+    cl <- cluster_tcrs(sub, "mouse", method = "louvain")
+    expect_length(cl, 30L)
+    expect_true(all(cl >= 1L))
+    expect_true(is.integer(cl))
+})
+
+test_that("cluster_tcrs leiden/louvain requires tcr_df and organism", {
+    skip_on_cran()
+    skip_if_not_installed("igraph")
+
+    dm <- matrix(0, nrow = 5, ncol = 5)
+    expect_error(cluster_tcrs(dist_matrix = dm, method = "leiden"),
+                 "tcr_df.*organism.*required")
+})
+
+
+# ===========================================================================
+# cluster_tcrs: DBSCAN
+# ===========================================================================
+
+test_that("cluster_tcrs method='dbscan' with explicit eps", {
+    skip_on_cran()
+    skip_if_not_installed("dbscan")
+
+    data(dash, envir = environment())
+    sub <- dash[1:30, ]
+
+    cl <- cluster_tcrs(sub, "mouse", method = "dbscan", eps = 50)
+    expect_length(cl, 30L)
+    expect_true(all(cl >= 0L))
+    expect_true(is.integer(cl))
+})
+
+test_that("cluster_tcrs method='dbscan' with auto eps", {
+    skip_on_cran()
+    skip_if_not_installed("dbscan")
+
+    data(dash, envir = environment())
+    sub <- dash[1:30, ]
+
+    expect_message(
+        cl <- cluster_tcrs(sub, "mouse", method = "dbscan"),
+        "Auto-detected DBSCAN eps"
+    )
+    expect_length(cl, 30L)
+    expect_true(all(cl >= 0L))
+})
+
+test_that("cluster_tcrs dbscan works with precomputed dist_matrix", {
+    skip_on_cran()
+    skip_if_not_installed("dbscan")
+
+    data(dash, envir = environment())
+    sub <- dash[1:30, ]
+    dm <- tcrdist_matrix(sub, "mouse")
+
+    cl <- cluster_tcrs(dist_matrix = dm, method = "dbscan", eps = 50)
+    expect_length(cl, 30L)
+    expect_true(all(cl >= 0L))
+})
+
+
+# ===========================================================================
+# cluster_tcrs: K-medoids
+# ===========================================================================
+
+test_that("cluster_tcrs method='kmedoids' returns correct k clusters", {
+    skip_on_cran()
+    skip_if_not_installed("cluster")
+
+    data(dash, envir = environment())
+    sub <- dash[1:30, ]
+
+    cl <- cluster_tcrs(sub, "mouse", method = "kmedoids", k = 4)
+    expect_length(cl, 30L)
+    expect_equal(length(unique(cl)), 4L)
+    expect_true(all(cl >= 1L))
+    expect_true(is.integer(cl))
+})
+
+test_that("cluster_tcrs kmedoids errors without k", {
+    skip_on_cran()
+    skip_if_not_installed("cluster")
+
+    data(dash, envir = environment())
+    sub <- dash[1:10, ]
+
+    expect_error(cluster_tcrs(sub, "mouse", method = "kmedoids"),
+                 "'k' is required")
+})
+
+test_that("cluster_tcrs kmedoids works with precomputed dist_matrix", {
+    skip_on_cran()
+    skip_if_not_installed("cluster")
+
+    data(dash, envir = environment())
+    sub <- dash[1:30, ]
+    dm <- tcrdist_matrix(sub, "mouse")
+
+    cl1 <- cluster_tcrs(sub, "mouse", method = "kmedoids", k = 3)
+    cl2 <- cluster_tcrs(dist_matrix = dm, method = "kmedoids", k = 3)
+    expect_equal(cl1, cl2)
+})
+
 
 # ===========================================================================
 # .neighborhood_tally

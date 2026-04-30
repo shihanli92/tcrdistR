@@ -29,6 +29,8 @@ Suggests:
     ggrepel,
     uwot,
     igraph,
+    dbscan,
+    cluster,
     knitr,
     rmarkdown
 VignetteBuilder: knitr

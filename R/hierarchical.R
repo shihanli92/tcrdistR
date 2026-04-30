@@ -95,47 +95,221 @@ tcrdist_hclust <- function(tcr_df, organism, method = "average",
 
 
 # ---------------------------------------------------------------------------
+# .get_dist_matrix  (internal)
+# ---------------------------------------------------------------------------
+
+#' Get or compute a dense distance matrix
+#'
+#' Returns \code{dist_matrix} if provided, otherwise computes one from
+#' \code{tcr_df} and \code{organism}.
+#'
+#' @param tcr_df Data.frame with TCR columns, or \code{NULL}.
+#' @param organism Character string, or \code{NULL}.
+#' @param dist_matrix Precomputed distance matrix, or \code{NULL}.
+#' @return A numeric matrix (N x N).
+#' @keywords internal
+#' @noRd
+.get_dist_matrix <- function(tcr_df, organism, dist_matrix) {
+    if (!is.null(dist_matrix)) {
+        return(as.matrix(dist_matrix))
+    }
+    if (is.null(tcr_df) || is.null(organism)) {
+        stop("cluster_tcrs: either 'dist_matrix' or both 'tcr_df' and ",
+             "'organism' must be provided", call. = FALSE)
+    }
+    tcrdist_matrix(tcr_df, organism)
+}
+
+
+# ---------------------------------------------------------------------------
+# .dbscan_auto_eps  (internal)
+# ---------------------------------------------------------------------------
+
+#' Auto-detect DBSCAN eps using k-distance knee
+#'
+#' Computes the sorted k-th nearest neighbor distances and finds the point
+#' of maximum curvature (the "knee") as the recommended eps.
+#'
+#' @param dist_mat Numeric matrix (N x N). Distance matrix.
+#' @param min_pts Integer. The minPts parameter for DBSCAN.
+#' @return Numeric scalar. The auto-detected eps value.
+#' @keywords internal
+#' @noRd
+.dbscan_auto_eps <- function(dist_mat, min_pts) {
+    n <- nrow(dist_mat)
+    k <- min(min_pts, n - 1L)
+
+    # For each point, get sorted distances to all others and take the k-th
+    k_dists <- numeric(n)
+    for (i in seq_len(n)) {
+        sorted_d <- sort(dist_mat[i, -i])
+        k_dists[i] <- sorted_d[k]
+    }
+
+    # Sort k-distances in ascending order
+    k_dists <- sort(k_dists)
+
+    # Find the knee: point of maximum second derivative (discrete curvature)
+    if (length(k_dists) < 3L) return(stats::median(k_dists))
+
+    # Second differences approximate curvature
+    d2 <- diff(diff(k_dists))
+    knee_idx <- which.max(d2) + 1L
+    eps <- k_dists[knee_idx]
+
+    message("Auto-detected DBSCAN eps: ", round(eps, 1))
+    eps
+}
+
+
+# ---------------------------------------------------------------------------
 # cluster_tcrs  (exported)
 # ---------------------------------------------------------------------------
 
-#' Cluster TCRs by TCRdist-based hierarchical clustering
+#' Cluster TCRs using various algorithms
 #'
-#' Computes TCRdist distances, performs hierarchical clustering, and cuts
-#' the tree into groups using either a fixed number of clusters (\code{k})
-#' or a height threshold (\code{h}).
+#' Assigns TCR clonotypes to clusters using one of five methods:
+#' hierarchical clustering, Leiden or Louvain community detection,
+#' DBSCAN density-based clustering, or k-medoids (PAM).
 #'
-#' @param tcr_df Data.frame with TCR columns.
+#' Distances can be precomputed via \code{dist_matrix} or computed
+#' internally from \code{tcr_df} and \code{organism}.
+#'
+#' @param tcr_df Data.frame with TCR columns. Required unless
+#'   \code{dist_matrix} is provided.
 #' @param organism Character string (\code{"human"} or \code{"mouse"}).
-#' @param k Integer. Number of clusters. Exactly one of \code{k} or
-#'   \code{h} must be specified.
-#' @param h Numeric. Height at which to cut the dendrogram. Exactly one
-#'   of \code{k} or \code{h} must be specified.
-#' @param method Clustering method. Default \code{"average"}.
+#'   Required unless \code{dist_matrix} is provided.
+#' @param method Clustering method. One of \code{"hierarchical"} (default),
+#'   \code{"leiden"}, \code{"louvain"}, \code{"dbscan"}, or
+#'   \code{"kmedoids"}.
+#' @param dist_matrix Optional precomputed N x N distance matrix. If
+#'   provided, \code{tcr_df} and \code{organism} are only needed for
+#'   graph-based methods (Leiden/Louvain) when KNN must be computed.
+#' @param k Integer. Number of clusters for \code{"hierarchical"} and
+#'   \code{"kmedoids"}. For hierarchical, exactly one of \code{k} or
+#'   \code{h} must be specified. For kmedoids, required.
+#' @param h Numeric. Height for dendrogram cutting (hierarchical only).
+#' @param hclust_method Character. Agglomeration method for
+#'   \code{stats::hclust()}. Default \code{"average"} (UPGMA).
+#' @param resolution Numeric. Resolution parameter for Leiden/Louvain.
+#'   Higher values yield more clusters. Default \code{1.0}.
+#' @param n_neighbors Integer. Number of nearest neighbors for KNN graph
+#'   construction (Leiden/Louvain). Default \code{10L}.
+#' @param eps Numeric or \code{NULL}. DBSCAN neighborhood radius. If
+#'   \code{NULL}, auto-detected from the k-distance knee.
+#' @param min_pts Integer. DBSCAN minimum points for core point.
+#'   Default \code{5L}.
 #'
-#' @return An integer vector of cluster assignments (length
-#'   \code{nrow(tcr_df)}).
+#' @return An integer vector of cluster assignments (length N).
+#'   \itemize{
+#'     \item For \code{hierarchical}, \code{leiden}, \code{louvain}, and
+#'       \code{kmedoids}: 1-based cluster IDs.
+#'     \item For \code{dbscan}: 0-based (0 = noise/unassigned), with
+#'       cluster IDs starting at 1.
+#'   }
 #'
 #' @examples
 #' \dontrun{
-#' clusters <- cluster_tcrs(tcr_df, "human", k = 5)
-#' table(clusters)
+#' data(dash)
+#' sub <- dash[1:50, ]
+#'
+#' # Hierarchical (default)
+#' clusters <- cluster_tcrs(sub, "mouse", k = 5)
+#'
+#' # K-medoids
+#' km <- cluster_tcrs(sub, "mouse", method = "kmedoids", k = 4)
+#'
+#' # DBSCAN with auto-detected eps
+#' db <- cluster_tcrs(sub, "mouse", method = "dbscan")
+#'
+#' # Leiden on KNN graph
+#' lei <- cluster_tcrs(sub, "mouse", method = "leiden", resolution = 1.0)
+#'
+#' # Precomputed distance matrix
+#' dm <- tcrdist_matrix(sub, "mouse")
+#' clusters <- cluster_tcrs(dist_matrix = dm, method = "kmedoids", k = 3)
 #' }
 #'
-#' @seealso \code{\link{tcrdist_hclust}}, \code{\link{neighborhood_test}}
+#' @seealso \code{\link{tcrdist_hclust}}, \code{\link{neighborhood_test}},
+#'   \code{\link{compute_tcrdist_umap}}
 #' @export
-cluster_tcrs <- function(tcr_df, organism, k = NULL, h = NULL,
-                          method = "average") {
-    if (is.null(k) && is.null(h)) {
-        stop("cluster_tcrs: exactly one of 'k' or 'h' must be specified",
-             call. = FALSE)
-    }
-    if (!is.null(k) && !is.null(h)) {
-        stop("cluster_tcrs: specify either 'k' or 'h', not both",
-             call. = FALSE)
-    }
+cluster_tcrs <- function(tcr_df = NULL, organism = NULL,
+                          method = c("hierarchical", "leiden", "louvain",
+                                     "dbscan", "kmedoids"),
+                          dist_matrix = NULL,
+                          k = NULL, h = NULL,
+                          hclust_method = "average",
+                          resolution = 1.0,
+                          n_neighbors = 10L,
+                          eps = NULL,
+                          min_pts = 5L) {
+    method <- match.arg(method)
 
-    result <- tcrdist_hclust(tcr_df, organism, method = method)
-    stats::cutree(result$hclust, k = k, h = h)
+    switch(method,
+        hierarchical = {
+            if (is.null(k) && is.null(h)) {
+                stop("cluster_tcrs: exactly one of 'k' or 'h' must be ",
+                     "specified for method='hierarchical'", call. = FALSE)
+            }
+            if (!is.null(k) && !is.null(h)) {
+                stop("cluster_tcrs: specify either 'k' or 'h', not both",
+                     call. = FALSE)
+            }
+            dm <- .get_dist_matrix(tcr_df, organism, dist_matrix)
+            hc <- stats::hclust(stats::as.dist(dm), method = hclust_method)
+            as.integer(stats::cutree(hc, k = k, h = h))
+        },
+
+        leiden = , louvain = {
+            if (!requireNamespace("igraph", quietly = TRUE)) {
+                stop("Package 'igraph' is required for method='", method,
+                     "'. Install it with: install.packages(\"igraph\")",
+                     call. = FALSE)
+            }
+            if (is.null(tcr_df) || is.null(organism)) {
+                stop("cluster_tcrs: 'tcr_df' and 'organism' are required ",
+                     "for method='", method, "'", call. = FALSE)
+            }
+            n <- nrow(tcr_df)
+            knn_k <- min(as.integer(n_neighbors), n - 1L)
+            knn <- tcrdist_knn(tcr_df, organism, K = knn_k)
+            graph <- .build_knn_graph(knn$knn_indices, knn$knn_distances, n)
+            clusters <- .run_clustering(graph, resolution = resolution,
+                                         method = method)
+            # .run_clustering returns 0-based; convert to 1-based
+            as.integer(clusters + 1L)
+        },
+
+        dbscan = {
+            if (!requireNamespace("dbscan", quietly = TRUE)) {
+                stop("Package 'dbscan' is required for method='dbscan'. ",
+                     "Install it with: install.packages(\"dbscan\")",
+                     call. = FALSE)
+            }
+            dm <- .get_dist_matrix(tcr_df, organism, dist_matrix)
+            if (is.null(eps)) {
+                eps <- .dbscan_auto_eps(dm, min_pts)
+            }
+            res <- dbscan::dbscan(stats::as.dist(dm), eps = eps,
+                                   minPts = min_pts)
+            as.integer(res$cluster)
+        },
+
+        kmedoids = {
+            if (!requireNamespace("cluster", quietly = TRUE)) {
+                stop("Package 'cluster' is required for method='kmedoids'. ",
+                     "Install it with: install.packages(\"cluster\")",
+                     call. = FALSE)
+            }
+            if (is.null(k)) {
+                stop("cluster_tcrs: 'k' is required for method='kmedoids'",
+                     call. = FALSE)
+            }
+            dm <- .get_dist_matrix(tcr_df, organism, dist_matrix)
+            res <- cluster::pam(stats::as.dist(dm), k = k, diss = TRUE)
+            as.integer(res$clustering)
+        }
+    )
 }
 
 
