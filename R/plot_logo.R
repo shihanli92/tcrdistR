@@ -394,6 +394,10 @@ plot_cdr3_logo <- function(cdr3_seqs,
         )
 
     if (return_junction_pwm) {
+        # Override x limits to align with junction bars
+        n_aa <- ncol(pwm_result$pwm)
+        p <- p + ggplot2::scale_x_continuous(
+            limits = c(0.5, n_aa + 0.5), expand = c(0, 0))
         return(list(plot = p, junction_pwm = pwm_result$junction_pwm))
     }
 
@@ -402,6 +406,10 @@ plot_cdr3_logo <- function(cdr3_seqs,
             stop("Package 'patchwork' is required for junction bars.",
                  call. = FALSE)
         }
+        # Override logo x limits to match junction bar scale
+        n_aa <- ncol(pwm_result$pwm)
+        p <- p + ggplot2::scale_x_continuous(
+            limits = c(0.5, n_aa + 0.5), expand = c(0, 0))
         jbar <- plot_junction_bars(pwm_result$junction_pwm,
                                     chain = chain,
                                     gap_character = gap_character)
@@ -453,7 +461,11 @@ plot_junction_bars <- function(junction_pwm,
     )
 
     n_cols <- ncol(junction_pwm)
+    n_aa   <- n_cols %/% 3L
 
+    # Map nucleotide positions to amino-acid x-scale so bars align with
+    # ggseqlogo letters (which sit at integer positions 1..n_aa).
+    # Each codon's 3 nucleotides tile within the amino acid's [k-0.5, k+0.5].
     df_list <- vector("list", length(src_order) * n_cols)
     idx <- 0L
     for (col_i in seq_len(n_cols)) {
@@ -465,7 +477,7 @@ plot_junction_bars <- function(junction_pwm,
                 0
             }
             df_list[[idx]] <- data.frame(
-                pos = col_i,
+                pos = (col_i - 0.5) / 3 + 0.5,
                 source = src,
                 fraction = frac,
                 stringsAsFactors = FALSE
@@ -477,7 +489,7 @@ plot_junction_bars <- function(junction_pwm,
 
     ggplot2::ggplot(df, ggplot2::aes(x = .data$pos, y = .data$fraction,
                                       fill = .data$source)) +
-        ggplot2::geom_col(position = "stack", width = 0.9) +
+        ggplot2::geom_col(position = "stack", width = 1 / 3) +
         ggplot2::scale_fill_manual(
             values = src_colors[src_order],
             breaks = src_order,
@@ -485,7 +497,8 @@ plot_junction_bars <- function(junction_pwm,
         ) +
         ggplot2::scale_x_continuous(
             breaks = NULL,
-            expand = ggplot2::expansion(mult = 0.01)
+            limits = c(0.5, n_aa + 0.5),
+            expand = c(0, 0)
         ) +
         ggplot2::scale_y_continuous(
             expand = ggplot2::expansion(mult = 0)
