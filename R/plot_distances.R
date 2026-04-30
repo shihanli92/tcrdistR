@@ -285,30 +285,41 @@ plot_tcrdist_dendrogram <- function(tcr_df, organism, color_by = NULL,
 #' Plot the distribution of pairwise TCRdist distances
 #'
 #' Histogram with overlaid density curve of the upper triangle of a pairwise
-#' distance matrix. A vertical dashed line marks the median distance.
+#' distance matrix.  A vertical dashed line marks the median distance.
+#' When \code{threshold} is provided, a red vertical line is drawn at that
+#' value with a label.
 #'
-#' @param dist_matrix Numeric matrix. Square pairwise distance matrix.
+#' @param dist_matrix Numeric matrix or numeric vector.  If a square matrix,
+#'   the upper triangle is extracted; if a vector, used directly.
 #' @param title Optional plot title.
 #' @param binwidth Numeric. Histogram bin width. If \code{NULL}, uses
 #'   ggplot2 default.
+#' @param threshold Numeric or \code{NULL}.  If not \code{NULL}, a vertical
+#'   line is drawn at this distance value and labeled.
 #'
 #' @return A \code{ggplot} object.
 #'
 #' @examples
 #' \dontrun{
 #' mat <- matrix(c(0,10,20, 10,0,15, 20,15,0), nrow = 3)
-#' plot_distance_distribution(mat)
+#' plot_distance_distribution(mat, threshold = 12)
 #' }
 #'
-#' @seealso \code{\link{plot_tcrdist_heatmap}}, \code{\link{tcrdist_matrix}}
+#' @seealso \code{\link{plot_tcrdist_heatmap}}, \code{\link{tcrdist_matrix}},
+#'   \code{\link{compute_tcr_network}}
 #' @export
 plot_distance_distribution <- function(dist_matrix, title = NULL,
-                                        binwidth = NULL) {
+                                        binwidth = NULL,
+                                        threshold = NULL) {
     .check_ggplot2("plot_distance_distribution()")
 
-    stopifnot(is.matrix(dist_matrix), nrow(dist_matrix) == ncol(dist_matrix))
-
-    dists <- dist_matrix[upper.tri(dist_matrix)]
+    # Accept a vector or a square matrix
+    if (is.matrix(dist_matrix)) {
+        stopifnot(nrow(dist_matrix) == ncol(dist_matrix))
+        dists <- dist_matrix[upper.tri(dist_matrix)]
+    } else {
+        dists <- as.numeric(dist_matrix)
+    }
 
     if (length(dists) == 0L) {
         return(ggplot2::ggplot() +
@@ -335,10 +346,25 @@ plot_distance_distribution <- function(dist_matrix, title = NULL,
             bins = 30L, fill = "#1f77b4", alpha = 0.6)
     }
 
-    p + ggplot2::geom_density(color = "#d62728", linewidth = 0.8) +
+    p <- p + ggplot2::geom_density(color = "#d62728", linewidth = 0.8) +
         ggplot2::geom_vline(xintercept = med, linetype = "dashed",
-                            color = "gray40") +
-        ggplot2::labs(x = "TCRdist", y = "Density", title = title) +
+                            color = "gray40")
+
+    # Threshold line
+    if (!is.null(threshold)) {
+        p <- p + ggplot2::geom_vline(
+            xintercept = threshold, color = "#d62728",
+            linetype = "solid", linewidth = 0.9
+        ) +
+        ggplot2::annotate(
+            "text", x = threshold, y = Inf,
+            label = paste0("threshold = ", round(threshold, 1)),
+            vjust = 2, hjust = -0.05, color = "#d62728",
+            fontface = "bold", size = 3.5
+        )
+    }
+
+    p + ggplot2::labs(x = "TCRdist", y = "Density", title = title) +
         ggplot2::theme_minimal() +
         ggplot2::theme(
             plot.title = ggplot2::element_text(hjust = 0.5, size = 11)

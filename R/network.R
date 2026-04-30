@@ -165,6 +165,46 @@
 }
 
 
+# ---------------------------------------------------------------------------
+# .jitter_overlapping
+# ---------------------------------------------------------------------------
+
+#' Jitter overlapping layout coordinates
+#'
+#' Finds groups of nodes that share identical (x, y) positions and
+#' spreads each group into a small circle.  The radius is proportional
+#' to the overall layout extent so the offset is visible but not
+#' disruptive.
+#'
+#' @param coords Numeric matrix (N x 2) of layout coordinates.
+#' @param frac Numeric.  Jitter radius as a fraction of the layout
+#'   extent.  Default \code{0.015}.
+#' @return Numeric matrix (N x 2) with adjusted coordinates.
+#' @keywords internal
+.jitter_overlapping <- function(coords, frac = 0.015) {
+    key <- paste(coords[, 1L], coords[, 2L], sep = "\x01")
+    groups <- split(seq_len(nrow(coords)), key)
+
+    # Only process groups with 2+ overlapping nodes
+    dups <- groups[lengths(groups) >= 2L]
+    if (length(dups) == 0L) return(coords)
+
+    # Scale radius to the layout extent
+    x_range <- diff(range(coords[, 1L]))
+    y_range <- diff(range(coords[, 2L]))
+    extent  <- max(x_range, y_range, 1e-6)
+    radius  <- frac * extent
+
+    for (idx in dups) {
+        k <- length(idx)
+        angles <- seq(0, 2 * pi, length.out = k + 1L)[seq_len(k)]
+        coords[idx, 1L] <- coords[idx, 1L] + radius * cos(angles)
+        coords[idx, 2L] <- coords[idx, 2L] + radius * sin(angles)
+    }
+    coords
+}
+
+
 # ===========================================================================
 # compute_tcr_network
 # ===========================================================================
@@ -179,6 +219,10 @@
 #' valley between the two peaks of the (typically bimodal) TCRdist
 #' distribution, using kernel density estimation on a subsample.
 #'
+#' A distance distribution plot with the threshold marked is automatically
+#' displayed when \pkg{ggplot2} is available.  The plot is also stored in the
+#' returned list as \code{dist_plot}.
+#'
 #' @param tcrs Data.frame with TCR columns (\code{va}, \code{cdr3a},
 #'   \code{vb}, \code{cdr3b}).  All columns are attached as vertex attributes
 #'   on the output graph.
@@ -192,6 +236,13 @@
 #' @param scale Numeric or \code{NULL}.  Scale parameter for the similarity
 #'   transform \code{exp(-dist / scale)}.  If \code{NULL}, defaults to
 #'   \code{threshold / 4}.
+#' @param min_edges Integer.  Minimum number of edges a vertex must have to
+#'   be kept.  \code{0} (default) keeps all vertices.  \code{1} removes
+#'   singletons (isolated nodes), \code{2} removes vertices with fewer than
+#'   2 edges, etc.
+#' @param jitter Logical.  If \code{TRUE} (default), slightly offset
+#'   overlapping nodes (e.g. identical clones with distance 0) so they are
+#'   individually visible instead of stacking on top of each other.
 #' @param layout Character.  Layout algorithm: \code{"fr"}
 #'   (Fruchterman-Reingold), \code{"kk"} (Kamada-Kawai), \code{"drl"},
 #'   \code{"circle"}, or \code{"grid"}.  Default \code{"fr"}.
@@ -208,6 +259,9 @@
 #'     \item{\code{scale}}{Numeric.  Scale parameter used.}
 #'     \item{\code{n_components}}{Integer.  Number of connected components.}
 #'     \item{\code{n_edges}}{Integer.  Number of edges in the graph.}
+#'     \item{\code{dist_plot}}{\code{ggplot} object showing the distance
+#'       distribution with the threshold line, or \code{NULL} if
+#'       \pkg{ggplot2} is not available.}
 #'   }
 #'
 #' @examples
@@ -227,6 +281,8 @@ compute_tcr_network <- function(tcrs,
                                  threshold = NULL,
                                  dist_matrix = NULL,
                                  scale = NULL,
+                                 min_edges = 0L,
+                                 jitter = TRUE,
                                  layout = "fr",
                                  seed = NULL) {
     if (!requireNamespace("igraph", quietly = TRUE)) {
@@ -243,6 +299,8 @@ compute_tcr_network <- function(tcrs,
     }
 
     # ---- Get edges -----------------------------------------------------------
+    dists_vec <- NULL  # for distribution plot
+
     if (!is.null(dist_matrix)) {
         # From precomputed distance matrix
         dist_matrix <- as.matrix(dist_matrix)
@@ -251,8 +309,9 @@ compute_tcr_network <- function(tcrs,
                  "nrow(tcrs)", call. = FALSE)
         }
 
+        dists_vec <- dist_matrix[upper.tri(dist_matrix)]
+
         if (is.null(threshold)) {
-            dists_vec <- dist_matrix[upper.tri(dist_matrix)]
             threshold <- .find_distance_valley(dists_vec)
             message("Auto-detected distance threshold: ", round(threshold, 1))
         }
@@ -276,12 +335,13 @@ compute_tcr_network <- function(tcrs,
                  "'dist_matrix' is not provided", call. = FALSE)
         }
 
+        # Subsample to get distance distribution (for threshold + plot)
+        n_sub <- min(500L, n)
+        sub_idx <- if (n_sub < n) sample(n, n_sub) else seq_len(n)
+        sub_dists <- tcrdist_matrix(tcrs[sub_idx, ], organism)
+        dists_vec <- sub_dists[upper.tri(sub_dists)]
+
         if (is.null(threshold)) {
-            # Subsample to estimate distribution valley
-            n_sub <- min(500L, n)
-            sub_idx <- if (n_sub < n) sample(n, n_sub) else seq_len(n)
-            sub_dists <- tcrdist_matrix(tcrs[sub_idx, ], organism)
-            dists_vec <- sub_dists[upper.tri(sub_dists)]
             threshold <- .find_distance_valley(dists_vec)
             message("Auto-detected distance threshold: ", round(threshold, 1))
         }
@@ -328,6 +388,24 @@ compute_tcr_network <- function(tcrs,
         g <- igraph::set_vertex_attr(g, col, value = tcrs[[col]])
     }
 
+    # ---- Prune low-degree vertices ------------------------------------------
+    min_edges <- as.integer(min_edges)
+    if (min_edges > 0L) {
+        repeat {
+            deg <- igraph::degree(g)
+            drop <- which(deg < min_edges)
+            if (length(drop) == 0L) break
+            keep <- which(deg >= min_edges)
+            if (length(keep) == 0L) {
+                warning("compute_tcr_network: min_edges=", min_edges,
+                        " removed all vertices; returning unpruned graph",
+                        call. = FALSE)
+                break
+            }
+            g <- igraph::induced_subgraph(g, keep)
+        }
+    }
+
     # ---- Layout --------------------------------------------------------------
     if (!is.null(seed)) set.seed(seed)
 
@@ -351,13 +429,30 @@ compute_tcr_network <- function(tcrs,
         layout_fn(g)
     }
 
+    # ---- Jitter overlapping nodes -------------------------------------------
+    if (jitter) {
+        coords <- .jitter_overlapping(coords)
+    }
+
+    # ---- Distance distribution plot with threshold line ---------------------
+    dist_plot <- NULL
+    if (!is.null(dists_vec) && length(dists_vec) > 0L &&
+        requireNamespace("ggplot2", quietly = TRUE)) {
+        dist_plot <- plot_distance_distribution(
+            dists_vec, threshold = threshold,
+            title = "TCRdist distribution with network threshold"
+        )
+        print(dist_plot)
+    }
+
     list(
         graph        = g,
         layout       = coords,
         threshold    = threshold,
         scale        = scale,
         n_components = igraph::components(g)$no,
-        n_edges      = igraph::ecount(g)
+        n_edges      = igraph::ecount(g),
+        dist_plot    = dist_plot
     )
 }
 

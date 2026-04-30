@@ -56,6 +56,29 @@ test_that(".find_distance_valley warns on too few distances", {
 
 
 # ===========================================================================
+# .jitter_overlapping tests
+# ===========================================================================
+
+test_that(".jitter_overlapping spreads overlapping nodes", {
+    coords <- matrix(c(1, 1, 1, 2,
+                        3, 3, 3, 4), ncol = 2)
+    # Rows 1-3 overlap at (1,3), row 4 is unique
+    result <- tcrdistR:::.jitter_overlapping(coords)
+    # Overlapping nodes should now have distinct coordinates
+    expect_false(all(result[1, ] == result[2, ]))
+    expect_false(all(result[1, ] == result[3, ]))
+    # Non-overlapping node should be unchanged
+    expect_equal(result[4, ], coords[4, ])
+})
+
+test_that(".jitter_overlapping is a no-op without overlaps", {
+    coords <- matrix(c(1, 2, 3, 4, 5, 6), ncol = 2)
+    result <- tcrdistR:::.jitter_overlapping(coords)
+    expect_equal(result, coords)
+})
+
+
+# ===========================================================================
 # compute_tcr_network tests
 # ===========================================================================
 
@@ -75,6 +98,7 @@ test_that("compute_tcr_network returns correct structure", {
     expect_true(is.numeric(net$scale))
     expect_true(is.numeric(net$n_components))
     expect_true(is.numeric(net$n_edges))
+    expect_true(inherits(net$dist_plot, "ggplot"))
 })
 
 test_that("compute_tcr_network vertex count matches input", {
@@ -166,6 +190,18 @@ test_that("compute_tcr_network is reproducible with seed", {
     expect_equal(n1$layout, n2$layout)
 })
 
+test_that("compute_tcr_network jitter=FALSE keeps raw layout", {
+    skip_if_not_installed("igraph")
+    data(dash)
+    sub <- dash[1:50, ]
+
+    n1 <- compute_tcr_network(sub, "mouse", threshold = 48, seed = 42,
+                               jitter = FALSE)
+    n2 <- compute_tcr_network(sub, "mouse", threshold = 48, seed = 42,
+                               jitter = FALSE)
+    expect_equal(n1$layout, n2$layout)
+})
+
 test_that("compute_tcr_network errors without organism or dist_matrix", {
     skip_if_not_installed("igraph")
     data(dash)
@@ -199,6 +235,59 @@ test_that("compute_tcr_network high threshold connects more", {
     net_high <- compute_tcr_network(sub, "mouse", threshold = 100, seed = 1)
 
     expect_true(net_high$n_edges >= net_low$n_edges)
+})
+
+test_that("compute_tcr_network min_edges=1 removes singletons", {
+    skip_if_not_installed("igraph")
+    data(dash)
+    sub <- dash[1:50, ]
+
+    net_full   <- compute_tcr_network(sub, "mouse", threshold = 48, seed = 1)
+    net_pruned <- compute_tcr_network(sub, "mouse", threshold = 48, seed = 1,
+                                       min_edges = 1L)
+
+    # Pruned graph should have no isolated nodes
+    deg <- igraph::degree(net_pruned$graph)
+    expect_true(all(deg >= 1L))
+    # And fewer or equal vertices
+    expect_true(igraph::vcount(net_pruned$graph) <=
+                    igraph::vcount(net_full$graph))
+})
+
+test_that("compute_tcr_network min_edges=0 keeps all vertices", {
+    skip_if_not_installed("igraph")
+    data(dash)
+    sub <- dash[1:30, ]
+
+    net <- compute_tcr_network(sub, "mouse", threshold = 48, seed = 1,
+                                min_edges = 0L)
+    expect_equal(igraph::vcount(net$graph), 30L)
+})
+
+test_that("compute_tcr_network min_edges prunes to higher degree", {
+    skip_if_not_installed("igraph")
+    data(dash)
+    sub <- dash[1:100, ]
+
+    net <- compute_tcr_network(sub, "mouse", threshold = 100, seed = 1,
+                                min_edges = 3L)
+    deg <- igraph::degree(net$graph)
+    expect_true(all(deg >= 3L))
+})
+
+test_that("compute_tcr_network min_edges warns if all removed", {
+    skip_if_not_installed("igraph")
+    data(dash)
+    sub <- dash[1:10, ]
+
+    # Very low threshold + high min_edges = likely removes everything
+    expect_warning(
+        net <- compute_tcr_network(sub, "mouse", threshold = 1, seed = 1,
+                                    min_edges = 100L),
+        "removed all vertices"
+    )
+    # Should return unpruned graph
+    expect_equal(igraph::vcount(net$graph), 10L)
 })
 
 

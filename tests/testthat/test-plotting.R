@@ -255,6 +255,27 @@ test_that("plot_distance_distribution with custom binwidth", {
     expect_s3_class(p, "gg")
 })
 
+test_that("plot_distance_distribution with threshold line", {
+    skip_if_not_installed("ggplot2")
+
+    mat <- matrix(c(0, 10, 20, 30,
+                     10, 0, 15, 25,
+                     20, 15, 0, 12,
+                     30, 25, 12, 0), nrow = 4)
+    p <- plot_distance_distribution(mat, threshold = 18)
+    expect_s3_class(p, "gg")
+    # Should have the annotation layer for the threshold label
+    expect_true(length(p$layers) > 3L)
+})
+
+test_that("plot_distance_distribution accepts a numeric vector", {
+    skip_if_not_installed("ggplot2")
+
+    dists <- c(5, 10, 15, 20, 25, 30)
+    p <- plot_distance_distribution(dists, threshold = 12)
+    expect_s3_class(p, "gg")
+})
+
 test_that("plot_tcr_scatter returns ggplot with NULL color_by", {
     skip_if_not_installed("ggplot2")
 

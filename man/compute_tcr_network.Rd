@@ -10,6 +10,8 @@ compute_tcr_network(
   threshold = NULL,
   dist_matrix = NULL,
   scale = NULL,
+  min_edges = 0L,
+  jitter = TRUE,
   layout = "fr",
   seed = NULL
 )
@@ -33,6 +35,15 @@ If \code{NULL}, auto-detected from the distance distribution valley.}
 transform \code{exp(-dist / scale)}.  If \code{NULL}, defaults to
 \code{threshold / 4}.}
 
+\item{min_edges}{Integer.  Minimum number of edges a vertex must have to
+be kept.  \code{0} (default) keeps all vertices.  \code{1} removes
+singletons (isolated nodes), \code{2} removes vertices with fewer than
+2 edges, etc.}
+
+\item{jitter}{Logical.  If \code{TRUE} (default), slightly offset
+overlapping nodes (e.g. identical clones with distance 0) so they are
+individually visible instead of stacking on top of each other.}
+
 \item{layout}{Character.  Layout algorithm: \code{"fr"}
 (Fruchterman-Reingold), \code{"kk"} (Kamada-Kawai), \code{"drl"},
 \code{"circle"}, or \code{"grid"}.  Default \code{"fr"}.}
@@ -51,6 +62,9 @@ all columns from \code{tcrs}.  Edge attributes: \code{weight}
 \item{\code{scale}}{Numeric.  Scale parameter used.}
 \item{\code{n_components}}{Integer.  Number of connected components.}
 \item{\code{n_edges}}{Integer.  Number of edges in the graph.}
+\item{\code{dist_plot}}{\code{ggplot} object showing the distance
+distribution with the threshold line, or \code{NULL} if
+\pkg{ggplot2} is not available.}
 }
 }
 \description{
@@ -62,6 +76,10 @@ via exponential decay: \code{exp(-distance / scale)}.
 When \code{threshold = NULL}, the threshold is auto-detected by finding the
 valley between the two peaks of the (typically bimodal) TCRdist
 distribution, using kernel density estimation on a subsample.
+
+A distance distribution plot with the threshold marked is automatically
+displayed when \pkg{ggplot2} is available.  The plot is also stored in the
+returned list as \code{dist_plot}.
 }
 \examples{
 \donttest{

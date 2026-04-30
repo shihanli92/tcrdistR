@@ -4,30 +4,42 @@
 \alias{plot_distance_distribution}
 \title{Plot the distribution of pairwise TCRdist distances}
 \usage{
-plot_distance_distribution(dist_matrix, title = NULL, binwidth = NULL)
+plot_distance_distribution(
+  dist_matrix,
+  title = NULL,
+  binwidth = NULL,
+  threshold = NULL
+)
 }
 \arguments{
-\item{dist_matrix}{Numeric matrix. Square pairwise distance matrix.}
+\item{dist_matrix}{Numeric matrix or numeric vector.  If a square matrix,
+the upper triangle is extracted; if a vector, used directly.}
 
 \item{title}{Optional plot title.}
 
 \item{binwidth}{Numeric. Histogram bin width. If \code{NULL}, uses
 ggplot2 default.}
+
+\item{threshold}{Numeric or \code{NULL}.  If not \code{NULL}, a vertical
+line is drawn at this distance value and labeled.}
 }
 \value{
 A \code{ggplot} object.
 }
 \description{
 Histogram with overlaid density curve of the upper triangle of a pairwise
-distance matrix. A vertical dashed line marks the median distance.
+distance matrix.  A vertical dashed line marks the median distance.
+When \code{threshold} is provided, a red vertical line is drawn at that
+value with a label.
 }
 \examples{
 \dontrun{
 mat <- matrix(c(0,10,20, 10,0,15, 20,15,0), nrow = 3)
-plot_distance_distribution(mat)
+plot_distance_distribution(mat, threshold = 12)
 }
 
 }
 \seealso{
-\code{\link{plot_tcrdist_heatmap}}, \code{\link{tcrdist_matrix}}
+\code{\link{plot_tcrdist_heatmap}}, \code{\link{tcrdist_matrix}},
+\code{\link{compute_tcr_network}}
 }
