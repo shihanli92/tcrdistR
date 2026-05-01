@@ -14,3 +14,6 @@
 ^tcrdistR_.*\.tar\.gz$
 ^\.github$
 ^data-raw$
+^tests/regenerate_kernel_pca_fixture\.(R|py)$
+^doc$
+^Meta$

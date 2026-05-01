@@ -44,11 +44,17 @@ V-region distances for alpha genes.}
 \item{v_dist_b}{Named square \code{NumericMatrix}. Pre-computed pairwise
 V-region distances for beta genes.}
 
-\item{weight_cdr3_region}{Integer. CDR3 alignment distance multiplier.
-Default 3 matches \code{WEIGHT_CDR3_REGION}.}
+\item{weight_cdr3_a}{Integer. Alpha CDR3 alignment distance multiplier.
+Default 3.}
 
-\item{gap_penalty_cdr3_region}{Integer. Per-residue length-difference
-penalty. Default 12 matches \code{GAP_PENALTY_CDR3_REGION}.}
+\item{gap_penalty_cdr3_a}{Integer. Alpha per-residue length-difference
+penalty. Default 12.}
+
+\item{weight_cdr3_b}{Integer. Beta CDR3 alignment distance multiplier.
+Default 3.}
+
+\item{gap_penalty_cdr3_b}{Integer. Beta per-residue length-difference
+penalty. Default 12.}
 }
 \value{
 An nq x nr \code{NumericMatrix} of TCRdist distances.

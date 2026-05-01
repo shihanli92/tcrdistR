@@ -39,10 +39,14 @@ using namespace Rcpp;
 //'   V-region distances for beta genes.
 //' @param threshold  Numeric. Maximum distance to include in the result.
 //'   Pairs with distance > threshold are omitted.
-//' @param weight_cdr3_region Integer. CDR3 alignment distance multiplier.
-//'   Default 3 matches \code{WEIGHT_CDR3_REGION}.
-//' @param gap_penalty_cdr3_region Integer. Per-residue length-difference
-//'   penalty. Default 12 matches \code{GAP_PENALTY_CDR3_REGION}.
+//' @param weight_cdr3_a Integer. Alpha CDR3 alignment distance multiplier.
+//'   Default 3.
+//' @param gap_penalty_cdr3_a Integer. Alpha per-residue length-difference
+//'   penalty. Default 12.
+//' @param weight_cdr3_b Integer. Beta CDR3 alignment distance multiplier.
+//'   Default 3.
+//' @param gap_penalty_cdr3_b Integer. Beta per-residue length-difference
+//'   penalty. Default 12.
 //' @return A \code{List} with four elements:
 //'   \describe{
 //'     \item{\code{i}}{Integer vector of 1-based row indices.}

@@ -42,11 +42,17 @@ distance (inclusive) are returned.}
 
 \item{bgroups}{Integer vector of length N. Beta-chain group assignments.}
 
-\item{weight_cdr3_region}{Integer. CDR3 alignment distance multiplier.
-Default 3 matches \code{WEIGHT_CDR3_REGION}.}
+\item{weight_cdr3_a}{Integer. Alpha CDR3 alignment distance multiplier.
+Default 3.}
 
-\item{gap_penalty_cdr3_region}{Integer. Per-residue length-difference
-penalty. Default 12 matches \code{GAP_PENALTY_CDR3_REGION}.}
+\item{gap_penalty_cdr3_a}{Integer. Alpha per-residue length-difference
+penalty. Default 12.}
+
+\item{weight_cdr3_b}{Integer. Beta CDR3 alignment distance multiplier.
+Default 3.}
+
+\item{gap_penalty_cdr3_b}{Integer. Beta per-residue length-difference
+penalty. Default 12.}
 }
 \value{
 A \code{List} of length N. Each element is a \code{List} with:

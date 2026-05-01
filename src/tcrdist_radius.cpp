@@ -41,10 +41,14 @@ using namespace Rcpp;
 //'   distance (inclusive) are returned.
 //' @param agroups Integer vector of length N. Alpha-chain group assignments.
 //' @param bgroups Integer vector of length N. Beta-chain group assignments.
-//' @param weight_cdr3_region Integer. CDR3 alignment distance multiplier.
-//'   Default 3 matches \code{WEIGHT_CDR3_REGION}.
-//' @param gap_penalty_cdr3_region Integer. Per-residue length-difference
-//'   penalty. Default 12 matches \code{GAP_PENALTY_CDR3_REGION}.
+//' @param weight_cdr3_a Integer. Alpha CDR3 alignment distance multiplier.
+//'   Default 3.
+//' @param gap_penalty_cdr3_a Integer. Alpha per-residue length-difference
+//'   penalty. Default 12.
+//' @param weight_cdr3_b Integer. Beta CDR3 alignment distance multiplier.
+//'   Default 3.
+//' @param gap_penalty_cdr3_b Integer. Beta per-residue length-difference
+//'   penalty. Default 12.
 //' @return A \code{List} of length N. Each element is a \code{List} with:
 //'   \describe{
 //'     \item{\code{indices}}{Integer vector of 1-based neighbor indices.}

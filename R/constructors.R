@@ -24,7 +24,7 @@ NULL
     }
 
     # Drop rows with NA in any grouping column
-    complete <- complete.cases(clone_df[, group_cols, drop = FALSE])
+    complete <- stats::complete.cases(clone_df[, group_cols, drop = FALSE])
     if (!all(complete)) {
         n_dropped <- sum(!complete)
         message(sprintf(

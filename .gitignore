@@ -34,3 +34,5 @@ tests/regenerate_kernel_pca_fixture.py
 *.tar.gz
 *.Rcheck/
 README.html
+/doc/
+/Meta/

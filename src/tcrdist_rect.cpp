@@ -38,10 +38,14 @@ using namespace Rcpp;
 //'   V-region distances for alpha genes.
 //' @param v_dist_b   Named square \code{NumericMatrix}. Pre-computed pairwise
 //'   V-region distances for beta genes.
-//' @param weight_cdr3_region Integer. CDR3 alignment distance multiplier.
-//'   Default 3 matches \code{WEIGHT_CDR3_REGION}.
-//' @param gap_penalty_cdr3_region Integer. Per-residue length-difference
-//'   penalty. Default 12 matches \code{GAP_PENALTY_CDR3_REGION}.
+//' @param weight_cdr3_a Integer. Alpha CDR3 alignment distance multiplier.
+//'   Default 3.
+//' @param gap_penalty_cdr3_a Integer. Alpha per-residue length-difference
+//'   penalty. Default 12.
+//' @param weight_cdr3_b Integer. Beta CDR3 alignment distance multiplier.
+//'   Default 3.
+//' @param gap_penalty_cdr3_b Integer. Beta per-residue length-difference
+//'   penalty. Default 12.
 //' @return An nq x nr \code{NumericMatrix} of TCRdist distances.
 //' @examples
 //' \dontrun{

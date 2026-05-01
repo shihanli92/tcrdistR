@@ -462,7 +462,7 @@ tcr_repertoire_overlap <- function(counts_a, counts_b,
         p_a <- counts_a / sum(counts_a)
         p_b <- counts_b / sum(counts_b)
         all_sp <- union_sp
-        pa <- setNames(rep(0, length(all_sp)), all_sp)
+        pa <- stats::setNames(rep(0, length(all_sp)), all_sp)
         pb <- pa
         pa[names(p_a)] <- p_a
         pb[names(p_b)] <- p_b

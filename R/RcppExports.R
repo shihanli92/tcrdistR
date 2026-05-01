@@ -301,10 +301,14 @@ rcpp_hamming_matrix <- function(seqs) {
 #'   TCRs sharing the same bgroups value are masked from each other.
 #' @param sort_nbrs Logical. If \code{TRUE}, sort the K neighbors by ascending
 #'   distance. Default \code{TRUE}.
-#' @param weight_cdr3_region Integer. CDR3 alignment distance multiplier.
-#'   Default 3 matches \code{WEIGHT_CDR3_REGION}.
-#' @param gap_penalty_cdr3_region Integer. Per-residue length-difference
-#'   penalty. Default 12 matches \code{GAP_PENALTY_CDR3_REGION}.
+#' @param weight_cdr3_a Integer. Alpha CDR3 alignment distance multiplier.
+#'   Default 3.
+#' @param gap_penalty_cdr3_a Integer. Alpha per-residue length-difference
+#'   penalty. Default 12.
+#' @param weight_cdr3_b Integer. Beta CDR3 alignment distance multiplier.
+#'   Default 3.
+#' @param gap_penalty_cdr3_b Integer. Beta per-residue length-difference
+#'   penalty. Default 12.
 #' @return A \code{List} with two elements:
 #'   \describe{
 #'     \item{\code{knn_indices}}{Integer matrix (N x K). 1-based neighbor indices.}
@@ -352,10 +356,14 @@ rcpp_tcrdist_knn <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_dist_
 #'   strings, e.g. \code{"TRAV1-1*01"}).
 #' @param v_dist_b   Named square \code{NumericMatrix}. Same structure for
 #'   beta genes.
-#' @param weight_cdr3_region Integer. CDR3 alignment distance multiplier.
-#'   Default 3 matches \code{WEIGHT_CDR3_REGION}.
-#' @param gap_penalty_cdr3_region Integer. Per-residue length-difference
-#'   penalty.  Default 12 matches \code{GAP_PENALTY_CDR3_REGION}.
+#' @param weight_cdr3_a Integer. Alpha CDR3 alignment distance multiplier.
+#'   Default 3.
+#' @param gap_penalty_cdr3_a Integer. Alpha per-residue length-difference
+#'   penalty. Default 12.
+#' @param weight_cdr3_b Integer. Beta CDR3 alignment distance multiplier.
+#'   Default 3.
+#' @param gap_penalty_cdr3_b Integer. Beta per-residue length-difference
+#'   penalty. Default 12.
 #' @return An N x N symmetric \code{NumericMatrix} of TCRdist distances.
 #' @examples
 #' \dontrun{
@@ -400,10 +408,14 @@ rcpp_tcrdist_matrix <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_seqs, v_di
 #'   distance (inclusive) are returned.
 #' @param agroups Integer vector of length N. Alpha-chain group assignments.
 #' @param bgroups Integer vector of length N. Beta-chain group assignments.
-#' @param weight_cdr3_region Integer. CDR3 alignment distance multiplier.
-#'   Default 3 matches \code{WEIGHT_CDR3_REGION}.
-#' @param gap_penalty_cdr3_region Integer. Per-residue length-difference
-#'   penalty. Default 12 matches \code{GAP_PENALTY_CDR3_REGION}.
+#' @param weight_cdr3_a Integer. Alpha CDR3 alignment distance multiplier.
+#'   Default 3.
+#' @param gap_penalty_cdr3_a Integer. Alpha per-residue length-difference
+#'   penalty. Default 12.
+#' @param weight_cdr3_b Integer. Beta CDR3 alignment distance multiplier.
+#'   Default 3.
+#' @param gap_penalty_cdr3_b Integer. Beta per-residue length-difference
+#'   penalty. Default 12.
 #' @return A \code{List} of length N. Each element is a \code{List} with:
 #'   \describe{
 #'     \item{\code{indices}}{Integer vector of 1-based neighbor indices.}
@@ -452,10 +464,14 @@ rcpp_tcrdist_radius_neighbors <- function(va_genes, cdr3a_seqs, vb_genes, cdr3b_
 #'   V-region distances for alpha genes.
 #' @param v_dist_b   Named square \code{NumericMatrix}. Pre-computed pairwise
 #'   V-region distances for beta genes.
-#' @param weight_cdr3_region Integer. CDR3 alignment distance multiplier.
-#'   Default 3 matches \code{WEIGHT_CDR3_REGION}.
-#' @param gap_penalty_cdr3_region Integer. Per-residue length-difference
-#'   penalty. Default 12 matches \code{GAP_PENALTY_CDR3_REGION}.
+#' @param weight_cdr3_a Integer. Alpha CDR3 alignment distance multiplier.
+#'   Default 3.
+#' @param gap_penalty_cdr3_a Integer. Alpha per-residue length-difference
+#'   penalty. Default 12.
+#' @param weight_cdr3_b Integer. Beta CDR3 alignment distance multiplier.
+#'   Default 3.
+#' @param gap_penalty_cdr3_b Integer. Beta per-residue length-difference
+#'   penalty. Default 12.
 #' @return An nq x nr \code{NumericMatrix} of TCRdist distances.
 #' @examples
 #' \dontrun{
@@ -503,10 +519,14 @@ rcpp_tcrdist_rect <- function(query_va, query_cdr3a, query_vb, query_cdr3b, ref_
 #'   V-region distances for beta genes.
 #' @param threshold  Numeric. Maximum distance to include in the result.
 #'   Pairs with distance > threshold are omitted.
-#' @param weight_cdr3_region Integer. CDR3 alignment distance multiplier.
-#'   Default 3 matches \code{WEIGHT_CDR3_REGION}.
-#' @param gap_penalty_cdr3_region Integer. Per-residue length-difference
-#'   penalty. Default 12 matches \code{GAP_PENALTY_CDR3_REGION}.
+#' @param weight_cdr3_a Integer. Alpha CDR3 alignment distance multiplier.
+#'   Default 3.
+#' @param gap_penalty_cdr3_a Integer. Alpha per-residue length-difference
+#'   penalty. Default 12.
+#' @param weight_cdr3_b Integer. Beta CDR3 alignment distance multiplier.
+#'   Default 3.
+#' @param gap_penalty_cdr3_b Integer. Beta per-residue length-difference
+#'   penalty. Default 12.
 #' @return A \code{List} with four elements:
 #'   \describe{
 #'     \item{\code{i}}{Integer vector of 1-based row indices.}
