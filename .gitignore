@@ -36,3 +36,6 @@ tests/regenerate_kernel_pca_fixture.py
 README.html
 /doc/
 /Meta/
+
+# Test artifacts
+Rplots.pdf
