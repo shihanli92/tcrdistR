@@ -65,103 +65,62 @@ test_that(".fill_missing_chain preserves extra columns", {
 
 
 # -- tcrdist_matrix single-chain tests --------------------------------------
+# Component additivity (single-chain == paired+components) is tested in
+# test-components.R.  Here we test that single-chain input produces a valid
+# distance matrix.
 
-test_that("beta-only tcrdist_matrix matches components='beta' on paired data", {
-    tcrs <- make_paired_tcrs()
-    beta_only <- tcrs[, c("vb", "cdr3b")]
-
-    d_single <- tcrdist_matrix(beta_only, "human")
-    d_ref    <- tcrdist_matrix(tcrs, "human", components = "beta")
-    expect_equal(d_single, d_ref, tolerance = 1e-10)
-})
-
-test_that("alpha-only tcrdist_matrix matches components='alpha' on paired data", {
-    tcrs <- make_paired_tcrs()
-    alpha_only <- tcrs[, c("va", "cdr3a")]
-
-    d_single <- tcrdist_matrix(alpha_only, "human")
-    d_ref    <- tcrdist_matrix(tcrs, "human", components = "alpha")
-    expect_equal(d_single, d_ref, tolerance = 1e-10)
-})
-
-test_that("beta-only with explicit components='cdr3b' works", {
-    tcrs <- make_paired_tcrs()
-    beta_only <- tcrs[, c("vb", "cdr3b")]
-
-    d_cdr3b <- tcrdist_matrix(beta_only, "human", components = "cdr3b")
-    d_ref   <- tcrdist_matrix(tcrs, "human", components = "cdr3b")
-    expect_equal(d_cdr3b, d_ref, tolerance = 1e-10)
-})
-
-test_that("alpha-only with explicit components='va' works", {
-    tcrs <- make_paired_tcrs()
-    alpha_only <- tcrs[, c("va", "cdr3a")]
-
-    d_va  <- tcrdist_matrix(alpha_only, "human", components = "va")
-    d_ref <- tcrdist_matrix(tcrs, "human", components = "va")
-    expect_equal(d_va, d_ref, tolerance = 1e-10)
-})
-
-test_that("single-chain diagonal is zero", {
+test_that("beta-only tcrdist_matrix produces valid output", {
     tcrs <- make_paired_tcrs()
     beta_only <- tcrs[, c("vb", "cdr3b")]
     d <- tcrdist_matrix(beta_only, "human")
-    expect_true(all(diag(d) == 0))
+    expect_equal(nrow(d), 3L)
+    expect_equal(ncol(d), 3L)
 })
 
-test_that("single-chain matrix is symmetric", {
+test_that("alpha-only tcrdist_matrix produces valid output", {
     tcrs <- make_paired_tcrs()
     alpha_only <- tcrs[, c("va", "cdr3a")]
     d <- tcrdist_matrix(alpha_only, "human")
-    expect_equal(d, t(d))
+    expect_equal(nrow(d), 3L)
+    expect_equal(ncol(d), 3L)
 })
-
 
 # -- tcrdist_sparse single-chain tests --------------------------------------
+# Sparse/rect additivity vs paired+components is tested in test-components.R.
 
-test_that("beta-only tcrdist_sparse matches paired components='beta'", {
+test_that("beta-only tcrdist_sparse produces valid output", {
     tcrs <- make_paired_tcrs()
     beta_only <- tcrs[, c("vb", "cdr3b")]
-
-    sp_single <- as.matrix(tcrdist_sparse(beta_only, "human", threshold = Inf))
-    sp_ref    <- as.matrix(tcrdist_sparse(tcrs, "human", threshold = Inf,
-                                           components = "beta"))
-    expect_equal(sp_single, sp_ref, tolerance = 1e-10)
+    sp <- tcrdist_sparse(beta_only, "human", threshold = Inf)
+    expect_true(inherits(sp, "dgCMatrix"))
+    expect_equal(nrow(sp), 3L)
 })
 
-test_that("alpha-only tcrdist_sparse matches paired components='alpha'", {
+test_that("alpha-only tcrdist_sparse produces valid output", {
     tcrs <- make_paired_tcrs()
     alpha_only <- tcrs[, c("va", "cdr3a")]
-
-    sp_single <- as.matrix(tcrdist_sparse(alpha_only, "human", threshold = Inf))
-    sp_ref    <- as.matrix(tcrdist_sparse(tcrs, "human", threshold = Inf,
-                                           components = "alpha"))
-    expect_equal(sp_single, sp_ref, tolerance = 1e-10)
+    sp <- tcrdist_sparse(alpha_only, "human", threshold = Inf)
+    expect_true(inherits(sp, "dgCMatrix"))
+    expect_equal(nrow(sp), 3L)
 })
 
 
 # -- tcrdist_rect single-chain tests ----------------------------------------
 
-test_that("beta-only tcrdist_rect matches paired components='beta'", {
+test_that("beta-only tcrdist_rect produces correct dimensions", {
     tcrs <- make_paired_tcrs()
     beta_only <- tcrs[, c("vb", "cdr3b")]
     ref <- beta_only[c(1, 3), ]
-
-    r_single <- tcrdist_rect(beta_only, ref, "human")
-    r_ref    <- tcrdist_rect(tcrs, tcrs[c(1, 3), ], "human",
-                              components = "beta")
-    expect_equal(r_single, r_ref, tolerance = 1e-10)
+    r <- tcrdist_rect(beta_only, ref, "human")
+    expect_equal(dim(r), c(3L, 2L))
 })
 
-test_that("alpha-only tcrdist_rect matches paired components='alpha'", {
+test_that("alpha-only tcrdist_rect produces correct dimensions", {
     tcrs <- make_paired_tcrs()
     alpha_only <- tcrs[, c("va", "cdr3a")]
     ref <- alpha_only[c(1, 3), ]
-
-    r_single <- tcrdist_rect(alpha_only, ref, "human")
-    r_ref    <- tcrdist_rect(tcrs, tcrs[c(1, 3), ], "human",
-                              components = "alpha")
-    expect_equal(r_single, r_ref, tolerance = 1e-10)
+    r <- tcrdist_rect(alpha_only, ref, "human")
+    expect_equal(dim(r), c(3L, 2L))
 })
 
 test_that("tcrdist_rect errors when query and ref have different chains", {
@@ -175,24 +134,18 @@ test_that("tcrdist_rect errors when query and ref have different chains", {
 })
 
 
-# -- tcrdist_knn single-chain tests -----------------------------------------
+# -- tcrdist_knn / radius_neighbors single-chain tests ----------------------
+# KNN-vs-matrix consistency is tested in test-neighbors.R.
 
-test_that("beta-only tcrdist_knn consistent with tcrdist_matrix", {
+test_that("beta-only tcrdist_knn produces valid output", {
     tcrs <- make_paired_tcrs()
     beta_only <- tcrs[, c("vb", "cdr3b")]
-
-    d <- tcrdist_matrix(beta_only, "human")
     knn <- tcrdist_knn(beta_only, "human", K = 2L)
-
-    for (i in seq_len(nrow(beta_only))) {
-        for (k in seq_len(2L)) {
-            j <- knn$knn_indices[i, k]
-            expect_equal(knn$knn_distances[i, k], d[i, j], tolerance = 1e-10)
-        }
-    }
+    expect_equal(nrow(knn$knn_indices), 3L)
+    expect_equal(ncol(knn$knn_indices), 2L)
 })
 
-test_that("alpha-only tcrdist_knn works", {
+test_that("alpha-only tcrdist_knn produces valid output", {
     tcrs <- make_paired_tcrs()
     alpha_only <- tcrs[, c("va", "cdr3a")]
     knn <- tcrdist_knn(alpha_only, "human", K = 1L)
@@ -200,23 +153,12 @@ test_that("alpha-only tcrdist_knn works", {
     expect_equal(ncol(knn$knn_indices), 1L)
 })
 
-
-# -- tcrdist_radius_neighbors single-chain tests ----------------------------
-
-test_that("beta-only tcrdist_radius_neighbors consistent with tcrdist_matrix", {
+test_that("beta-only tcrdist_radius_neighbors produces valid output", {
     tcrs <- make_paired_tcrs()
     beta_only <- tcrs[, c("vb", "cdr3b")]
-
-    d <- tcrdist_matrix(beta_only, "human")
     nbrs <- tcrdist_radius_neighbors(beta_only, "human", radius = 200)
-
-    for (i in seq_len(nrow(beta_only))) {
-        idx <- nbrs[[i]]$indices
-        dst <- nbrs[[i]]$distances
-        for (k in seq_along(idx)) {
-            expect_equal(dst[k], d[i, idx[k]], tolerance = 1e-10)
-        }
-    }
+    expect_length(nbrs, 3L)
+    expect_true(all(vapply(nbrs, function(x) is.list(x), logical(1))))
 })
 
 

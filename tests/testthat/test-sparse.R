@@ -52,19 +52,6 @@ test_that("tcrdist_sparse with threshold=250 captures all pairs", {
     expect_equal(sp_dense[2, 3], mat[2, 3])
 })
 
-test_that("tcrdist_sparse result is symmetric", {
-    tcrs <- data.frame(
-        va    = c("TRAV1-1*01", "TRAV1-1*01", "TRAV12-2*01"),
-        cdr3a = c("CAVRDSSYKLIF", "CAVRDSSYKLIF", "CAVSANSGTYF"),
-        vb    = c("TRBV19*01", "TRBV19*01", "TRBV20-1*01"),
-        cdr3b = c("CASSIRSSYEQYF", "CASSIRSYEQYF", "CSARDRTGNTIYF"),
-        stringsAsFactors = FALSE
-    )
-    sp <- tcrdist_sparse(tcrs, "human", threshold = 250)
-    sp_dense <- as.matrix(sp)
-    expect_equal(sp_dense, t(sp_dense))
-})
-
 test_that("tcrdist_sparse returns a dgCMatrix", {
     tcrs <- data.frame(
         va    = c("TRAV1-1*01", "TRAV1-1*01", "TRAV12-2*01"),

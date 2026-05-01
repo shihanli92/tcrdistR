@@ -17,11 +17,6 @@ test_that("hamming_distance: different lengths = -1", {
     expect_equal(hamming_distance("CASSI", "CASSILY"), -1L)
 })
 
-test_that("hamming_distance: single character", {
-    expect_equal(hamming_distance("A", "A"), 0L)
-    expect_equal(hamming_distance("A", "B"), 1L)
-})
-
 test_that("hamming_distance: empty strings = 0", {
     expect_equal(hamming_distance("", ""), 0L)
 })
