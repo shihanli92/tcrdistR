@@ -73,15 +73,21 @@ rcpp_tcrdist_knn(
   Logical. If `TRUE`, sort the K neighbors by ascending distance.
   Default `TRUE`.
 
-- weight_cdr3_region:
+- weight_cdr3_a:
 
-  Integer. CDR3 alignment distance multiplier. Default 3 matches
-  `WEIGHT_CDR3_REGION`.
+  Integer. Alpha CDR3 alignment distance multiplier. Default 3.
 
-- gap_penalty_cdr3_region:
+- gap_penalty_cdr3_a:
 
-  Integer. Per-residue length-difference penalty. Default 12 matches
-  `GAP_PENALTY_CDR3_REGION`.
+  Integer. Alpha per-residue length-difference penalty. Default 12.
+
+- weight_cdr3_b:
+
+  Integer. Beta CDR3 alignment distance multiplier. Default 3.
+
+- gap_penalty_cdr3_b:
+
+  Integer. Beta per-residue length-difference penalty. Default 12.
 
 ## Value
 
