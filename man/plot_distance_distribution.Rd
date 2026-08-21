@@ -5,10 +5,11 @@
 \title{Plot the distribution of pairwise TCRdist distances}
 \usage{
 plot_distance_distribution(
-  dist_matrix,
+  dist_matrix = NULL,
   title = NULL,
   binwidth = NULL,
-  threshold = NULL
+  threshold = NULL,
+  tcr_rep = NULL
 )
 }
 \arguments{
@@ -22,6 +23,10 @@ ggplot2 default.}
 
 \item{threshold}{Numeric or \code{NULL}.  If not \code{NULL}, a vertical
 line is drawn at this distance value and labeled.}
+
+\item{tcr_rep}{A \code{\linkS4class{TCRrep}} object.  If provided, the
+distance matrix is extracted from its \code{paired_dist} slot (or computed
+on the fly).  Cannot be combined with \code{dist_matrix}.}
 }
 \value{
 A \code{ggplot} object.

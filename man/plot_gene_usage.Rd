@@ -5,11 +5,12 @@
 \title{Plot V-gene or J-gene usage frequencies}
 \usage{
 plot_gene_usage(
-  tcr_df,
+  tcr_df = NULL,
   gene_col,
   strip_allele = TRUE,
   max_genes = 20L,
-  title = NULL
+  title = NULL,
+  tcr_rep = NULL
 )
 }
 \arguments{
@@ -25,6 +26,10 @@ suffixes (everything after \code{"*"}) before tallying.}
 \code{20L}.}
 
 \item{title}{Optional plot title.}
+
+\item{tcr_rep}{A \code{\linkS4class{TCRrep}} object.  If provided, the
+clone data.frame is used as \code{tcr_df}.  Cannot be combined with
+\code{tcr_df}.}
 }
 \value{
 A \code{ggplot} object.

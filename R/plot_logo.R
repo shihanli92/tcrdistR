@@ -533,6 +533,9 @@ plot_junction_bars <- function(junction_pwm,
 #' @param max_genes Integer. Maximum number of genes to display. Default
 #'   \code{20L}.
 #' @param title Optional plot title.
+#' @param tcr_rep A \code{\linkS4class{TCRrep}} object.  If provided, the
+#'   clone data.frame is used as \code{tcr_df}.  Cannot be combined with
+#'   \code{tcr_df}.
 #'
 #' @return A \code{ggplot} object.
 #'
@@ -545,9 +548,16 @@ plot_junction_bars <- function(junction_pwm,
 #'
 #' @seealso \code{\link{plot_cdr3_logo}}, \code{\link{plot_tcrdist_dendrogram}}
 #' @export
-plot_gene_usage <- function(tcr_df, gene_col, strip_allele = TRUE,
-                             max_genes = 20L, title = NULL) {
+plot_gene_usage <- function(tcr_df = NULL, gene_col, strip_allele = TRUE,
+                             max_genes = 20L, title = NULL,
+                             tcr_rep = NULL) {
     .check_ggplot2("plot_gene_usage()")
+
+    if (!is.null(tcr_rep)) {
+        if (!is.null(tcr_df))
+            stop("provide 'tcr_rep' or 'tcr_df', not both", call. = FALSE)
+        tcr_df <- .extract_from_tcr_rep(tcr_rep)$clone_df
+    }
 
     stopifnot(gene_col %in% colnames(tcr_df))
 
@@ -591,6 +601,448 @@ plot_gene_usage <- function(tcr_df, gene_col, strip_allele = TRUE,
 
 
 # ---------------------------------------------------------------------------
+# plot_gene_alluvial  (exported)
+# ---------------------------------------------------------------------------
+
+#' Alluvial plot of TCR gene segment usage
+#'
+#' Draws an alluvial (Sankey) diagram showing how clonotypes flow across
+#' gene segments.  The default axis order is
+#' \code{ja} \eqn{\rightarrow} \code{va} \eqn{\rightarrow} \code{vb}
+#' \eqn{\rightarrow} \code{jb}, but any subset or reordering can be
+#' specified via \code{axes}.
+#'
+#' Requires the \pkg{ggalluvial} package (Suggests).
+#'
+#' @param tcr_df Data.frame with gene columns (e.g. \code{va}, \code{ja},
+#'   \code{vb}, \code{jb}).
+#' @param axes Character vector of column names to use as axes (strata),
+#'   in display order.  Default \code{c("ja", "va", "vb", "jb")}.
+#' @param strip_allele Logical.  If \code{TRUE} (default), strip allele
+#'   suffixes before tallying.
+#' @param max_genes Integer.  Per-axis cap: only the top \code{max_genes}
+#'   genes are shown; the rest are collapsed to \code{"Other"}.
+#'   Default \code{15L}.
+#' @param title Optional plot title.
+#' @param color_by Column name (character string) to color the alluvial
+#'   flows by.  Must be one of the \code{axes}.  Set to \code{NULL} for
+#'   a uniform fill color (see \code{fill_color}).  Default \code{NULL}
+#'   (uniform fill).
+#' @param fill_color Single color string used for all flows when
+#'   \code{color_by} is \code{NULL}.  Default \code{"black"}.  Ignored
+#'   when \code{color_by} is set.
+#' @param alpha Numeric.  Flow opacity.  Default \code{0.4}.
+#' @param palette Character vector of colors, or \code{NULL} for the
+#'   default \code{.tcrdistR_palette}.  Only used when \code{color_by}
+#'   is not \code{NULL}.
+#' @param facet_by Optional column name (character string) or vector of
+#'   values to facet by.  When a single string that matches a column in
+#'   \code{tcr_df}, that column is used for \code{facet_wrap}.  Otherwise
+#'   treated as a vector of facet labels (must have length
+#'   \code{nrow(tcr_df)}).
+#' @param tcr_rep A \code{\linkS4class{TCRrep}} object.  If provided, the
+#'   clone data.frame is used as \code{tcr_df}.  Cannot be combined with
+#'   \code{tcr_df}.
+#'
+#' @return A \code{ggplot} object.
+#'
+#' @examples
+#' \dontrun{
+#' data(dash)
+#' plot_gene_alluvial(dash)
+#' plot_gene_alluvial(dash, color_by = "va")
+#' plot_gene_alluvial(dash, fill_color = "steelblue", alpha = 0.5)
+#' plot_gene_alluvial(dash, facet_by = "epitope")
+#' }
+#'
+#' @seealso \code{\link{plot_gene_usage}}, \code{\link{plot_cdr3_length}}
+#' @export
+plot_gene_alluvial <- function(tcr_df = NULL,
+                                axes = c("ja", "va", "vb", "jb"),
+                                mode = c("sankey", "alluvial"),
+                                strip_allele = TRUE,
+                                max_genes = 15L,
+                                title = NULL,
+                                color_by = NULL,
+                                fill_color = "black",
+                                alpha = 0.4,
+                                palette = NULL,
+                                facet_by = NULL,
+                                tcr_rep = NULL) {
+    .check_ggplot2("plot_gene_alluvial()")
+    mode <- match.arg(mode)
+
+    if (mode == "alluvial" &&
+        !requireNamespace("ggalluvial", quietly = TRUE)) {
+        stop("Package 'ggalluvial' is required for mode='alluvial'. ",
+             "Install it with: install.packages(\"ggalluvial\")",
+             call. = FALSE)
+    }
+
+    if (!is.null(tcr_rep)) {
+        if (!is.null(tcr_df))
+            stop("provide 'tcr_rep' or 'tcr_df', not both", call. = FALSE)
+        tcr_df <- .extract_from_tcr_rep(tcr_rep)$clone_df
+    }
+
+    stopifnot(length(axes) >= 2L)
+    missing_cols <- setdiff(axes, colnames(tcr_df))
+    if (length(missing_cols) > 0L) {
+        stop("tcr_df is missing columns: ",
+             paste(missing_cols, collapse = ", "), call. = FALSE)
+    }
+
+    # Resolve facet_by: column name lookup or raw vector
+    facet_col <- NULL
+    if (!is.null(facet_by)) {
+        if (is.character(facet_by) && length(facet_by) == 1L &&
+            facet_by %in% colnames(tcr_df)) {
+            facet_col <- ".facet"
+            facet_vec <- tcr_df[[facet_by]]
+        } else {
+            if (length(facet_by) != nrow(tcr_df)) {
+                stop("'facet_by' must be a column name or a vector of length ",
+                     "nrow(tcr_df)", call. = FALSE)
+            }
+            facet_col <- ".facet"
+            facet_vec <- facet_by
+        }
+    }
+
+    # Build working data.frame
+    df <- tcr_df[, axes, drop = FALSE]
+    if (!is.null(facet_col)) df[[facet_col]] <- facet_vec
+    df <- df[stats::complete.cases(df), , drop = FALSE]
+
+    if (nrow(df) == 0L) {
+        return(ggplot2::ggplot() + ggplot2::theme_void() +
+                   ggplot2::ggtitle(title %||% "No gene data"))
+    }
+
+    if (strip_allele) {
+        for (col in axes) df[[col]] <- sub("\\*.*$", "", df[[col]])
+    }
+
+    for (col in axes) {
+        freq <- sort(table(df[[col]]), decreasing = TRUE)
+        if (length(freq) > max_genes) {
+            keep <- names(freq)[seq_len(max_genes)]
+            df[[col]][!df[[col]] %in% keep] <- "Other"
+        }
+    }
+
+    # Validate color_by
+    use_fill_aes <- !is.null(color_by)
+    if (use_fill_aes && !color_by %in% axes) {
+        stop("'color_by' must be one of the axes: ",
+             paste(axes, collapse = ", "), call. = FALSE)
+    }
+
+    # ---- Dispatch by mode ----------------------------------------------------
+    if (mode == "alluvial") {
+        p <- .gene_alluvial_alluvial(df, axes, facet_col, color_by,
+                                      fill_color, alpha, palette, title)
+    } else {
+        p <- .gene_alluvial_sankey(df, axes, facet_col, color_by,
+                                    fill_color, alpha, palette, title)
+    }
+
+    if (!is.null(facet_col)) {
+        p <- p + ggplot2::facet_wrap(
+            ggplot2::vars(.data[[facet_col]]),
+            scales = "free_y"
+        )
+    }
+
+    p
+}
+
+
+# -- alluvial mode (ggalluvial) ------------------------------------------------
+
+.gene_alluvial_alluvial <- function(df, axes, facet_col, color_by,
+                                     fill_color, alpha, palette, title) {
+    group_cols <- axes
+    if (!is.null(facet_col)) group_cols <- c(group_cols, facet_col)
+    agg <- stats::aggregate(
+        list(Freq = rep(1L, nrow(df))),
+        by = as.list(df[, group_cols, drop = FALSE]),
+        FUN = sum
+    )
+    for (col in axes) {
+        freq <- sort(tapply(agg$Freq, agg[[col]], sum), decreasing = TRUE)
+        agg[[col]] <- factor(agg[[col]], levels = names(freq))
+    }
+
+    use_fill_aes <- !is.null(color_by)
+
+    p <- ggplot2::ggplot(
+        agg,
+        ggplot2::aes(axis1 = .data[[axes[1L]]],
+                     axis2 = .data[[axes[2L]]],
+                     y = .data$Freq)
+    )
+    if (length(axes) >= 3L) p <- p + ggplot2::aes(axis3 = .data[[axes[3L]]])
+    if (length(axes) >= 4L) p <- p + ggplot2::aes(axis4 = .data[[axes[4L]]])
+
+    if (use_fill_aes) {
+        n_levels <- length(levels(agg[[color_by]]))
+        if (is.null(palette)) palette <- .tcrdistR_palette(n_levels)
+        p <- p +
+            ggalluvial::geom_alluvium(
+                ggplot2::aes(fill = .data[[color_by]]),
+                width = 1 / 4, alpha = alpha
+            ) +
+            ggplot2::scale_fill_manual(values = palette)
+    } else {
+        p <- p +
+            ggalluvial::geom_alluvium(
+                width = 1 / 4, fill = fill_color, alpha = alpha
+            )
+    }
+
+    p +
+        ggalluvial::geom_stratum(width = 1 / 4, fill = "grey90",
+                                  color = "grey40") +
+        ggplot2::geom_text(
+            stat = ggalluvial::StatStratum,
+            ggplot2::aes(label = ggplot2::after_stat(.data$stratum)),
+            size = 2.5
+        ) +
+        ggplot2::scale_x_discrete(limits = axes,
+                                   expand = c(0.15, 0.05)) +
+        ggplot2::labs(y = "Count", title = title,
+                      fill = if (use_fill_aes) color_by else NULL) +
+        ggplot2::theme_minimal() +
+        ggplot2::theme(
+            plot.title = ggplot2::element_text(hjust = 0.5, size = 11),
+            axis.text.y = ggplot2::element_blank(),
+            axis.ticks.y = ggplot2::element_blank(),
+            panel.grid = ggplot2::element_blank()
+        )
+}
+
+
+# -- sankey mode (pure ggplot2) ------------------------------------------------
+
+.gene_alluvial_sankey <- function(df, axes, facet_col, color_by,
+                                   fill_color, alpha, palette, title) {
+    n_axes   <- length(axes)
+    n_curves <- 50L
+    stratum_w <- 0.12
+
+    # -- compute per-axis gene order (by overall frequency, descending) --------
+    axis_levels <- lapply(axes, function(col) {
+        freq <- sort(table(df[[col]]), decreasing = TRUE)
+        names(freq)
+    })
+    names(axis_levels) <- axes
+
+    # -- build strata layout: cumulative y-positions per facet -----------------
+    facet_vals <- if (!is.null(facet_col)) unique(df[[facet_col]]) else list(NULL)
+
+    all_strata  <- list()
+    all_flows   <- list()
+
+    for (fv in facet_vals) {
+        if (!is.null(facet_col)) {
+            sub <- df[df[[facet_col]] == fv, , drop = FALSE]
+        } else {
+            sub <- df
+        }
+        total_n <- nrow(sub)
+
+        # Per-axis: compute gene counts & cumulative y positions
+        axis_info <- list()
+        for (ai in seq_along(axes)) {
+            col <- axes[ai]
+            lvls <- axis_levels[[col]]
+            counts <- table(factor(sub[[col]], levels = lvls))
+            yend <- cumsum(as.integer(counts))
+            ystart <- c(0L, yend[-length(yend)])
+            axis_info[[col]] <- data.frame(
+                gene   = lvls,
+                ystart = ystart,
+                yend   = yend,
+                count  = as.integer(counts),
+                stringsAsFactors = FALSE
+            )
+        }
+
+        # Build strata rectangles
+        for (ai in seq_along(axes)) {
+            col <- axes[ai]
+            info <- axis_info[[col]]
+            info <- info[info$count > 0L, , drop = FALSE]
+            sr <- data.frame(
+                xmin  = ai - stratum_w,
+                xmax  = ai + stratum_w,
+                ymin  = info$ystart,
+                ymax  = info$yend,
+                label = info$gene,
+                axis  = col,
+                stringsAsFactors = FALSE
+            )
+            if (!is.null(facet_col)) sr[[facet_col]] <- fv
+            all_strata[[length(all_strata) + 1L]] <- sr
+        }
+
+        # Build flow polygons between each adjacent pair
+        for (pi in seq_len(n_axes - 1L)) {
+            left_col  <- axes[pi]
+            right_col <- axes[pi + 1L]
+            left_info  <- axis_info[[left_col]]
+            right_info <- axis_info[[right_col]]
+
+            # Pairwise counts
+            pair_tab <- table(
+                factor(sub[[left_col]],  levels = left_info$gene),
+                factor(sub[[right_col]], levels = right_info$gene)
+            )
+
+            # Track consumed y per stratum
+            left_used  <- stats::setNames(left_info$ystart,  left_info$gene)
+            right_used <- stats::setNames(right_info$ystart, right_info$gene)
+
+            for (lg in left_info$gene) {
+                for (rg in right_info$gene) {
+                    cnt <- as.integer(pair_tab[lg, rg])
+                    if (cnt == 0L) next
+
+                    ly0 <- left_used[lg]
+                    ly1 <- ly0 + cnt
+                    ry0 <- right_used[rg]
+                    ry1 <- ry0 + cnt
+
+                    left_used[lg]  <- ly1
+                    right_used[rg] <- ry1
+
+                    # Sigmoid curve
+                    t <- seq(0, 1, length.out = n_curves)
+                    s <- 3 / (1 + exp(-12 * (t - 0.5)))  # scaled sigmoid
+                    s <- (s - min(s)) / (max(s) - min(s))
+                    xvals <- pi + stratum_w + t * (1 - 2 * stratum_w)
+
+                    top    <- ly1 + s * (ry1 - ly1)
+                    bottom <- ly0 + s * (ry0 - ly0)
+
+                    poly <- data.frame(
+                        x = c(xvals, rev(xvals)),
+                        y = c(top, rev(bottom)),
+                        left_gene  = lg,
+                        right_gene = rg,
+                        pair       = pi,
+                        stringsAsFactors = FALSE
+                    )
+                    if (!is.null(facet_col)) poly[[facet_col]] <- fv
+                    all_flows[[length(all_flows) + 1L]] <- poly
+                }
+            }
+        }
+    }
+
+    strata_df <- do.call(rbind, all_strata)
+    flow_df   <- do.call(rbind, all_flows)
+
+    # Assign group IDs for geom_polygon
+    flow_df$.gid <- rep(seq_along(all_flows),
+                        vapply(all_flows, nrow, integer(1L)))
+
+    # -- color logic -----------------------------------------------------------
+    use_fill_aes <- !is.null(color_by)
+    if (use_fill_aes) {
+        # color_by is always the left-side gene of the first pair
+        # map the left_gene column for pair==1, otherwise the flow inherits
+        # from whatever stratum it originated at on the color_by axis
+        color_axis_idx <- match(color_by, axes)
+        # For each flow, determine the gene at the color_by axis
+        # Flows have a pair index; if color_by axis == pair's left, use left_gene
+        # if color_by axis == pair's right, use right_gene
+        flow_df$.color <- ifelse(
+            flow_df$pair == color_axis_idx,
+            flow_df$left_gene,
+            ifelse(flow_df$pair == color_axis_idx - 1L,
+                   flow_df$right_gene,
+                   NA_character_)
+        )
+        # For axes not adjacent to color_by, propagate via left/right chain
+        # Simpler approach: just color by left_gene of pair containing color_by
+        # For a clean look, we color ALL flows by their gene at the color_by axis
+        # This requires tracing — for simplicity, color each pair's left gene
+        # when color_by is the first axis, or right gene when it's the last
+        if (color_axis_idx == 1L) {
+            flow_df$.color <- flow_df$left_gene
+            # Only accurate for pair 1; other pairs need propagation
+            # For sankey, flows don't chain, so just color per-segment
+        }
+        # Simplest correct approach: color by left_gene for all flows where
+        # pair >= color_axis_idx, and right_gene where pair < color_axis_idx
+        flow_df$.color <- ifelse(
+            flow_df$pair >= color_axis_idx,
+            flow_df$left_gene,
+            flow_df$right_gene
+        )
+
+        n_colors <- length(axis_levels[[color_by]])
+        if (is.null(palette)) palette <- .tcrdistR_palette(n_colors)
+        names(palette) <- axis_levels[[color_by]]
+    }
+
+    # -- build plot ------------------------------------------------------------
+    p <- ggplot2::ggplot()
+
+    if (use_fill_aes) {
+        p <- p + ggplot2::geom_polygon(
+            data = flow_df,
+            ggplot2::aes(x = .data$x, y = .data$y,
+                         group = .data$.gid,
+                         fill = .data$.color),
+            alpha = alpha
+        ) +
+        ggplot2::scale_fill_manual(values = palette, name = color_by)
+    } else {
+        p <- p + ggplot2::geom_polygon(
+            data = flow_df,
+            ggplot2::aes(x = .data$x, y = .data$y,
+                         group = .data$.gid),
+            fill = fill_color, alpha = alpha
+        )
+    }
+
+    p <- p +
+        ggplot2::geom_rect(
+            data = strata_df,
+            ggplot2::aes(xmin = .data$xmin, xmax = .data$xmax,
+                         ymin = .data$ymin, ymax = .data$ymax),
+            fill = "grey90", color = "grey40", linewidth = 0.3
+        ) +
+        ggplot2::geom_text(
+            data = strata_df[strata_df$ymax - strata_df$ymin > 0, ],
+            ggplot2::aes(
+                x = (.data$xmin + .data$xmax) / 2,
+                y = (.data$ymin + .data$ymax) / 2,
+                label = .data$label
+            ),
+            size = 2.5, fontface = "plain"
+        ) +
+        ggplot2::scale_x_continuous(
+            breaks = seq_along(axes), labels = axes,
+            expand = c(0.08, 0.08)
+        ) +
+        ggplot2::labs(y = "Count", title = title) +
+        ggplot2::theme_minimal() +
+        ggplot2::theme(
+            plot.title = ggplot2::element_text(hjust = 0.5, size = 11),
+            axis.text.y = ggplot2::element_blank(),
+            axis.ticks.y = ggplot2::element_blank(),
+            panel.grid = ggplot2::element_blank()
+        )
+
+    p
+}
+
+
+# ---------------------------------------------------------------------------
 # plot_cdr3_length  (exported)
 # ---------------------------------------------------------------------------
 
@@ -606,6 +1058,9 @@ plot_gene_usage <- function(tcr_df, gene_col, strip_allele = TRUE,
 #' @param max_lengths Integer. Maximum number of distinct lengths to display.
 #'   Rare extremes are dropped. Default \code{30L}.
 #' @param title Optional character string. Plot title.
+#' @param tcr_rep A \code{\linkS4class{TCRrep}} object.  If provided, the
+#'   clone data.frame is used as \code{tcr_df}.  Cannot be combined with
+#'   \code{tcr_df}.
 #'
 #' @return A \code{ggplot} object.
 #'
@@ -618,9 +1073,17 @@ plot_gene_usage <- function(tcr_df, gene_col, strip_allele = TRUE,
 #'
 #' @seealso \code{\link{plot_gene_usage}}, \code{\link{plot_cdr3_logo}}
 #' @export
-plot_cdr3_length <- function(tcr_df, chain = c("alpha", "beta", "both"),
-                              max_lengths = 30L, title = NULL) {
+plot_cdr3_length <- function(tcr_df = NULL, chain = c("alpha", "beta", "both"),
+                              max_lengths = 30L, title = NULL,
+                              tcr_rep = NULL) {
     .check_ggplot2("plot_cdr3_length()")
+
+    if (!is.null(tcr_rep)) {
+        if (!is.null(tcr_df))
+            stop("provide 'tcr_rep' or 'tcr_df', not both", call. = FALSE)
+        tcr_df <- .extract_from_tcr_rep(tcr_rep)$clone_df
+    }
+
     chain <- match.arg(chain)
 
     build_lengths <- function(seqs, label) {

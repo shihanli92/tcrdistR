@@ -49,6 +49,10 @@
 #'   \code{color_by} is \code{NULL}. Default \code{"#E41A1C"}.
 #' @param background_alpha Numeric. Alpha for non-highlighted points.
 #'   Default \code{0.15}.
+#' @param tcr_rep A \code{\linkS4class{TCRrep}} object.  If provided and
+#'   \code{metadata} is \code{NULL}, the clone data.frame is used as
+#'   \code{metadata}, enabling column-name lookups for \code{color_by},
+#'   \code{facet_by}, and \code{highlight}.
 #'
 #' @return A \code{ggplot} object.
 #'
@@ -89,8 +93,13 @@ plot_tcr_scatter <- function(coords, color_by = NULL, title = NULL,
                               facet_by = NULL,
                               highlight = NULL,
                               highlight_color = "#E41A1C",
-                              background_alpha = 0.15) {
+                              background_alpha = 0.15,
+                              tcr_rep = NULL) {
     .check_ggplot2("plot_tcr_scatter()")
+
+    if (!is.null(tcr_rep) && is.null(metadata)) {
+        metadata <- .extract_from_tcr_rep(tcr_rep)$clone_df
+    }
 
     coords <- as.matrix(coords)
     stopifnot(ncol(coords) == 2L)

@@ -90,6 +90,9 @@
 #' @param cluster Logical. If \code{TRUE} (default), reorder rows and columns
 #'   by hierarchical clustering.
 #' @param title Optional plot title.
+#' @param tcr_rep A \code{\linkS4class{TCRrep}} object.  If provided, the
+#'   distance matrix is extracted from its \code{paired_dist} slot (or computed
+#'   on the fly).  Cannot be combined with \code{dist_matrix}.
 #'
 #' @return A \code{ggplot} object.
 #'
@@ -101,9 +104,18 @@
 #'
 #' @seealso \code{\link{plot_tcrdist_dendrogram}}, \code{\link{plot_distance_distribution}}, \code{\link{tcrdist_matrix}}
 #' @export
-plot_tcrdist_heatmap <- function(dist_matrix, labels = NULL,
-                                  cluster = TRUE, title = NULL) {
+plot_tcrdist_heatmap <- function(dist_matrix = NULL, labels = NULL,
+                                  cluster = TRUE, title = NULL,
+                                  tcr_rep = NULL) {
     .check_ggplot2("plot_tcrdist_heatmap()")
+
+    if (!is.null(tcr_rep)) {
+        if (!is.null(dist_matrix))
+            stop("provide 'tcr_rep' or 'dist_matrix', not both", call. = FALSE)
+        ex <- .extract_from_tcr_rep(tcr_rep)
+        dist_matrix <- ex$paired_dist %||%
+            tcrdist_matrix(ex$clone_df, ex$organism)
+    }
 
     stopifnot(is.matrix(dist_matrix), nrow(dist_matrix) == ncol(dist_matrix))
     n <- nrow(dist_matrix)
@@ -186,6 +198,9 @@ plot_tcrdist_heatmap <- function(dist_matrix, labels = NULL,
 #'   Default \code{500L}.
 #' @param title Optional plot title.
 #' @param point_size Numeric. Leaf point size. Default \code{2}.
+#' @param tcr_rep A \code{\linkS4class{TCRrep}} object.  If provided,
+#'   \code{tcr_df} and \code{organism} are extracted from its slots.
+#'   Cannot be combined with \code{tcr_df}.
 #'
 #' @return A \code{ggplot} object.
 #'
@@ -196,10 +211,20 @@ plot_tcrdist_heatmap <- function(dist_matrix, labels = NULL,
 #'
 #' @seealso \code{\link{plot_tcrdist_heatmap}}, \code{\link{tcrdist_hclust}}, \code{\link{cluster_tcrs}}
 #' @export
-plot_tcrdist_dendrogram <- function(tcr_df, organism, color_by = NULL,
+plot_tcrdist_dendrogram <- function(tcr_df = NULL, organism = NULL,
+                                     color_by = NULL,
                                      method = "average", max_tcrs = 500L,
-                                     title = NULL, point_size = 2) {
+                                     title = NULL, point_size = 2,
+                                     tcr_rep = NULL) {
     .check_ggplot2("plot_tcrdist_dendrogram()")
+
+    if (!is.null(tcr_rep)) {
+        if (!is.null(tcr_df))
+            stop("provide 'tcr_rep' or 'tcr_df', not both", call. = FALSE)
+        ex <- .extract_from_tcr_rep(tcr_rep)
+        tcr_df   <- ex$clone_df
+        organism <- ex$organism
+    }
 
     n <- nrow(tcr_df)
     if (n < 2L) {
@@ -296,6 +321,9 @@ plot_tcrdist_dendrogram <- function(tcr_df, organism, color_by = NULL,
 #'   ggplot2 default.
 #' @param threshold Numeric or \code{NULL}.  If not \code{NULL}, a vertical
 #'   line is drawn at this distance value and labeled.
+#' @param tcr_rep A \code{\linkS4class{TCRrep}} object.  If provided, the
+#'   distance matrix is extracted from its \code{paired_dist} slot (or computed
+#'   on the fly).  Cannot be combined with \code{dist_matrix}.
 #'
 #' @return A \code{ggplot} object.
 #'
@@ -308,10 +336,19 @@ plot_tcrdist_dendrogram <- function(tcr_df, organism, color_by = NULL,
 #' @seealso \code{\link{plot_tcrdist_heatmap}}, \code{\link{tcrdist_matrix}},
 #'   \code{\link{compute_tcr_network}}
 #' @export
-plot_distance_distribution <- function(dist_matrix, title = NULL,
+plot_distance_distribution <- function(dist_matrix = NULL, title = NULL,
                                         binwidth = NULL,
-                                        threshold = NULL) {
+                                        threshold = NULL,
+                                        tcr_rep = NULL) {
     .check_ggplot2("plot_distance_distribution()")
+
+    if (!is.null(tcr_rep)) {
+        if (!is.null(dist_matrix))
+            stop("provide 'tcr_rep' or 'dist_matrix', not both", call. = FALSE)
+        ex <- .extract_from_tcr_rep(tcr_rep)
+        dist_matrix <- ex$paired_dist %||%
+            tcrdist_matrix(ex$clone_df, ex$organism)
+    }
 
     # Accept a vector or a square matrix
     if (is.matrix(dist_matrix)) {

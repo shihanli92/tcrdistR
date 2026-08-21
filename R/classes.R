@@ -84,6 +84,25 @@ setClass(
 )
 
 # ---------------------------------------------------------------------------
+# Extract helper
+# ---------------------------------------------------------------------------
+
+#' Extract common fields from a TCRrep object
+#' @param tcr_rep A \code{TCRrep} object.
+#' @return A named list with \code{clone_df}, \code{organism}, \code{paired_dist}.
+#' @keywords internal
+#' @noRd
+.extract_from_tcr_rep <- function(tcr_rep) {
+    stopifnot(is(tcr_rep, "TCRrep"))
+    list(
+        clone_df    = tcr_rep@clone_df,
+        organism    = tcr_rep@organism,
+        paired_dist = tcr_rep@paired_dist
+    )
+}
+
+
+# ---------------------------------------------------------------------------
 # Validity
 # ---------------------------------------------------------------------------
 

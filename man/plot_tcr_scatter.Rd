@@ -20,7 +20,8 @@ plot_tcr_scatter(
   facet_by = NULL,
   highlight = NULL,
   highlight_color = "#E41A1C",
-  background_alpha = 0.15
+  background_alpha = 0.15,
+  tcr_rep = NULL
 )
 }
 \arguments{
@@ -73,6 +74,11 @@ vector, integer indices, or a named list for multi-column filtering
 
 \item{background_alpha}{Numeric. Alpha for non-highlighted points.
 Default \code{0.15}.}
+
+\item{tcr_rep}{A \code{\linkS4class{TCRrep}} object.  If provided and
+\code{metadata} is \code{NULL}, the clone data.frame is used as
+\code{metadata}, enabling column-name lookups for \code{color_by},
+\code{facet_by}, and \code{highlight}.}
 }
 \value{
 A \code{ggplot} object.

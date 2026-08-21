@@ -163,3 +163,16 @@ test_that("plot_tcr_network works with no edges", {
     net <- compute_tcr_network(dash[1:10, ], "mouse", threshold = 1, seed = 1)
     expect_true(inherits(plot_tcr_network(net, color_by = "epitope"), "ggplot"))
 })
+
+test_that("compute_tcr_network accepts TCRrep input", {
+    skip_if_not_installed("igraph")
+    data(dash)
+    rep <- TCRrep(dash[1:30, ], "mouse", compute_distances = TRUE)
+
+    net <- compute_tcr_network(tcr_rep = rep, threshold = 100, seed = 1)
+    expect_true(inherits(net$graph, "igraph"))
+    expect_equal(igraph::vcount(net$graph), 30L)
+
+    # Conflict error
+    expect_error(compute_tcr_network(rep@clone_df, tcr_rep = rep), "not both")
+})

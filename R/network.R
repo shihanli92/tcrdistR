@@ -248,6 +248,10 @@
 #'   \code{"circle"}, or \code{"grid"}.  Default \code{"fr"}.
 #' @param seed Integer or \code{NULL}.  Random seed for layout
 #'   reproducibility.
+#' @param tcr_rep A \code{\linkS4class{TCRrep}} object.  If provided,
+#'   \code{tcrs} and \code{organism} are extracted from its slots (and
+#'   \code{paired_dist} is used as \code{dist_matrix} when available).
+#'   Cannot be combined with \code{tcrs}.
 #'
 #' @return A named list with elements:
 #'   \describe{
@@ -276,7 +280,7 @@
 #' @seealso \code{\link{plot_tcr_network}}, \code{\link{tcrdist_sparse}},
 #'   \code{\link{tcrdist_matrix}}
 #' @export
-compute_tcr_network <- function(tcrs,
+compute_tcr_network <- function(tcrs = NULL,
                                  organism = NULL,
                                  threshold = NULL,
                                  dist_matrix = NULL,
@@ -284,12 +288,23 @@ compute_tcr_network <- function(tcrs,
                                  min_edges = 0L,
                                  jitter = TRUE,
                                  layout = "fr",
-                                 seed = NULL) {
+                                 seed = NULL,
+                                 tcr_rep = NULL) {
     if (!requireNamespace("igraph", quietly = TRUE)) {
         stop("Package 'igraph' is required for compute_tcr_network(). ",
              "Install it with: install.packages(\"igraph\")",
              call. = FALSE)
     }
+
+    if (!is.null(tcr_rep)) {
+        if (!is.null(tcrs))
+            stop("provide 'tcr_rep' or 'tcrs', not both", call. = FALSE)
+        ex <- .extract_from_tcr_rep(tcr_rep)
+        tcrs       <- ex$clone_df
+        organism   <- organism %||% ex$organism
+        dist_matrix <- dist_matrix %||% ex$paired_dist
+    }
+
     if (!is.data.frame(tcrs)) {
         stop("compute_tcr_network: 'tcrs' must be a data.frame", call. = FALSE)
     }

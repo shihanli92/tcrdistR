@@ -27,6 +27,7 @@ Suggests:
     patchwork,
     png,
     ggrepel,
+    ggalluvial,
     uwot,
     igraph,
     dbscan,

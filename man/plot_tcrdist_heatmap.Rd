@@ -4,7 +4,13 @@
 \alias{plot_tcrdist_heatmap}
 \title{Plot a TCRdist pairwise distance heatmap}
 \usage{
-plot_tcrdist_heatmap(dist_matrix, labels = NULL, cluster = TRUE, title = NULL)
+plot_tcrdist_heatmap(
+  dist_matrix = NULL,
+  labels = NULL,
+  cluster = TRUE,
+  title = NULL,
+  tcr_rep = NULL
+)
 }
 \arguments{
 \item{dist_matrix}{Numeric matrix. Square pairwise distance matrix.}
@@ -16,6 +22,10 @@ uses \code{rownames(dist_matrix)} or integer indices.}
 by hierarchical clustering.}
 
 \item{title}{Optional plot title.}
+
+\item{tcr_rep}{A \code{\linkS4class{TCRrep}} object.  If provided, the
+distance matrix is extracted from its \code{paired_dist} slot (or computed
+on the fly).  Cannot be combined with \code{dist_matrix}.}
 }
 \value{
 A \code{ggplot} object.

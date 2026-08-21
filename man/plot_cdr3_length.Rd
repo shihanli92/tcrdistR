@@ -5,10 +5,11 @@
 \title{Plot CDR3 length distribution}
 \usage{
 plot_cdr3_length(
-  tcr_df,
+  tcr_df = NULL,
   chain = c("alpha", "beta", "both"),
   max_lengths = 30L,
-  title = NULL
+  title = NULL,
+  tcr_rep = NULL
 )
 }
 \arguments{
@@ -22,6 +23,10 @@ plot_cdr3_length(
 Rare extremes are dropped. Default \code{30L}.}
 
 \item{title}{Optional character string. Plot title.}
+
+\item{tcr_rep}{A \code{\linkS4class{TCRrep}} object.  If provided, the
+clone data.frame is used as \code{tcr_df}.  Cannot be combined with
+\code{tcr_df}.}
 }
 \value{
 A \code{ggplot} object.

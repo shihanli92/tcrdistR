@@ -5,13 +5,14 @@
 \title{Plot a TCRdist-based dendrogram}
 \usage{
 plot_tcrdist_dendrogram(
-  tcr_df,
-  organism,
+  tcr_df = NULL,
+  organism = NULL,
   color_by = NULL,
   method = "average",
   max_tcrs = 500L,
   title = NULL,
-  point_size = 2
+  point_size = 2,
+  tcr_rep = NULL
 )
 }
 \arguments{
@@ -33,6 +34,10 @@ Default \code{500L}.}
 \item{title}{Optional plot title.}
 
 \item{point_size}{Numeric. Leaf point size. Default \code{2}.}
+
+\item{tcr_rep}{A \code{\linkS4class{TCRrep}} object.  If provided,
+\code{tcr_df} and \code{organism} are extracted from its slots.
+Cannot be combined with \code{tcr_df}.}
 }
 \value{
 A \code{ggplot} object.

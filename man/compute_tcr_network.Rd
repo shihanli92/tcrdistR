@@ -5,7 +5,7 @@
 \title{Build a TCR clone network from distance data}
 \usage{
 compute_tcr_network(
-  tcrs,
+  tcrs = NULL,
   organism = NULL,
   threshold = NULL,
   dist_matrix = NULL,
@@ -13,7 +13,8 @@ compute_tcr_network(
   min_edges = 0L,
   jitter = TRUE,
   layout = "fr",
-  seed = NULL
+  seed = NULL,
+  tcr_rep = NULL
 )
 }
 \arguments{
@@ -50,6 +51,11 @@ individually visible instead of stacking on top of each other.}
 
 \item{seed}{Integer or \code{NULL}.  Random seed for layout
 reproducibility.}
+
+\item{tcr_rep}{A \code{\linkS4class{TCRrep}} object.  If provided,
+\code{tcrs} and \code{organism} are extracted from its slots (and
+\code{paired_dist} is used as \code{dist_matrix} when available).
+Cannot be combined with \code{tcrs}.}
 }
 \value{
 A named list with elements:

@@ -378,3 +378,116 @@ test_that("plot_tcr_logo_panel works with various options", {
                                show_junction_bars = TRUE)
     expect_true(inherits(p4, "patchwork") || inherits(p4, "gg"))
 })
+
+
+# ===========================================================================
+# TCRrep input support
+# ===========================================================================
+
+test_that("plot functions accept TCRrep input", {
+    skip_on_cran()
+    data(dash, envir = environment())
+    rep <- TCRrep(dash[1:30, ], "mouse", compute_distances = TRUE)
+
+    # Distance-based plots
+    expect_true(inherits(plot_tcrdist_heatmap(tcr_rep = rep), "ggplot"))
+    expect_true(inherits(plot_distance_distribution(tcr_rep = rep), "ggplot"))
+    expect_true(inherits(plot_tcrdist_dendrogram(tcr_rep = rep), "ggplot"))
+
+    # tcr_df-based plots
+    expect_true(inherits(plot_gene_usage(tcr_rep = rep, gene_col = "va"),
+                         "ggplot"))
+    expect_true(inherits(plot_cdr3_length(tcr_rep = rep), "ggplot"))
+
+    # Scatter with metadata from TCRrep
+    coords <- matrix(rnorm(60), ncol = 2)
+    expect_true(inherits(
+        plot_tcr_scatter(coords, color_by = "epitope", tcr_rep = rep),
+        "ggplot"))
+
+    # Alluvial (sankey mode, no ggalluvial needed)
+    expect_true(inherits(plot_gene_alluvial(tcr_rep = rep), "ggplot"))
+
+    # Conflict errors
+    mat <- rep@paired_dist
+    expect_error(plot_tcrdist_heatmap(mat, tcr_rep = rep), "not both")
+    expect_error(plot_distance_distribution(mat, tcr_rep = rep), "not both")
+    expect_error(plot_tcrdist_dendrogram(rep@clone_df, tcr_rep = rep),
+                 "not both")
+    expect_error(plot_gene_usage(rep@clone_df, "va", tcr_rep = rep),
+                 "not both")
+    expect_error(plot_cdr3_length(rep@clone_df, tcr_rep = rep), "not both")
+    expect_error(plot_gene_alluvial(rep@clone_df, tcr_rep = rep), "not both")
+})
+
+
+# ===========================================================================
+# plot_gene_alluvial
+# ===========================================================================
+
+test_that("plot_gene_alluvial sankey mode works with all options", {
+    data(dash, envir = environment())
+
+    # Default sankey 4-axis
+    p <- plot_gene_alluvial(dash)
+    expect_s3_class(p, "ggplot")
+
+    # Custom 2-axis
+    p2 <- plot_gene_alluvial(dash, axes = c("va", "vb"))
+    expect_s3_class(p2, "ggplot")
+
+    # 3-axis
+    p3 <- plot_gene_alluvial(dash, axes = c("ja", "va", "vb"))
+    expect_s3_class(p3, "ggplot")
+
+    # max_genes caps rare genes
+    p4 <- plot_gene_alluvial(dash, max_genes = 3L)
+    expect_s3_class(p4, "ggplot")
+
+    # Facet by column name
+    p5 <- plot_gene_alluvial(dash, facet_by = "epitope")
+    expect_s3_class(p5, "ggplot")
+    expect_false(inherits(p5$facet, "FacetNull"))
+
+    # Facet by vector
+    p6 <- plot_gene_alluvial(dash, facet_by = dash$epitope)
+    expect_s3_class(p6, "ggplot")
+
+    # Colored by axis
+    p7 <- plot_gene_alluvial(dash, color_by = "va")
+    expect_s3_class(p7, "ggplot")
+
+    # Custom fill color and alpha
+    p8 <- plot_gene_alluvial(dash, fill_color = "steelblue", alpha = 0.8)
+    expect_s3_class(p8, "ggplot")
+})
+
+test_that("plot_gene_alluvial alluvial mode works", {
+    skip_if_not_installed("ggalluvial")
+    data(dash, envir = environment())
+
+    p <- plot_gene_alluvial(dash, mode = "alluvial")
+    expect_s3_class(p, "ggplot")
+
+    p2 <- plot_gene_alluvial(dash, mode = "alluvial", color_by = "va")
+    expect_s3_class(p2, "ggplot")
+
+    p3 <- plot_gene_alluvial(dash, mode = "alluvial",
+                              fill_color = "steelblue", alpha = 0.8)
+    expect_s3_class(p3, "ggplot")
+
+    p4 <- plot_gene_alluvial(dash, mode = "alluvial", facet_by = "epitope")
+    expect_s3_class(p4, "ggplot")
+})
+
+test_that("plot_gene_alluvial input validation", {
+    data(dash, envir = environment())
+
+    # Invalid color_by
+    expect_error(plot_gene_alluvial(dash, color_by = "epitope"),
+                 "must be one of the axes")
+
+    # Missing column error
+    expect_error(plot_gene_alluvial(dash, axes = c("va", "nonexistent")),
+                 "missing columns")
+})
