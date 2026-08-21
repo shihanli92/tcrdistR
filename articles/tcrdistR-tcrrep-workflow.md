@@ -396,7 +396,7 @@ with other single-cell and repertoire analysis tools:
 
 ``` r
 sessionInfo()
-#> R version 4.6.0 (2026-04-24)
+#> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
 #> Running under: Ubuntu 24.04.4 LTS
 #> 
@@ -420,16 +420,16 @@ sessionInfo()
 #> [1] patchwork_1.3.2 ggplot2_4.0.3   tcrdistR_0.1.0 
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] Matrix_1.7-5       gtable_0.3.6       jsonlite_2.0.0     compiler_4.6.0    
-#>  [5] Rcpp_1.1.1-1.1     FNN_1.1.4.1        jquerylib_0.1.4    systemfonts_1.3.2 
+#>  [1] Matrix_1.7-5       gtable_0.3.6       jsonlite_2.0.0     compiler_4.6.1    
+#>  [5] Rcpp_1.1.2         FNN_1.1.4.1        jquerylib_0.1.4    systemfonts_1.3.2 
 #>  [9] scales_1.4.0       textshaping_1.0.5  yaml_2.3.12        fastmap_1.2.0     
 #> [13] uwot_0.2.4         lattice_0.22-9     R6_2.6.1           labeling_0.4.3    
-#> [17] igraph_2.3.0       knitr_1.51         desc_1.4.3         pillar_1.11.1     
-#> [21] bslib_0.10.0       RColorBrewer_1.1-3 rlang_1.2.0        cachem_1.1.0      
-#> [25] xfun_0.57          fs_2.1.0           sass_0.4.10        S7_0.2.2          
-#> [29] cli_3.6.6          pkgdown_2.2.0      withr_3.0.2        magrittr_2.0.5    
-#> [33] digest_0.6.39      grid_4.6.0         lifecycle_1.0.5    vctrs_0.7.3       
-#> [37] RSpectra_0.16-2    evaluate_1.0.5     glue_1.8.1         farver_2.1.2      
-#> [41] ragg_1.5.2         ggseqlogo_0.2.2    rmarkdown_2.31     tools_4.6.0       
-#> [45] pkgconfig_2.0.3    htmltools_0.5.9
+#> [17] igraph_2.3.3       knitr_1.51         desc_1.4.3         pillar_1.11.1     
+#> [21] bslib_0.12.0       RColorBrewer_1.1-3 rlang_1.3.0        cachem_1.1.0      
+#> [25] xfun_0.60          fs_2.1.0           sass_0.4.10        S7_0.2.2          
+#> [29] otel_0.2.0         cli_3.6.6          magrittr_2.0.5     pkgdown_2.2.1     
+#> [33] withr_3.0.3        digest_0.6.39      grid_4.6.1         lifecycle_1.0.5   
+#> [37] vctrs_0.7.3        RSpectra_0.16-2    evaluate_1.0.5     glue_1.8.1        
+#> [41] farver_2.1.2       ragg_1.5.2         ggseqlogo_0.2.2    rmarkdown_2.31    
+#> [45] pkgconfig_2.0.3    tools_4.6.1        htmltools_0.5.9
 ```

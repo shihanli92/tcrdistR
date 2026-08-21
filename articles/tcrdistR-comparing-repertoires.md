@@ -298,7 +298,7 @@ responses use structurally distinct TCR repertoires.
 
 ``` r
 sessionInfo()
-#> R version 4.6.0 (2026-04-24)
+#> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
 #> Running under: Ubuntu 24.04.4 LTS
 #> 
@@ -322,14 +322,14 @@ sessionInfo()
 #> [1] patchwork_1.3.2 ggplot2_4.0.3   tcrdistR_0.1.0 
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] vctrs_0.7.3        cli_3.6.6          knitr_1.51         rlang_1.2.0       
-#>  [5] xfun_0.57          S7_0.2.2           textshaping_1.0.5  jsonlite_2.0.0    
-#>  [9] labeling_0.4.3     glue_1.8.1         htmltools_0.5.9    ragg_1.5.2        
-#> [13] sass_0.4.10        scales_1.4.0       rmarkdown_2.31     grid_4.6.0        
-#> [17] evaluate_1.0.5     jquerylib_0.1.4    fastmap_1.2.0      yaml_2.3.12       
-#> [21] lifecycle_1.0.5    compiler_4.6.0     RSpectra_0.16-2    RColorBrewer_1.1-3
-#> [25] fs_2.1.0           Rcpp_1.1.1-1.1     lattice_0.22-9     systemfonts_1.3.2 
-#> [29] farver_2.1.2       digest_0.6.39      R6_2.6.1           Matrix_1.7-5      
-#> [33] bslib_0.10.0       withr_3.0.2        tools_4.6.0        gtable_0.3.6      
-#> [37] pkgdown_2.2.0      cachem_1.1.0       desc_1.4.3
+#>  [1] vctrs_0.7.3        cli_3.6.6          knitr_1.51         rlang_1.3.0       
+#>  [5] xfun_0.60          otel_0.2.0         S7_0.2.2           textshaping_1.0.5 
+#>  [9] jsonlite_2.0.0     labeling_0.4.3     glue_1.8.1         htmltools_0.5.9   
+#> [13] ragg_1.5.2         sass_0.4.10        scales_1.4.0       rmarkdown_2.31    
+#> [17] grid_4.6.1         evaluate_1.0.5     jquerylib_0.1.4    fastmap_1.2.0     
+#> [21] yaml_2.3.12        lifecycle_1.0.5    compiler_4.6.1     RSpectra_0.16-2   
+#> [25] RColorBrewer_1.1-3 fs_2.1.0           Rcpp_1.1.2         lattice_0.22-9    
+#> [29] farver_2.1.2       systemfonts_1.3.2  digest_0.6.39      R6_2.6.1          
+#> [33] Matrix_1.7-5       bslib_0.12.0       withr_3.0.3        tools_4.6.1       
+#> [37] gtable_0.3.6       pkgdown_2.2.1      cachem_1.1.0       desc_1.4.3
 ```

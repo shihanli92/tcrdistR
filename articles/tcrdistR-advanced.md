@@ -352,7 +352,7 @@ scores <- make_cd8_score_table_column(human_tcrs)
 
 ``` r
 sessionInfo()
-#> R version 4.6.0 (2026-04-24)
+#> R version 4.6.1 (2026-06-24)
 #> Platform: x86_64-pc-linux-gnu
 #> Running under: Ubuntu 24.04.4 LTS
 #> 
@@ -376,12 +376,12 @@ sessionInfo()
 #> [1] tcrdistR_0.1.0
 #> 
 #> loaded via a namespace (and not attached):
-#>  [1] cli_3.6.6         knitr_1.51        rlang_1.2.0       xfun_0.57        
-#>  [5] textshaping_1.0.5 jsonlite_2.0.0    htmltools_0.5.9   ragg_1.5.2       
-#>  [9] sass_0.4.10       rmarkdown_2.31    grid_4.6.0        evaluate_1.0.5   
-#> [13] jquerylib_0.1.4   fastmap_1.2.0     yaml_2.3.12       lifecycle_1.0.5  
-#> [17] compiler_4.6.0    RSpectra_0.16-2   fs_2.1.0          Rcpp_1.1.1-1.1   
-#> [21] systemfonts_1.3.2 lattice_0.22-9    digest_0.6.39     R6_2.6.1         
-#> [25] bslib_0.10.0      Matrix_1.7-5      tools_4.6.0       pkgdown_2.2.0    
-#> [29] cachem_1.1.0      desc_1.4.3
+#>  [1] cli_3.6.6         knitr_1.51        rlang_1.3.0       xfun_0.60        
+#>  [5] otel_0.2.0        textshaping_1.0.5 jsonlite_2.0.0    htmltools_0.5.9  
+#>  [9] ragg_1.5.2        sass_0.4.10       rmarkdown_2.31    grid_4.6.1       
+#> [13] evaluate_1.0.5    jquerylib_0.1.4   fastmap_1.2.0     yaml_2.3.12      
+#> [17] lifecycle_1.0.5   compiler_4.6.1    RSpectra_0.16-2   fs_2.1.0         
+#> [21] Rcpp_1.1.2        systemfonts_1.3.2 lattice_0.22-9    digest_0.6.39    
+#> [25] R6_2.6.1          bslib_0.12.0      Matrix_1.7-5      tools_4.6.1      
+#> [29] pkgdown_2.2.1     cachem_1.1.0      desc_1.4.3
 ```
