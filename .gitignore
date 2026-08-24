@@ -22,6 +22,9 @@ Thumbs.db
 # Benchmarks (internal testing, not published)
 benchmarks/
 
+# Comparison study (tcrdistR vs tcrdist3, not published)
+comparison/
+
 # Large raw data files (only compressed .rda tracked in data/)
 data-raw/*.tsv
 data-raw/*.zip
