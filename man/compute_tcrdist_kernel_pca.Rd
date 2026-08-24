@@ -75,6 +75,25 @@ Two kernel choices are supported:
 \item{Gaussian (\code{kernel = "gaussian"})}{RBF kernel:
 \code{gram = exp(-0.5 * (D / sdev)^2)}.}
 }
+
+\strong{Performance.} With the default \code{method = "auto"}, when
+\code{n_components} is small relative to \code{n} the decomposition uses a
+matrix-free ARPACK partial solve (\code{RSpectra::eigs_sym}) that computes
+only the requested components and never materialises the centered Gram
+matrix -- typically an order of magnitude faster than a full
+\code{base::eigen()} for large repertoires. Set \code{method = "eigen"} for a
+bit-exact full LAPACK decomposition (e.g. to reproduce
+\code{scipy.linalg.eigh}).
+
+The full-eigen path is bound by R's BLAS/LAPACK. On the reference
+(unoptimised) BLAS an \code{n = 5000} decomposition can take minutes; linking
+R against an optimised BLAS speeds all matrix math several-fold. On macOS this
+is a one-line symlink to the Accelerate shim that already ships with R
+(\code{libRblas.dylib} -> \code{libRblas.vecLib.dylib}); on Linux use
+\code{update-alternatives} to select OpenBLAS. (This swaps BLAS only, not
+LAPACK, but \code{dsyevr}'s dominant cost is BLAS-3, so most of the win
+carries over.) The \code{"auto"}/ARPACK path sidesteps this by doing far less
+arithmetic in the first place.
 }
 \examples{
 \donttest{

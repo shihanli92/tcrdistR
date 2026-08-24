@@ -22,12 +22,23 @@
 #' \deqn{K_c = K - 1_n K - K 1_n + 1_n K 1_n}
 #' where \eqn{1_n} is an n-by-n matrix of \eqn{1/n}.
 #'
+#' @details For a symmetric \code{K} (the normal case: the Gram matrix is
+#'   symmetrised before centering) \code{rowMeans == colMeans}, so the
+#'   transform collapses to a single fused expression that avoids the two
+#'   \code{sweep()} copies. A general (row/col separate) fallback is used when
+#'   \code{K} is not symmetric.
+#'
 #' @param K Numeric square matrix (the kernel / Gram matrix).
 #' @return The double-centered kernel matrix (same dimensions as \code{K}).
 #' @keywords internal
 .center_kernel_matrix <- function(K) {
     n <- nrow(K)
     if (n == 0L) return(K)
+
+    if (isSymmetric(K)) {
+        row_means <- rowMeans(K)
+        return(K - outer(row_means, row_means, `+`) + mean(row_means))
+    }
 
     row_means <- rowMeans(K)
     col_means <- colMeans(K)
@@ -38,6 +49,69 @@
     K_c <- K_c + grand_mean
 
     K_c
+}
+
+
+# ---------------------------------------------------------------------------
+# RSpectra helpers (internal)
+# ---------------------------------------------------------------------------
+
+#' Is RSpectra usable in this session?
+#' @keywords internal
+.rspectra_available <- function() {
+    requireNamespace("RSpectra", quietly = TRUE)
+}
+
+#' Matrix-free double-centered-kernel operator for ARPACK
+#'
+#' Computes \code{Kc \%*\% x} for the double-centered kernel \code{Kc} WITHOUT
+#' materialising \code{Kc}, using (for symmetric \code{K}):
+#' \deqn{Kc v = Kv - mean(Kv) - (rowSums(K)/n)(1'v) + (sum(K)/n^2)(1'v).}
+#' \code{args} carries \code{K}, precomputed \code{row_sums} and \code{total}
+#' (\code{= sum(K)}), and \code{n}, so per-iteration cost is one BLAS
+#' \code{dgemv} plus O(n) work.
+#' @keywords internal
+.centered_kernel_matvec <- function(x, args) {
+    Kv <- as.vector(args$K %*% x)
+    sx <- sum(x)
+    Kv - mean(Kv) - (args$row_sums / args$n) * sx + (args$total / args$n^2) * sx
+}
+
+#' Top-k eigenpairs of the double-centered kernel via ARPACK
+#'
+#' @param gram Symmetric raw kernel (Gram) matrix (not yet centered).
+#' @param k_request Number of eigenpairs to request.
+#' @param matrix_free If \code{TRUE}, apply centering implicitly via
+#'   \code{.centered_kernel_matvec} (no centered matrix materialised); else
+#'   double-centre \code{gram} densely first. Both use \code{which = "LA"}
+#'   (largest algebraic) because the default kernel yields an indefinite
+#'   centered Gram and only positive eigenvalues are wanted.
+#' @return The \code{RSpectra::eigs_sym} result list (\code{values},
+#'   \code{vectors}, \code{nconv}). Retries once with a larger Krylov subspace
+#'   if the first solve under-converges.
+#' @keywords internal
+.kpca_eigs_rspectra <- function(gram, k_request, matrix_free = TRUE) {
+    n <- nrow(gram)
+    solve_once <- function(opts) {
+        if (matrix_free) {
+            row_sums <- rowSums(gram)
+            args <- list(K = gram, row_sums = row_sums,
+                         total = sum(row_sums), n = n)
+            eigs_sym(.centered_kernel_matvec, k = k_request,
+                     which = "LA", n = n, args = args, opts = opts)
+        } else {
+            eigs_sym(.center_kernel_matrix(gram), k = k_request,
+                     which = "LA", opts = opts)
+        }
+    }
+    eig <- solve_once(list(tol = 1e-12))
+    nconv <- if (is.null(eig$nconv)) 0L else eig$nconv
+    if (nconv < k_request) {
+        eig <- solve_once(list(tol = 1e-12,
+                               ncv = min(n, 4L * k_request + 1L),
+                               maxitr = 3000L))
+    }
+    eig
 }
 
 
@@ -63,6 +137,26 @@
 #'   \item{Gaussian (\code{kernel = "gaussian"})}{RBF kernel:
 #'     \code{gram = exp(-0.5 * (D / sdev)^2)}.}
 #' }
+#'
+#' @details
+#' \strong{Performance.} With the default \code{method = "auto"}, when
+#' \code{n_components} is small relative to \code{n} the decomposition uses a
+#' matrix-free ARPACK partial solve (\code{RSpectra::eigs_sym}) that computes
+#' only the requested components and never materialises the centered Gram
+#' matrix -- typically an order of magnitude faster than a full
+#' \code{base::eigen()} for large repertoires. Set \code{method = "eigen"} for a
+#' bit-exact full LAPACK decomposition (e.g. to reproduce
+#' \code{scipy.linalg.eigh}).
+#'
+#' The full-eigen path is bound by R's BLAS/LAPACK. On the reference
+#' (unoptimised) BLAS an \code{n = 5000} decomposition can take minutes; linking
+#' R against an optimised BLAS speeds all matrix math several-fold. On macOS this
+#' is a one-line symlink to the Accelerate shim that already ships with R
+#' (\code{libRblas.dylib} -> \code{libRblas.vecLib.dylib}); on Linux use
+#' \code{update-alternatives} to select OpenBLAS. (This swaps BLAS only, not
+#' LAPACK, but \code{dsyevr}'s dominant cost is BLAS-3, so most of the win
+#' carries over.) The \code{"auto"}/ARPACK path sidesteps this by doing far less
+#' arithmetic in the first place.
 #'
 #' @param tcr_df A \code{data.frame} with at least columns \code{va},
 #'   \code{cdr3a}, \code{vb}, \code{cdr3b}. Optional if \code{dist_matrix}
@@ -108,6 +202,7 @@
 #' str(result)
 #' }
 #' @seealso \code{\link{plot_tcr_scatter}}, \code{\link{knn_from_pca}}, \code{\link{tcrdist_matrix}}
+#' @importFrom RSpectra eigs_sym
 #' @export
 compute_tcrdist_kernel_pca <- function(tcr_df = NULL,
                                        organism = NULL,
@@ -155,13 +250,17 @@ compute_tcrdist_kernel_pca <- function(tcr_df = NULL,
         ))
     }
 
-    # "auto" selects RSpectra for partial decomposition when available
-    if (method == "auto") {
-        method <- if (requireNamespace("RSpectra", quietly = TRUE) &&
-                      n_components < n) "RSpectra" else "eigen"
-    }
-
     n_components <- min(n_components, n)
+
+    # "auto" routes to the RSpectra (ARPACK) partial solver when it is a clear
+    # win: enough clones that base::eigen()'s full O(n^3) solve dominates, and
+    # few enough components (k <= n/2) that partial decomposition pays off.
+    # Otherwise a single dense LAPACK call is faster and more robust.
+    if (method == "auto") {
+        use_partial <- .rspectra_available() && n >= 100L &&
+                       n_components <= n %/% 2L && n_components <= n - 2L
+        method <- if (use_partial) "RSpectra" else "eigen"
+    }
 
     # ---- Step 1: Compute TCRdist distance matrix ---------------------------
     if (is.null(dist_matrix) && n > 20000L) {
@@ -182,27 +281,39 @@ compute_tcrdist_kernel_pca <- function(tcr_df = NULL,
     } else {
         gram <- exp(-0.5 * (D / gaussian_kernel_sdev)^2)
     }
+    # D is no longer needed; free it before the eigensolve when we own it.
+    if (is.null(dist_matrix)) rm(D)
 
-    # ---- Step 3: Double-center the Gram matrix -----------------------------
-    gram_centered <- .center_kernel_matrix(gram)
-
-    # Force symmetry (numerical safety for eigen())
-    gram_centered <- (gram_centered + t(gram_centered)) / 2
+    # ---- Step 3: Symmetrise (guard for user-supplied dist_matrix) ----------
+    # Both the fused centering and the matrix-free operator assume a symmetric
+    # Gram matrix. tcrdist_matrix() is symmetric; a user-supplied dist_matrix
+    # may not be. Symmetrising here (before centering, which preserves it)
+    # replaces the previous post-centering re-symmetrisation.
+    if (!isSymmetric(gram)) {
+        gram <- (gram + t(gram)) / 2
+    }
 
     # ---- Step 4: Eigendecompose --------------------------------------------
-    if (method == "eigen") {
-        eig <- eigen(gram_centered, symmetric = TRUE)
-        all_values  <- eig$values
-        all_vectors <- eig$vectors
-    } else {
-        # RSpectra
-        if (!requireNamespace("RSpectra", quietly = TRUE)) {
+    if (method == "RSpectra") {
+        if (!.rspectra_available()) {
             stop("Package 'RSpectra' is required for method='RSpectra' ",
                  "but not installed.")
         }
-        k_request <- min(n_components + 10L, n - 1L)
-        eig <- RSpectra::eigs_sym(gram_centered, k = k_request,
-                                  which = "LM")
+        k_request <- min(n_components, n - 1L)
+        eig <- .kpca_eigs_rspectra(gram, k_request, matrix_free = TRUE)
+        nconv <- if (is.null(eig$nconv)) 0L else eig$nconv
+        if (nconv < k_request) {
+            warning(sprintf(
+                "compute_tcrdist_kernel_pca: ARPACK converged %d/%d eigenpairs; falling back to base::eigen().",
+                nconv, k_request))
+            method <- "eigen"
+        } else {
+            all_values  <- eig$values
+            all_vectors <- eig$vectors
+        }
+    }
+    if (method == "eigen") {
+        eig <- eigen(.center_kernel_matrix(gram), symmetric = TRUE)
         all_values  <- eig$values
         all_vectors <- eig$vectors
     }

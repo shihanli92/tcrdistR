@@ -44,7 +44,8 @@ test_that("eigenvalues match Python/scipy reference (default kernel)", {
     result <- compute_tcrdist_kernel_pca(
         tcrs, ref$organism,
         n_components = ref$n_components,
-        kernel = NULL
+        kernel = NULL,
+        method = "eigen"
     )
 
     py_eigenvalues <- ref$default_kernel$eigenvalues
@@ -78,7 +79,8 @@ test_that("embeddings match Python/scipy reference (default kernel, modulo sign 
     result <- compute_tcrdist_kernel_pca(
         tcrs, ref$organism,
         n_components = ref$n_components,
-        kernel = NULL
+        kernel = NULL,
+        method = "eigen"
     )
 
     py_embeddings <- ref$default_kernel$embeddings
@@ -127,7 +129,8 @@ test_that("eigenvalues match Python/scipy reference (gaussian kernel)", {
         tcrs, ref$organism,
         n_components = ref$n_components,
         kernel = "gaussian",
-        gaussian_kernel_sdev = ref$gaussian_kernel$sdev
+        gaussian_kernel_sdev = ref$gaussian_kernel$sdev,
+        method = "eigen"
     )
 
     py_eigenvalues <- ref$gaussian_kernel$eigenvalues
@@ -162,7 +165,8 @@ test_that("embeddings match Python/scipy reference (gaussian kernel, modulo sign
         tcrs, ref$organism,
         n_components = ref$n_components,
         kernel = "gaussian",
-        gaussian_kernel_sdev = ref$gaussian_kernel$sdev
+        gaussian_kernel_sdev = ref$gaussian_kernel$sdev,
+        method = "eigen"
     )
 
     py_embeddings <- ref$gaussian_kernel$embeddings
@@ -336,6 +340,17 @@ test_that("auto method selects RSpectra when available", {
                  tolerance = 1e-14)
     expect_equal(result_auto$embeddings, result_rspectra$embeddings,
                  tolerance = 1e-14)
+
+    # Negative case: requesting all components must fall back to eigen (ARPACK
+    # cannot compute the full spectrum) and must not error.
+    result_full <- compute_tcrdist_kernel_pca(
+        tcrs, "mouse", n_components = nrow(tcrs), method = "auto"
+    )
+    result_eigen_full <- compute_tcrdist_kernel_pca(
+        tcrs, "mouse", n_components = nrow(tcrs), method = "eigen"
+    )
+    expect_equal(result_full$eigenvalues, result_eigen_full$eigenvalues,
+                 tolerance = 1e-14)
 })
 
 
@@ -409,4 +424,119 @@ test_that("compute_tcrdist_kernel_pca accepts precomputed dist_matrix", {
     r2 <- compute_tcrdist_kernel_pca(dist_matrix = dm, n_components = 3L)
     expect_equal(r1$eigenvalues, r2$eigenvalues)
     expect_equal(nrow(r2$embeddings), 5L)
+})
+
+
+# ---------------------------------------------------------------------------
+# Test 13: RSpectra path matches the scipy fixture (both kernels)
+# ---------------------------------------------------------------------------
+
+test_that("RSpectra path matches Python/scipy reference (both kernels)", {
+    skip_if_not_installed("RSpectra")
+    skip_if_not_installed("jsonlite")
+    fixture_path <- test_path("fixtures", "kernel_pca_ref.json")
+    skip_if_not(file.exists(fixture_path), "fixture not found")
+    tcrs <- .load_dash_100()
+    skip_if(is.null(tcrs), "Could not load DASH data")
+    ref <- jsonlite::fromJSON(fixture_path, simplifyVector = TRUE)
+
+    for (kern in list(list(kernel = NULL, ref = ref$default_kernel, sdev = 100),
+                      list(kernel = "gaussian", ref = ref$gaussian_kernel,
+                           sdev = ref$gaussian_kernel$sdev))) {
+        res <- compute_tcrdist_kernel_pca(
+            tcrs, ref$organism, n_components = ref$n_components,
+            kernel = kern$kernel, gaussian_kernel_sdev = kern$sdev,
+            method = "RSpectra"
+        )
+        py_eig <- kern$ref$eigenvalues
+        expect_equal(res$eigenvalues[seq_along(py_eig)], py_eig,
+                     tolerance = 1e-8)
+        py_emb <- kern$ref$embeddings
+        for (k in seq_len(ncol(py_emb))) {
+            if (sd(py_emb[, k]) > 1e-12) {
+                expect_true(abs(abs(cor(res$embeddings[, k], py_emb[, k])) - 1) < 1e-6)
+            }
+        }
+    }
+})
+
+
+# ---------------------------------------------------------------------------
+# Test 14: indefinite centered Gram - RSpectra returns same positives as eigen
+# (regression guard for which = "LA"; "LM" would drop positive eigenvalues)
+# ---------------------------------------------------------------------------
+
+test_that("RSpectra matches eigen on an indefinite centered Gram", {
+    skip_if_not_installed("RSpectra")
+    dash_path <- test_path("fixtures", "dash.csv")
+    skip_if_not(file.exists(dash_path), "dash.csv not found")
+
+    dash <- read.csv(dash_path, stringsAsFactors = FALSE, nrows = 300)
+    tcrs <- data.frame(vb = dash$v_b_gene, cdr3b = dash$cdr3_b_aa,
+                       stringsAsFactors = FALSE)
+    tcrs <- tcrs[!duplicated(tcrs), ]
+    D <- tcrdist_matrix(tcrs, "mouse")
+    # confirm the centered default-kernel Gram is genuinely indefinite
+    gram <- 1 - D / max(D); gram[gram < 0] <- 0
+    ev <- eigen(tcrdistR:::.center_kernel_matrix(gram), symmetric = TRUE,
+                only.values = TRUE)$values
+    skip_if(min(ev) >= -1e-6, "Gram not indefinite for this slice")
+
+    k <- 50L
+    re <- compute_tcrdist_kernel_pca(dist_matrix = D, n_components = k,
+                                     method = "eigen")
+    rr <- compute_tcrdist_kernel_pca(dist_matrix = D, n_components = k,
+                                     method = "RSpectra")
+    expect_equal(rr$n_components, re$n_components)
+    expect_equal(rr$eigenvalues, re$eigenvalues, tolerance = 1e-8)
+})
+
+
+# ---------------------------------------------------------------------------
+# Test 15: matrix-free operator equals dense-centered ARPACK
+# ---------------------------------------------------------------------------
+
+test_that("matrix-free ARPACK operator matches dense-centered ARPACK", {
+    skip_if_not_installed("RSpectra")
+    dash_path <- test_path("fixtures", "dash.csv")
+    skip_if_not(file.exists(dash_path), "dash.csv not found")
+
+    dash <- read.csv(dash_path, stringsAsFactors = FALSE, nrows = 200)
+    tcrs <- data.frame(vb = dash$v_b_gene, cdr3b = dash$cdr3_b_aa,
+                       stringsAsFactors = FALSE)
+    tcrs <- tcrs[!duplicated(tcrs), ]
+    D <- tcrdist_matrix(tcrs, "mouse")
+    gram <- 1 - D / max(D); gram[gram < 0] <- 0
+
+    ef <- tcrdistR:::.kpca_eigs_rspectra(gram, 30L, matrix_free = TRUE)
+    ed <- tcrdistR:::.kpca_eigs_rspectra(gram, 30L, matrix_free = FALSE)
+    expect_equal(sort(ef$values, decreasing = TRUE),
+                 sort(ed$values, decreasing = TRUE), tolerance = 1e-10)
+})
+
+
+# ---------------------------------------------------------------------------
+# Test 16: scale - RSpectra and eigen agree at n = 1500
+# ---------------------------------------------------------------------------
+
+test_that("RSpectra and eigen agree at n = 1500", {
+    skip_on_cran()
+    skip_if_not_installed("RSpectra")
+    dash_path <- test_path("fixtures", "dash.csv")
+    skip_if_not(file.exists(dash_path), "dash.csv not found")
+
+    dash <- read.csv(dash_path, stringsAsFactors = FALSE)
+    skip_if(nrow(dash) < 1500, "need >= 1500 DASH rows")
+    tcrs <- data.frame(va = dash$v_a_gene, cdr3a = dash$cdr3_a_aa,
+                       vb = dash$v_b_gene, cdr3b = dash$cdr3_b_aa,
+                       stringsAsFactors = FALSE)
+    tcrs <- tcrs[!duplicated(tcrs), ][seq_len(1500), ]
+    D <- tcrdist_matrix(tcrs, "mouse")
+
+    re <- compute_tcrdist_kernel_pca(dist_matrix = D, n_components = 50L,
+                                     method = "eigen")
+    rr <- compute_tcrdist_kernel_pca(dist_matrix = D, n_components = 50L,
+                                     method = "RSpectra")
+    expect_equal(rr$eigenvalues[seq_len(50L)], re$eigenvalues[seq_len(50L)],
+                 tolerance = 1e-8)
 })

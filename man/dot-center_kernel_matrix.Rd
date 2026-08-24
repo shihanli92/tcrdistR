@@ -18,4 +18,11 @@ Applies the standard double-centering transform used by kernel PCA
 \deqn{K_c = K - 1_n K - K 1_n + 1_n K 1_n}
 where \eqn{1_n} is an n-by-n matrix of \eqn{1/n}.
 }
+\details{
+For a symmetric \code{K} (the normal case: the Gram matrix is
+symmetrised before centering) \code{rowMeans == colMeans}, so the
+transform collapses to a single fused expression that avoids the two
+\code{sweep()} copies. A general (row/col separate) fallback is used when
+\code{K} is not symmetric.
+}
 \keyword{internal}
